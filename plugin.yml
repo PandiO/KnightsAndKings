@@ -1,0 +1,155 @@
+main: Main.Main
+version: 0.3
+name: KnightsAndKings
+depend: [WorldGuard, WorldEdit, WGBlockRestricter, Citizens]
+
+commands:
+  initiate:
+  test:
+  arena:
+    description: Grants acces to the developers-commands
+    permission: k&k.arena
+  duel:
+    description: Invite a player to a duel
+  coins:
+    description: /coins <set/add/remove> <amount/all> to set/add/remove an amount of coins from a user
+    permission: k&k.coins
+  pay:
+    description: /pay <coins/gems> <username> <amount>
+  gems:
+    description: /gems <set/add/remove> <amount/all> to set/add/remove an amount of gems from a user
+    permission: k&k.gems
+  balance:
+    description: /balance <username> to check someone's balance
+    aliases: [bal]
+  lottery:
+    description: /lottery
+  experience:
+    description: /experience <set/add/remove> <amount/all> <username> to set/add/remove an amount of experience from a user
+    aliases: [exp]
+    permission: K&k.experience
+  donator:
+    description: /donator <set/upgrade/downgrade/remove> <donator> <username> to modify the donator rank of a user
+  friends:
+    description: /friends <add/remove/list> <username>
+    aliases: [friend, f]
+  request:
+    descrption: /request <accept/deny/list> for all open friend-requests
+  requests:
+    description: /requests to see all open friend-requests
+  gate:
+    description: /gate
+  kills:
+    description: /kills for all kill-commands
+  house:
+    description: /house for all house-commands
+  hideandseek:
+    description: /hideandseek for all commands
+    aliases: [hs]
+  home:
+    description: /home to teleport to your home-location
+  resourceproperty:
+    description: /rp <create> <categoryID> <propertyID>
+    aliases: [rp]
+  room:
+    description: /room for all room-commands
+  menu:
+    description: /menu opens the personal menu
+  shopkeeper:
+    description: /shopkeeper reload to reload the shopkeeper traits
+    permission: k&k.shopkeeper
+  product:
+    description: /product for all product-commands
+  soulbound:
+    description: /soulbound
+  ghosted:
+    description: /ghosted
+  property:
+    description: /property for all property-commands
+  propertycategory:
+    description: /propertycategory for all category-commands
+    aliases: [pc]
+  scenario:
+    description: /scenario
+  specialskill:
+    description: /specialskill for all special-skill-commands
+  spawnpoint:
+    description: /spawnpoint for all house-commands
+    aliases: [sp]
+  point:
+    description: /point <name/list> to teleport to a spawnpoint
+    aliases: [warp]
+  street:
+    description: /street to see all street-commands
+  nexttitle:
+    description: /nexttitle
+  town:
+    description: /town to see all town-commands
+  discord:
+    description: /discord
+  enchant:
+    description: /enchant to enchant an item
+  enderchest:
+    description: /enderchest
+    permission: k&k.enderchest
+    aliases: [ec]
+  fly:
+    description: /fly
+  gamemode:
+    description: /gamemode
+    aliases: [gm]
+  invsee:
+    description: /invsee <username>
+    aliases: [is]
+  rename:
+    description: /rename to rename an item
+  lore:
+    description: /lore to modify a lore of an item
+  message:
+    description: /message
+    aliases: [msg]
+  reply:
+    description: /reply
+    aliases: [r]
+  page:
+    description: /page to get a link to our website!
+  tpa:
+    description: /tpa
+  default:
+    description: /default <set> <username>
+  spawn:
+    description: /spawn
+  weather:
+    description: /weather
+  ownermode:
+    description: /om
+    aliases: [om]
+  stats:
+    description: /stats
+    aliases: [s]
+  vote:
+    description: /vote
+  knightsandkings:
+    description: /k&k <reload>
+    permission: k&k.reload
+    aliases: [k&k]
+  user:
+    description: /user remove <player>
+  tutorial:
+    description: /tutorial
+  ping:
+    description: /ping
+  staffchat:
+    description: /staffchat
+    aliases: [sc, st]
+  staffmode:
+    description: /sm
+    aliases: [sm]
+  inventory:
+    description: /inventory clear <player>
+  afk:
+    description: /afk
+  treasure:
+    description: /treasure
+  heal:
+    description: /heal

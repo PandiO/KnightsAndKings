@@ -1,0 +1,746 @@
+package Sieges;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+
+import Handlers.ColorOptions;
+import Main.Main;
+import Minigames.Participant;
+import SpawnPoints.SpawnPoint;
+import Towns.Town;
+import Users.User;
+
+public class SiegeScenario 
+{
+	Town town = new Town();
+	SpawnPoint spawnpoint = new SpawnPoint();
+	Main main = Main.getPlugin(Main.class);
+	/**
+	 * This region states which location the siege game will be played in
+	 */
+	protected int ID;
+	protected String name;
+	protected int townID;
+	protected String townName;
+	protected int entryTitle;
+	protected int playersMin;
+	protected int playersMax;
+	protected Integer mainObjectiveID;
+	protected MainObjective mainObjective;
+	protected List<SideObjective> sideObjectives = new ArrayList<SideObjective>();
+	protected ChatColor team1Color = ColorOptions.KAKColor;
+	protected ChatColor team2Color = ColorOptions.error;
+	protected int Spawn1Amount;
+	protected int Spawn2Amount;
+	protected List<SiegeSpawnpoint> team1Spawnpoints = new ArrayList<SiegeSpawnpoint>();
+	protected List<SiegeSpawnpoint> team2Spawnpoints = new ArrayList<SiegeSpawnpoint>();
+	protected HashMap<User, SiegeObject> editMode = new HashMap<User, SiegeObject>();
+	protected List<User> testingList = new ArrayList<User>();
+	
+	/**
+	 * Siege minigame related variables
+	 */
+	protected boolean active;
+	protected Siege siege;
+	protected List<Participant> votes = new ArrayList<Participant>();
+	
+	public SiegeScenario(int ID, String name, int townID, int playersMin, int playersMax, int mainObjective, boolean newScenario)
+	{
+		this.ID = ID;
+		this.name = name;
+		this.townID = townID;
+		this.townName = this.town.getTownName(townID);
+		this.entryTitle = this.town.getRequiredTitleID(townID);
+		this.playersMin = playersMin;
+		this.playersMax = playersMax;
+		this.mainObjectiveID = mainObjective;
+		try
+		{
+			this.mainObjective = new MainObjective(this.ID, this.mainObjectiveID);
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		try
+		{
+			this.sideObjectives = this.fetchSideObjectives();
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		try
+		{
+			this.team1Spawnpoints = this.fetchTeam1Spawnpoints();
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		try
+		{
+			this.team2Spawnpoints = this.fetchTeam2Spawnpoints();
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		this.active = false;
+		
+		
+		Sieges.Scenarios.add(this);
+	}
+	
+	public int getID()
+	{
+		return this.ID;
+	}
+	
+	public String getName()
+	{
+		return this.name;
+	}
+	
+	public int getTownID()
+	{
+		return this.townID;
+	}
+	
+	public String getTownName()
+	{
+		return this.townName;
+	}
+	
+	public int getEntryTitle()
+	{
+		return this.entryTitle;
+	}
+	
+	public int getPlayersMin()
+	{
+		return this.playersMin;
+	}
+	
+	public int getPlayersMax()
+	{
+		return this.playersMax;
+	}
+	
+	public Integer getMainObjectiveID()
+	{
+		return this.mainObjectiveID;
+	}
+	
+	public List<SiegeSpawnpoint> getTeam1Spawnpoints()
+	{
+		return this.team1Spawnpoints;
+	}
+	
+	public List<SiegeSpawnpoint> getTeam2Spawnpoints()
+	{
+		return this.team2Spawnpoints;
+	}
+	
+	public List<SiegeSpawnpoint> getTeamSpawnpoints(Integer teamNumber)
+	{
+		List<SiegeSpawnpoint> spawnpoints = null;
+		
+		if (teamNumber == 1)
+		{
+			spawnpoints = this.getTeam1Spawnpoints();
+		} else if (teamNumber == 2)
+		{
+			spawnpoints = this.getTeam2Spawnpoints();
+		}
+		
+		return spawnpoints;
+	}
+	
+	public ChatColor getTeam1Color()
+	{
+		return this.team1Color;
+	}
+	
+	public ChatColor getTeam2Color()
+	{
+		return this.team2Color;
+	}
+	
+	public int getSpawn1Amount()
+	{
+		return this.Spawn1Amount;
+	}
+	
+	public int getSpawn2Amount()
+	{
+		return this.Spawn2Amount;
+	}
+	
+	public boolean getActive()
+	{
+		return this.active;
+	}
+	
+	public List<User> getTestingList()
+	{
+		return this.testingList;
+	}
+	
+	public List<SideObjective> getSideObjectives()
+	{
+		return this.sideObjectives;
+	}
+	
+	public MainObjective getMainObjective()
+	{
+		return this.mainObjective;
+	}
+	
+	public Siege getSiege()
+	{
+		return this.siege;
+	}
+	
+	protected List<SideObjective> fetchSideObjectives()
+	{
+		List<SideObjective> sideObjectives = new ArrayList<SideObjective>();
+		
+		try
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SiegeObjectives WHERE SiegeID = ?");
+			stmt.setInt(1, this.ID);
+			
+			ResultSet results = stmt.executeQuery();
+			while (results.next())
+			{
+				sideObjectives.add(new SideObjective(results.getInt("ID"), ID, results.getInt("SpawnpointID"), results.getInt("GateID") == 0 ? -1 : results.getInt("GateID")));
+			}
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		
+		return sideObjectives;
+	}
+	
+	protected List<SiegeSpawnpoint> fetchTeam1Spawnpoints()
+	{
+		List<SiegeSpawnpoint> spawnpoints = new ArrayList<SiegeSpawnpoint>();
+		Main.logMessage(ColorOptions.coinStats + "Setting team 1 spawnpoints for scenario. Amount: " + this.getSpawn1Amount());
+		
+		try 
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM ScenarioSpawnpoints WHERE ScenarioID = ? AND TeamNumber = ?;");
+			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+			stmt.setInt(1, this.ID);
+			stmt.setInt(2, 1);
+			
+			ResultSet results = stmt.executeQuery();
+			if (results.next())
+			{
+				spawnpoints.add(new SiegeSpawnpoint(results.getInt("ID"), this.ID, results.getInt("SpawnPointID"), 1));
+			}
+		} catch (SQLException e) 
+		{
+			e.printStackTrace();
+		}
+		
+		return spawnpoints;
+	}
+	
+	protected List<SiegeSpawnpoint> fetchTeam2Spawnpoints()
+	{
+		int TeamNumber = 2;
+		List<SiegeSpawnpoint> spawnpoints = new ArrayList<SiegeSpawnpoint>();
+		
+		try 
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM ScenarioSpawnpoints WHERE ScenarioID = ? AND TeamNumber = ?;");
+			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+			stmt.setInt(1, this.ID);
+			stmt.setInt(2, TeamNumber);
+			
+			ResultSet results = stmt.executeQuery();
+			if (results.next())
+			{
+				spawnpoints.add(new SiegeSpawnpoint(results.getInt("ID"), this.ID, results.getInt("SpawnPointID"), TeamNumber));
+			}
+		} catch (SQLException e) 
+		{
+			e.printStackTrace();
+		}
+		
+		return spawnpoints;
+	}
+	
+	protected Integer getSideObjectiveSpawnPoint(Integer sideObjectiveID)
+	{
+		Integer spawnpointID = null;
+		
+		try 
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SiegeObjectives WHERE ID = ?;");
+			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+			stmt.setInt(1, sideObjectiveID);
+			
+			ResultSet results = stmt.executeQuery();
+			if (results.next())
+			{
+				spawnpointID = results.getInt("SpawnpointID");
+			}
+		} catch (SQLException e) 
+		{
+			e.printStackTrace();
+		}
+		
+		return spawnpointID;
+	}
+	
+	public SiegeSpawnpoint getSiegeSpawnpoint(Integer team, Integer spawnCountID)
+	{
+		SiegeSpawnpoint sp = null;
+		
+		List<SiegeSpawnpoint> spawnpoints = this.team1Spawnpoints;
+		
+		if (team == 2)
+		{
+			spawnpoints = this.team2Spawnpoints;
+		}
+		
+		for (SiegeSpawnpoint spawnpoint : spawnpoints)
+		{
+			if (spawnpoint.getSpawnCountID() == spawnCountID)
+			{
+				sp = spawnpoint;
+				break;
+			}
+		}
+		
+		return sp;
+	}
+	
+	public SideObjective getSideObjective(Integer subID)
+	{
+		SideObjective objective = null;
+		
+		for (SideObjective objectives : this.getSideObjectives())
+		{
+			if (objectives.getSubID() == subID)
+			{
+				objective = objectives;
+				break;
+			}
+		}
+		
+		return objective;
+	}
+	
+	public List<Participant> getVotes()
+	{
+		return this.votes;
+	}
+	
+	public void setVotes(Participant participant)
+	{
+		if (!this.votes.contains(participant))
+		{
+			this.votes.add(participant);
+			
+			if (siege != null)
+			{
+				if (this.siege.getRandomVotes().contains(participant))
+				{
+					this.siege.removeRandomVotes(participant);
+				}
+				for (SiegeScenario scenarios : this.siege.getSuggestedScenarioList())
+				{
+					if (scenarios != this && scenarios.getVotes().contains(participant))
+					{
+						scenarios.removeVotes(participant);
+					}
+				}
+			}
+		}
+	}
+	
+	public void removeVotes(Participant participant)
+	{
+		if (this.votes.contains(participant))
+		{
+			this.votes.remove(participant);
+		}
+	}
+	
+	public void setActive(boolean active, Siege siege)
+	{
+		this.siege = siege;
+		this.active = active;
+		mainObjective.setActive(active);
+		for (SideObjective objective : this.getSideObjectives())
+		{
+			objective.setActive(active);
+		}
+	}
+	
+	public void addTestingList(User user)
+	{
+		if (!this.testingList.contains(user))
+		{
+			this.testingList.add(user);
+			
+			for (SideObjective so : this.sideObjectives)
+			{
+				so.addTestingList(user);
+			}
+			this.mainObjective.addTestingList(user);
+		}
+	}
+	
+	public void removeTestingList(User user)
+	{
+		if (this.testingList.contains(user))
+		{
+			this.testingList.remove(user);
+			
+			for (SideObjective so : this.sideObjectives)
+			{
+				so.removeTestingList(user);
+			}
+			this.mainObjective.removeTestingList(user);
+		}
+	}
+	
+	public void setObjectiveCaptured(Objective objective)
+	{
+		if (this.mainObjective == objective)
+		{
+			this.setComplete();
+		} else if (this.sideObjectives.contains(objective))
+		{
+			Integer part = (int) (this.mainObjective.getOriginalCapturePoints()/5)*2;
+			
+			Integer sideObjectivePart = (int)part/this.sideObjectives.size();
+			
+			this.mainObjective.setCurrentCapturePoints(this.mainObjective.getCurrentCapturePoints()-sideObjectivePart);
+		}
+	}
+	
+	public void setComplete()
+	{
+		if (this.active)
+		{
+			if (this.siege != null)
+			{
+				this.siege.setComplete();
+			}
+		}
+		if (!this.testingList.isEmpty())
+		{
+			for (User user :this.testingList)
+			{
+				user.getPlayer().sendMessage(ColorOptions.message + "Siege has been won by the attackers!");
+			}
+		}
+	}
+	
+	public void toggleActive(Siege siege)
+	{
+		if (this.active)
+		{
+			this.setActive(false, siege);
+		} else
+		{
+			this.setActive(true, siege);
+		}
+	}
+	
+	public void setEditMode(User user, SiegeObject object)
+	{
+		if (object == null)
+		{
+			return;
+		}
+		if (!this.editMode.containsKey(user))
+		{
+			this.editMode.put(user, object);
+		}
+	}
+	
+	public void removeEditMode(User user)
+	{
+		if (this.editMode.containsKey(user))
+		{
+			this.editMode.remove(user);
+			user.getPlayer().sendMessage(ColorOptions.messageachievement + "Stopped Scenario editing mode");
+		}
+	}
+	
+	public void removeSideObjective(CommandSender sender, SideObjective sideObjective)
+	{
+		boolean noWarnings = true;
+		
+		Integer spawnpointID = sideObjective.getSpawnpointID();
+		String SideObjectiveError = ColorOptions.error + "Error while removing SideObjective " + sideObjective.getSubID() + "'s spawnpoint with ID " + spawnpointID + " from siege with ID " + this.ID;
+		String removeSideObjective = ColorOptions.message + "Removed Side objective " + sideObjective.getSubID() + " from siege " + this.ID;
+
+		try
+		{
+			this.spawnpoint.removeSpawnPoint(spawnpointID);
+			Bukkit.getConsoleSender().sendMessage(removeSideObjective);
+			sender.sendMessage(removeSideObjective);
+		} catch (Exception ex)
+		{
+			Bukkit.getConsoleSender().sendMessage(SideObjectiveError);
+			sender.sendMessage(SideObjectiveError);
+			ex.printStackTrace();
+			noWarnings = false;
+		}
+		sideObjective.remove();
+		
+		if (noWarnings)
+		{
+			sender.sendMessage(ColorOptions.messageachievement + "Completed the removal of Side Objective with no warnings");
+		} else
+		{
+			sender.sendMessage(ColorOptions.error + "Completed the removal of Side Objective of Scenario " + this.ID + " with warnings! Please notify a developer");
+		}
+	}
+	
+	public void removeTeamSpawnpoints(CommandSender sender, int teamNumber)
+	{
+		boolean noWarningsAll = true;
+		List<SiegeSpawnpoint> Spawnpoints = null;
+		String RemoveError = ColorOptions.error + "Error while removing Team spawnpoints for all teams of siege with ID " + this.ID;
+		String SuccesRemove = ColorOptions.message + "Removed Team spawnpoints for all teams of siege " + this.ID;
+		
+		if (teamNumber == -1)
+		{
+			Spawnpoints = this.team1Spawnpoints;
+			Spawnpoints.addAll(this.team2Spawnpoints);
+		} else if (teamNumber == 1)
+		{
+			Spawnpoints = this.team1Spawnpoints;
+			RemoveError = ColorOptions.error + "Error while removing Team spawnpoints for team 1 of siege with ID " + this.ID;
+			SuccesRemove = ColorOptions.message + "Removed Team spawnpoints for team 1 of siege " + this.ID;
+		} else if (teamNumber == 2)
+		{
+			Spawnpoints = this.team2Spawnpoints;
+			RemoveError = ColorOptions.error + "Error while removing Team spawnpoints for team 2 of siege with ID " + this.ID;
+			SuccesRemove = ColorOptions.message + "Removed Team spawnpoints for team 2 of siege " + this.ID;
+		}
+		
+		for(SiegeSpawnpoint spawnpoint : Spawnpoints)
+		{
+			boolean noWarnings = true;
+			
+			Integer spawnpointID = spawnpoint.getSpawnpointID();
+			String SpawnpointError = ColorOptions.error + "Error while removing Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " with spawnpointID " + spawnpointID + " from siege with ID " + this.ID;
+			String removeSpawnpoint = ColorOptions.message + "Removed Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " from siege " + this.ID + " with spawnpointID " + spawnpointID;
+
+			try
+			{
+				this.spawnpoint.removeSpawnPoint(spawnpointID);
+				Bukkit.getConsoleSender().sendMessage(removeSpawnpoint);
+				sender.sendMessage(removeSpawnpoint);
+			} catch (Exception ex)
+			{
+				Bukkit.getConsoleSender().sendMessage(SpawnpointError);
+				sender.sendMessage(SpawnpointError);
+				ex.printStackTrace();
+				noWarnings = false;
+			}
+			spawnpoint.remove();
+			
+			if (noWarnings)
+			{
+				sender.sendMessage(ColorOptions.messageachievement + "Completed the removal of a Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " with no warnings");
+			} else
+			{
+				noWarningsAll = false;
+				sender.sendMessage(ColorOptions.error + "Completed the removal of a Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " of Scenario " + this.ID + " with warnings! Please notify a developer");
+			}
+		}
+		
+		if (noWarningsAll)
+		{
+			sender.sendMessage(SuccesRemove);
+			Main.logMessage(SuccesRemove);
+		} else
+		{
+			sender.sendMessage(RemoveError);
+			Main.logError(RemoveError);
+		}
+	}
+	
+	public void removeSpawnpoint(CommandSender sender, SiegeSpawnpoint spawnpoint)
+	{
+		boolean noWarnings = true;
+		
+		Integer spawnpointID = spawnpoint.getSpawnpointID();
+		String SideObjectiveError = ColorOptions.error + "Error while removing SiegeSpawnpoint " + spawnpoint.getSpawnCountID() + "'s spawnpoint with ID " + spawnpointID + " from siege with ID " + this.ID;
+		String removeSideObjective = ColorOptions.message + "Removed Spawnpoint " + spawnpoint.getSpawnCountID() + " of team " + spawnpoint.getTeamNumber() + " from siege " + this.ID;
+
+		try
+		{
+			this.spawnpoint.removeSpawnPoint(spawnpointID);
+			Bukkit.getConsoleSender().sendMessage(removeSideObjective);
+			sender.sendMessage(removeSideObjective);
+		} catch (Exception ex)
+		{
+			Bukkit.getConsoleSender().sendMessage(SideObjectiveError);
+			sender.sendMessage(SideObjectiveError);
+			ex.printStackTrace();
+			noWarnings = false;
+		}
+		spawnpoint.remove();
+		
+		if (noWarnings)
+		{
+			sender.sendMessage(ColorOptions.messageachievement + "Completed the removal of Spawnpoint with no warnings");
+		} else
+		{
+			sender.sendMessage(ColorOptions.error + "Completed the removal of Spawnpoint of Scenario " + this.ID + " with warnings! Please notify a developer");
+		}
+	}
+	
+	public void teleportSpawnpoint(User user, SiegeSpawnpoint spawnpoint)
+	{
+		user.getPlayer().teleport(spawnpoint.getLocation());
+		user.getPlayer().sendMessage(ColorOptions.message + "Teleported to the spawnpoint of team " + spawnpoint.getTeamNumber());
+	}
+	
+	public void teleportObjective(User user, Objective objective)
+	{
+		String objectiveType = objective instanceof MainObjective ? "Main Objective" : "Side Objective";
+		Location location = objective.getLocation();
+		List<Location> locs = new ArrayList<Location>(Arrays.asList(
+				location,
+				location.clone().add(1, 0, 0),
+				location.clone().subtract(1, 0, 0),
+				location.clone().add(0, 0, 1),
+				location.clone().subtract(0, 0, 1)
+				));
+		
+		for (Location loc : locs)
+		{
+			if (this.spawnpoint.canTeleport(loc))
+			{
+				user.getPlayer().teleport(loc);
+				user.getPlayer().sendMessage(ColorOptions.message + "Teleported to the " + objectiveType);
+				return;
+			}
+		}
+		
+		user.getPlayer().sendMessage(ColorOptions.error + "Couldn't find space to teleport to near the " + objectiveType);
+		user.getPlayer().sendMessage(ColorOptions.error + "The coordinates are: " + location.toString());
+	}
+	
+	public void removePermanently(CommandSender sender)
+	{
+		boolean noWarnings = true;
+		
+		String removeTeamSpawnpointsError = ColorOptions.error + "Error while removing the spawnpoints for all teams from siege with ID " + this.ID;
+		String mainObjectiveError = ColorOptions.error + "Error while removing the Main Objective from siege with ID " + this.ID;
+		String removeTeamSpawnpoints = ColorOptions.message + "Removed the spawnpoints of all teams from siege " + this.ID;
+		String removeMainObjective = ColorOptions.message + "Removed the Main Objective from siege " + this.ID;
+		String removeSiege = ColorOptions.messageachievement + "Removed siege with ID " + this.ID + " from the Database!";
+		String spawnpointCleanup = ColorOptions.messageachievement + "Cleared all spawnpoints related to this siege";
+		String spawnpointCleanupError = ColorOptions.error + "Error while cleaning up spawnpoints related to this siege!";
+		
+		for (SideObjective sideObjective : this.sideObjectives)
+		{
+			this.removeSideObjective(sender, sideObjective);
+		}
+		
+		try
+		{
+			this.removeTeamSpawnpoints(sender, -1);
+			Main.logMessage(removeTeamSpawnpoints);
+			sender.sendMessage(removeTeamSpawnpoints);
+		} catch (Exception ex)
+		{
+			Main.logError(removeTeamSpawnpointsError);
+			sender.sendMessage(removeTeamSpawnpointsError);
+			ex.printStackTrace();
+			noWarnings = false;
+		}
+		try
+		{
+			this.spawnpoint.removeSpawnPoint(this.spawnpoint.getSpawnPointID("Siege." + this.ID + ".MO"));
+			Bukkit.getConsoleSender().sendMessage(removeMainObjective);
+			sender.sendMessage(removeMainObjective);
+		} catch (Exception ex)
+		{
+			Bukkit.getConsoleSender().sendMessage(mainObjectiveError);
+			sender.sendMessage(mainObjectiveError);
+			ex.printStackTrace();
+			noWarnings = false;
+		}
+		try
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM Sieges WHERE ID=?;");
+			stmt.setInt(1, this.ID);
+			
+			stmt.executeUpdate();
+			Bukkit.getConsoleSender().sendMessage(removeSiege);
+			sender.sendMessage(removeSiege);
+		} catch (Exception ex)
+		{
+			Bukkit.getConsoleSender().sendMessage(mainObjectiveError);
+			sender.sendMessage(mainObjectiveError);
+			ex.printStackTrace();
+			noWarnings = false;
+		}
+		
+		try
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM SpawnPoint WHERE Name LIKE ?;");
+			stmt.setString(1, "%siege." + this.ID + "%");
+			
+			stmt.executeUpdate();
+			Main.logMessage(spawnpointCleanup);
+			sender.sendMessage(spawnpointCleanup);
+		} catch (Exception ex)
+		{
+			Main.logError(spawnpointCleanupError);
+			sender.sendMessage(spawnpointCleanupError);
+			ex.printStackTrace();
+		}
+		
+		if (noWarnings)
+		{
+			sender.sendMessage(ColorOptions.messageachievement + "Completed the removal of siege " + this.ID + " with no warnings");
+		} else
+		{
+			sender.sendMessage(ColorOptions.error + "Completed the removal of siege " + this.ID + " with warnings! Please notify a developer");
+		}
+		this.remove();
+	}
+	
+	public void save()
+	{
+		for (SideObjective objective : this.getSideObjectives())
+		{
+			objective.saveSideObjective();
+		}
+		Scenarios.saveScenario(this);
+	}
+	
+	protected void remove()
+	{
+		for (SideObjective objective : this.getSideObjectives())
+		{
+			objective.saveSideObjective();
+		}
+		Scenarios.saveScenario(this);
+		Sieges.Scenarios.remove(this);
+		Scenarios.destroyScenario(this);
+	}
+}
