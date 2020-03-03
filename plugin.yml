@@ -71,6 +71,8 @@ commands:
     aliases: [pc]
   scenario:
     description: /scenario
+  siege:
+    description: /siege
   specialskill:
     description: /specialskill for all special-skill-commands
   spawnpoint:

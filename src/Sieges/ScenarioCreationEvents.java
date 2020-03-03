@@ -29,11 +29,11 @@ import Menu.Menu;
 import Users.User;
 import Users.Users;
 
-public class SiegeCreationEvents implements Listener
+public class ScenarioCreationEvents implements Listener
 {
 	
 	private Main main;
-	public SiegeCreationEvents(Main main)
+	public ScenarioCreationEvents(Main main)
 	{
 		this.main = main;
 	}
@@ -44,7 +44,7 @@ public class SiegeCreationEvents implements Listener
 		Player player = e.getPlayer();
 		UUID uuid = player.getUniqueId();
 		User user = null;
-		SiegeCreation sc = null;
+		ScenarioCreation sc = null;
 		
 		try
 		{
@@ -130,7 +130,7 @@ public class SiegeCreationEvents implements Listener
 		Player player = e.getPlayer();
 		UUID uuid = player.getUniqueId();
 		User user = null;
-		SiegeCreation sc = null;
+		ScenarioCreation sc = null;
 		
 		try
 		{
@@ -411,7 +411,7 @@ public class SiegeCreationEvents implements Listener
 		Player player = e.getPlayer();
 		UUID uuid = player.getUniqueId();
 		User user = null;
-		SiegeCreation sc = null;
+		ScenarioCreation sc = null;
 		
 		try
 		{

@@ -14,13 +14,13 @@ import Main.Main;
 import Towns.Town;
 import Users.User;
 
-public class SiegeCreation 
+public class ScenarioCreation 
 {
 	Main main = Main.getPlugin(Main.class);
 	WorldGuard worldguard = new WorldGuard();
 	Town town = new Town();
 	protected int Stage = -1;
-	protected SiegeCreation instance;
+	protected ScenarioCreation instance;
 	
 	protected User user;
 	protected String name;
@@ -103,14 +103,14 @@ public class SiegeCreation
 					))
 			));
 	
-	public SiegeCreation(User user)
+	public ScenarioCreation(User user)
 	{
 		this.user = user;
 		this.instance = this;
 		
 		Location loc = user.getPlayer().getLocation();
 		this.townID = this.worldguard.getStructureIDbyRegion("town", loc, this.worldguard.getRegionManager(loc.getWorld()));
-		Sieges.SiegeCreations.add(this);
+		Sieges.ScenarioCreations.add(this);
 		
 		this.sendMessage(startMessage);
 	}
@@ -253,7 +253,7 @@ public class SiegeCreation
 			confirmStop = true;
 		} else
 		{
-			Sieges.SiegeCreations.remove(this);
+			Sieges.ScenarioCreations.remove(this);
 			user.getPlayer().sendMessage(ColorOptions.error + "Stopped siege creation mode");
 			if (this.stashed)
 			{

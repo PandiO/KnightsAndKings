@@ -3254,4 +3254,9 @@ public class User
 			this.getPlayer().sendMessage(string);
 		}
 	}
+	
+	public void sendMessage(String message)
+	{
+		this.getPlayer().sendMessage(message);
+	}
 }

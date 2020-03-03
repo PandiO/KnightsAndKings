@@ -21,7 +21,7 @@ public class Scenarios
 	static Main main = Main.getPlugin(Main.class);
 	static SpawnPoint spawnpoint = new SpawnPoint();
 	
-	public static void createScenario(SiegeCreation sc)
+	public static void createScenario(ScenarioCreation sc)
 	{
 		int siegeID = -1;
 		List<String> spawnpointNames = new ArrayList<String>();

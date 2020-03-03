@@ -30,20 +30,19 @@ public class SiegeCommands implements CommandExecutor
 	
 	public static List<String> staffcommandhelp = Arrays.asList(new String[] {
 			"",
-			ColorOptions.statsformat + "List of Scenario-commands",
-			ColorOptions.stats + "-/Scenario create",
-			ColorOptions.stats + "-/Scenario remove",
-			ColorOptions.stats + "-/Scenario spawnpoint",
-			ColorOptions.stats + "-/Scenario objective",
-			ColorOptions.stats + "-/Scenario info",
-			ColorOptions.stats + "-/Scenario list",
+			ColorOptions.statsformat + "List of Siege-commands",
+			ColorOptions.stats + "-/Siege join",
+			ColorOptions.stats + "-/Siege leave",
+			ColorOptions.stats + "-/Siege vote",
+			ColorOptions.stats + "-/Siege skip",
+			ColorOptions.stats + "-/Siege info",
+			ColorOptions.stats + "-/Siege list",
 			""
 	});
 	
-	@SuppressWarnings("unused")
 	public boolean onCommand(CommandSender sender, Command command,	String label, String[] args)
 	{
-		if (label.equalsIgnoreCase("scenario"))
+		if (label.equalsIgnoreCase("siege"))
 		{
 			if (args.length <= 0)
 			{
@@ -54,7 +53,10 @@ public class SiegeCommands implements CommandExecutor
 				return false;
 			}
 			
-			if (args[0].equalsIgnoreCase("create"))
+			if (args[0].equalsIgnoreCase("join"))
+			{
+				sender.sendMessage(ColorOptions.error + "Command not configured yet.");
+			} else if (args[0].equalsIgnoreCase("leave"))
 			{
 				Player player = null;
 				
@@ -81,84 +83,68 @@ public class SiegeCommands implements CommandExecutor
 					return false;
 				}
 				
-				player.sendMessage(ColorOptions.message + "Starting scenario creation...");
-				new SiegeCreation(user);
-			} else if (args[0].equalsIgnoreCase("remove"))
+				Siege siege = Sieges.findSiege(user);
+				if (siege == null)
+				{
+					user.sendMessage(Arrays.asList(ColorOptions.error + "You are not participating in any sieges"));
+					return false;
+				}
+				
+				siege.leavePlayer(user);
+				user.sendMessage(ColorOptions.messageachievement + "You left a siege");
+			} else if (args[0].equalsIgnoreCase("skip"))
 			{
-				Player player = null;
+				boolean allowedToSkip = false;
 				
-				if (!(sender instanceof Player))
+				if (args.length < 2)
 				{
-					sender.sendMessage(CommandExceptions.SenderNotPlayer);
-					return false;
-				}
-				player = (Player) sender;
-				UUID uuid = player.getUniqueId();
-				User user = null;
-				
-				try
-				{
-					user = Users.getUser(uuid);
-				} catch (UserNotFoundException ex)
-				{
-					ErrorHandlers.userNotFoundAction(null, player, true);
-					return false;
-				} catch (Exception ex)
-				{
-					ex.printStackTrace();
-					ErrorHandlers.userNotFoundAction(null, player, true);
+					sender.sendMessage(ColorOptions.falsecommand + "Usage: /siege skip <siegeNumber/all>");
 					return false;
 				}
 				
-				if (args.length != 2)
-				{
-					user.sendMessage(Arrays.asList(
-							ColorOptions.error + "Usage:",
-							ColorOptions.error + "/Scenario remove <id> OR",
-							ColorOptions.error + "/Scenario remove <name>"
-							));
-					return false;
-				}
-				
-				SiegeScenario Scenario = null;
-				Integer scenarioID = null;
-				
-				if (main.isInt(args[1]))
-				{
-					scenarioID = Integer.valueOf(args[1]);
-				} else
-				{
-					Location location = player.getLocation();
-					String scenarioName = args[1];
-					Integer townID = this.worldguard.getStructureIDbyRegion("town", location, this.worldguard.getRegionManager(location.getWorld()));
-					
-					if (townID == null)
-					{
-						user.sendMessage(Arrays.asList(ColorOptions.error + "You need to stand inside the town of the scenario when removing by name"));
-						return false;
-					}
-					scenarioID = Scenarios.getScenarioID(scenarioName, townID);
-					
-					if (scenarioID == null)
-					{
-						user.sendMessage(Arrays.asList(ColorOptions.error + "Can't find a Scenario with name " + scenarioName + " in a town with ID " + townID));
-					}
-				}
-				
-				if (scenarioID == null)
-				{
-					user.sendMessage(Arrays.asList(ColorOptions.error + "No Scenario ID found! Please try again or notify a developer"));
-					return false;
-				}
-				Scenario = Scenarios.instantiateScenario(scenarioID, false);
-				
-				if (Scenario == null)
-				{
-					user.sendMessage(Arrays.asList(ColorOptions.error + "No Scenario could be found! Please try again or notify a developer"));
-					return false;
-				}
-				
-				Scenario.removePermanently(player);
+//				if (sender instanceof Player)
+//				{
+//					Player player = (Player)sender;
+//					UUID uuid = player.getUniqueId();
+//					User user = null;
+//					
+//					try
+//					{
+//						user = Users.getUser(uuid);
+//					} catch (Exception ex)
+//					{
+//						ex.printStackTrace();
+//						ErrorHandlers.userNotFoundAction(null, player, true);
+//						return false;
+//					}
+//					
+//					
+//					
+//					if (main.HideAndSeek == null)
+//					{
+//						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
+//						return false;
+//					}
+//					
+//					if (user.getDonatorID() >= 1)
+//					{
+//						main.HideAndSeek.skipStage(user);
+//					} else
+//					{
+//						player.sendMessage(ColorOptions.falsecommand + "Only players with donator title " + this.donator.getDonatorName(1) + " or higher can skip the cooldown");
+//						player.sendMessage(ColorOptions.message + "Check 'personal menu > Current rank' or type /donator");
+//						return false;
+//					}
+//				} else
+//				{
+//					if (main.HideAndSeek == null)
+//					{
+//						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
+//						return false;
+//					}
+//					main.HideAndSeek.skipStage(null);
+//					sender.sendMessage(ColorOptions.messageachievement + "Skipped the cooldown of Hide and Seek");
+//				}
 			}
 		}
 		return false;

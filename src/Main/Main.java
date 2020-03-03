@@ -145,10 +145,11 @@ import Rooms.Room;
 import Rooms.RoomCommands;
 import Rooms.RoomSellEvent;
 import Scoreboards.ActionBar;
+import Sieges.ScenarioCommands;
 import Sieges.Scenarios;
 import Sieges.Siege;
 import Sieges.SiegeCommands;
-import Sieges.SiegeCreationEvents;
+import Sieges.ScenarioCreationEvents;
 import Sieges.SiegeEvents;
 import Skills.AssassinSkill;
 import Skills.AttackSpeedEvent;
@@ -405,6 +406,7 @@ public class Main extends JavaPlugin
 			    this.startOcelotTask();
 			    this.startEventTask();
 			    Treasures.instantiateAll(-1);
+			    Users.updateScoreBoard(null);
 			    now.setTimeZone(TimeZone.getTimeZone("GMT-01:00"));
 			    try {
 					Broadcast.class.newInstance().startBroadcastTask();
@@ -584,7 +586,8 @@ public class Main extends JavaPlugin
 		getCommand("resourceproperty").setExecutor(new ResourceCommands(this));
 		getCommand("resourceproperty").setAliases(Arrays.asList("rp"));
 		getCommand("room").setExecutor(new RoomCommands(this));
-		getCommand("scenario").setExecutor(new SiegeCommands(this));
+		getCommand("scenario").setExecutor(new ScenarioCommands(this));
+		getCommand("siege").setExecutor(new SiegeCommands(this));
 		getCommand("specialskill").setExecutor(new SpecialSkillCommands(this));
 		getCommand("spawnpoint").setExecutor(new SpawnPointCommands(this));
 		getCommand("spawnpoint").setAliases(Arrays.asList("sp"));
@@ -702,7 +705,7 @@ public class Main extends JavaPlugin
 		pluginManager.registerEvents(new ResourceKillEvents(this), this);
 		pluginManager.registerEvents(new BlockBreakEvents(this), this);
 		pluginManager.registerEvents(new RoomSellEvent(this), this);
-		pluginManager.registerEvents(new SiegeCreationEvents(this), this);
+		pluginManager.registerEvents(new ScenarioCreationEvents(this), this);
 		pluginManager.registerEvents(new SiegeEvents(this), this);
 		pluginManager.registerEvents(new StrengthEvent(this), this);
 		pluginManager.registerEvents(new AttackSpeedEvent(this), this);

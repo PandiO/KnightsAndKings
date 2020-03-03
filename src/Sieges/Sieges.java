@@ -12,18 +12,18 @@ public class Sieges
 	static Main main = Main.getPlugin(Main.class);
 	public static CopyOnWriteArrayList<Siege> Sieges = new CopyOnWriteArrayList<Siege>();
 	public static CopyOnWriteArrayList<SiegeScenario> Scenarios = new CopyOnWriteArrayList<SiegeScenario>();
-	public static CopyOnWriteArrayList<SiegeCreation> SiegeCreations = new CopyOnWriteArrayList<SiegeCreation>();
-	public static CopyOnWriteArrayList<SiegeCreation> stashedSiegeCreations = new CopyOnWriteArrayList<SiegeCreation>();
+	public static CopyOnWriteArrayList<ScenarioCreation> ScenarioCreations = new CopyOnWriteArrayList<ScenarioCreation>();
+	public static CopyOnWriteArrayList<ScenarioCreation> stashedSiegeCreations = new CopyOnWriteArrayList<ScenarioCreation>();
 
-	public static SiegeCreation getSiegeCreation(User user)
+	public static ScenarioCreation getSiegeCreation(User user)
 	{
-		SiegeCreation sc = null;
+		ScenarioCreation sc = null;
 		
-		for (SiegeCreation SiegeCreations : SiegeCreations)
+		for (ScenarioCreation ScenarioCreations : ScenarioCreations)
 		{
-			if (SiegeCreations.user == user)
+			if (ScenarioCreations.user == user)
 			{
-				sc = SiegeCreations;
+				sc = ScenarioCreations;
 				break;
 			}
 		}
