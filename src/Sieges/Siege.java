@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -505,8 +506,8 @@ public class Siege extends MiniGame
 				
 				Users.Users.updateScoreBoard(getUserParticipants());
 				
-				getScenario().getMainObjective().setActive(true);
-				getScenario().getSideObjectives().forEach(q -> q.setActive(true));
+//				getScenario().getMainObjective().setActive(true);
+//				getScenario().getSideObjectives().forEach(q -> q.setActive(true));
 				
 				
 				if (progressSeconds == (progressExpire-2))
@@ -630,60 +631,94 @@ public class Siege extends MiniGame
 		}
 	}
 	
+	public void skipStage(User user)
+	{
+		if (this.cooldown)
+		{
+			this.startMatchmaking(true);
+			if (user != null)
+			{
+				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Skipped the cooldown of Siege " + (Sieges.Sieges.indexOf(this)+1) + "!");
+				if (Bukkit.getOnlinePlayers().size() < 2)
+				{
+					user.getPlayer().sendMessage(ColorOptions.message + "Siege might not proceed because of a lack of players!");
+				}
+			}
+		} else if (this.matchmaking)
+		{
+			this.matchmakingSeconds = 31;
+			if (user != null)
+			{
+				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Skipped the matchmaking of Siege " + (Sieges.Sieges.indexOf(this)+1) + "!");
+				if (Bukkit.getOnlinePlayers().size() < 2)
+				{
+					user.getPlayer().sendMessage(ColorOptions.message + "Siege might not proceed because of a lack of players!");
+				}
+			}
+		} else
+		{
+			user.getPlayer().sendMessage(ColorOptions.error + "Siege is already in matchmaking or progress!");
+		}
+	}
+	
 	public org.bukkit.scoreboard.Objective createScoreboard(Scoreboard board, User user)
 	{
-		Main.logMessage("Setting siege scoreboard for user " + user.getUsername());
-
-		org.bukkit.scoreboard.Objective scoreboard = null;
-		scoreboard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this));
-		
-		if (scoreboard == null)
-		{
-			scoreboard = board.registerNewObjective("siege_" + Sieges.Sieges.indexOf(this), "Game");
-			scoreboard.setDisplaySlot(DisplaySlot.SIDEBAR);
-		}
 		SiegeMember member = (SiegeMember) this.getParticipant(user);
 		Integer teamNumber = member.getTeamNumber();
 		String teamName = this.getTeamName(teamNumber);
 		SiegeScenario scenario = this.getScenario();
-		Integer boardLength = 5;
-		
+		Integer boardLength = 5;	
 		boardLength += scenario.getSideObjectives().size();
 		
-		scoreboard.setDisplayName(ColorOptions.KAKColor + "Siege");
+		Main.logMessage("Setting siege scoreboard for user " + user.getUsername() + ", teamnumber " + teamNumber + ", name " + teamName);
+
+		org.bukkit.scoreboard.Objective sideBoard = null;
+		sideBoard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + teamNumber);
 		
-		Score teamScore = scoreboard.getScore(ColorOptions.message + "Team: " + teamName);
+		if (sideBoard == null)
+		{
+			sideBoard = board.registerNewObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + teamNumber, "dummy");
+			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
+		}
+		
+		sideBoard.setDisplayName(ColorOptions.KAKColor + "Siege");
+		
+		Score teamScore = sideBoard.getScore(ColorOptions.message + "Team: " + teamName);
 		teamScore.setScore(boardLength);
 		
 		boardLength--;
 		
-		Score spaceScore = scoreboard.getScore(" ");
+		Score spaceScore = sideBoard.getScore(" ");
 		spaceScore.setScore(boardLength);
 		
 		boardLength--;
 		
 		MainObjective MO = scenario.getMainObjective();
-		Score MOScore = scoreboard.getScore(ColorOptions.message + "Main Objective: " + MO.getCapturePercentage() + "% Captured");
+		Score MOScore = sideBoard.getScore(ColorOptions.message + "Main Objective: " + MO.getCapturePercentage() + "% Captured");
 		MOScore.setScore(boardLength);
 		
 		boardLength--;
 		
 		for (SideObjective SO : scenario.getSideObjectives())
 		{
-			Score SOScore = scoreboard.getScore(ColorOptions.message + "Side Objective " + SO.getSubID() + ": " + SO.getCapturePercentage() + "% Captured");
+			Score SOScore = sideBoard.getScore(ColorOptions.message + "Side Objective " + SO.getSubID() + ": " + SO.getCapturePercentage() + "% Captured");
 			SOScore.setScore(boardLength);
 			boardLength--;
 		}
 		
-		Score spaceScore2 = scoreboard.getScore("  ");
+		Score spaceScore2 = sideBoard.getScore("  ");
 		spaceScore2.setScore(boardLength);
 		
 		boardLength--;
 		
 		HashMap<String, Integer> calcTime = main.getCalculatedTime(this.progressSeconds); 
-		Score timeScore = scoreboard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
+		Score timeScore = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
 		timeScore.setScore(boardLength);
 		
-		return scoreboard;
+		Main.logMessage("Set scoreboard for user " + user.getUsername() + ", teamnumber " + teamNumber + ", criteria " + sideBoard.getCriteria() + ", name " + sideBoard.getName());
+		
+		org.bukkit.scoreboard.Objective obj = user.getPlayer().getScoreboard().getObjective(DisplaySlot.SIDEBAR);
+		Main.logMessage("Sidebar board name " + obj.getName());
+		return sideBoard;
 	}
 }

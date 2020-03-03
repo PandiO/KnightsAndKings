@@ -102,7 +102,7 @@ public class SideObjective extends Objective
 			PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE SiegeObjectives SET GateID = ?, SiegeID = ?, SpawnpointID = ? WHERE ID = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, this.getGateID());
-			stmt.setInt(2, this.getSiegeID());
+			stmt.setInt(2, this.getScenarioID());
 			stmt.setInt(3, this.getSpawnpointID());
 			stmt.setInt(4, this.subID);
 			

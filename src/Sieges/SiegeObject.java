@@ -12,20 +12,20 @@ public class SiegeObject
 	Main main = Main.getPlugin(Main.class);
 	SpawnPoint spawnpoint = new SpawnPoint();
 	
-	protected int siegeID;
+	protected int scenarioID;
 	protected int spawnpointID;
 	protected int subID;
 	protected Location location;
 	
 	public SiegeObject(int siegeID, int spawnpointID)
 	{
-		this.siegeID = siegeID;
+		this.scenarioID = siegeID;
 		this.spawnpointID = spawnpointID;
 	}
 	
-	public int getSiegeID()
+	public int getScenarioID()
 	{
-		return this.siegeID;
+		return this.scenarioID;
 	}
 	
 	public int getSpawnpointID()
@@ -70,7 +70,7 @@ public class SiegeObject
 	
 	public void remove()
 	{
-		SiegeScenario scenario = Scenarios.findScenario(this.siegeID);
+		SiegeScenario scenario = Scenarios.findScenario(this.scenarioID);
 		if (this instanceof SiegeSpawnpoint)
 		{
 			SiegeSpawnpoint sp = (SiegeSpawnpoint) this;

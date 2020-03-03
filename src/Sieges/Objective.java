@@ -86,6 +86,7 @@ public class Objective extends SiegeObject
 	
 	public Integer calculateCapturePoints()
 	{
+		Integer defendAmount = 0;
 		Integer captureAmount = 0;
 		Integer capturePoints = 0;
 		
@@ -94,19 +95,46 @@ public class Objective extends SiegeObject
 			Player player = user.getPlayer();
 			if (this.getLocation().distance(player.getLocation()) <= this.captureRadius)
 			{
-				captureAmount++;
+				int teamNumber = 2;
+				Siege siege = Sieges.findSiege(user);
 				
-				if (captureAmount == 1)
+				if (siege != null)
 				{
-					capturePoints = 5;
+					teamNumber = siege.getTeamNumber(siege.getParticipant(user));
+				}
+				
+				if (teamNumber == 1)
+				{
+					defendAmount++;
+					
+					if (defendAmount == 1)
+					{
+						capturePoints -= 6;
+					} else
+					{
+						Integer step = 3;
+						if (this instanceof MainObjective)
+						{
+							step = 6;
+						}
+						capturePoints -= step;
+					}
 				} else
 				{
-					Integer step = 2;
-					if (this instanceof MainObjective)
+					captureAmount++;
+					
+					if (captureAmount == 1)
 					{
-						step = 5;
+						capturePoints = 5;
+					} else
+					{
+						Integer step = 2;
+						if (this instanceof MainObjective)
+						{
+							step = 5;
+						}
+						capturePoints+=step;
 					}
-					capturePoints+=step;
 				}
 			} else
 			{
@@ -136,7 +164,7 @@ public class Objective extends SiegeObject
 	{
 		List<User> receivers = new ArrayList<User>();
 		
-		SiegeScenario scenario = Scenarios.findScenario(this.siegeID);
+		SiegeScenario scenario = Scenarios.findScenario(this.scenarioID);
 		receivers.addAll(this.testingList);
 		
 		for (Siege sieges : Sieges.Sieges)
@@ -273,7 +301,7 @@ public class Objective extends SiegeObject
 			
 			this.stopCaptureTask();
 			this.stopCircleTask();
-			SiegeScenario scenario = Scenarios.findScenario(this.siegeID);
+			SiegeScenario scenario = Scenarios.findScenario(this.scenarioID);
 			MainObjective mo = scenario.getMainObjective();
 			mo.setCurrentCapturePoints(mo.getCurrentCapturePoints()-100);
 			for (User user : this.getPlayers())

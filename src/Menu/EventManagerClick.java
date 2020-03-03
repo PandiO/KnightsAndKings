@@ -439,7 +439,7 @@ public class EventManagerClick
 		}
 		if (dc.equalsIgnoreCase("side objective"))
 		{
-			Bukkit.getConsoleSender().sendMessage("SiegeID: " + objective.getSiegeID());
+			Bukkit.getConsoleSender().sendMessage("SiegeID: " + objective.getScenarioID());
 			scenario.teleportObjective(user, objective);
 			user.playSound("succesclick");
 			user.getPlayer().closeInventory();
