@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import API_methods.WorldGuard;
+import Donator.Donator;
 import Exceptions.CommandExceptions;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
@@ -23,6 +24,7 @@ public class SiegeCommands implements CommandExecutor
 {
 	private Main main;
 	private WorldGuard worldguard = new WorldGuard();
+	Donator donator = new Donator();
 	public SiegeCommands(Main main)
 	{
 		this.main = main;
@@ -98,7 +100,67 @@ public class SiegeCommands implements CommandExecutor
 				
 				if (args.length < 2)
 				{
-					sender.sendMessage(ColorOptions.falsecommand + "Usage: /siege skip <siegeNumber/all>");
+					sender.sendMessage(ColorOptions.falsecommand + "Usage: /siege skip <siegeNumber>");
+					return false;
+				}
+				User user = null;
+				Player player = null;
+				String siegeArg = args[1];
+				
+				if (sender instanceof Player)
+				{
+					player = (Player)sender;
+					UUID uuid = player.getUniqueId();
+					user = null;
+					
+					try
+					{
+						user = Users.getUser(uuid);
+					} catch (Exception ex)
+					{
+						ex.printStackTrace();
+						ErrorHandlers.userNotFoundAction(null, player, true);
+						return false;
+					}
+					
+					if (user.getDonatorID() >= 1)
+					{
+						allowedToSkip = true;
+					} else
+					{
+						player.sendMessage(ColorOptions.falsecommand + "Only players with donator title " + this.donator.getDonatorName(1) + " or higher can skip stages");
+						player.sendMessage(ColorOptions.message + "Check 'personal menu > Current rank' or type /donator");
+						return false;
+					}
+				} else
+				{
+					allowedToSkip = true;
+				}
+				
+				if (allowedToSkip)
+				{
+					if (main.isInt(siegeArg))
+					{
+						Integer siegeIndex = Integer.valueOf(siegeArg)-1;
+						
+						Siege siege = Sieges.Sieges.get(siegeIndex);
+						
+						if (siege == null)
+						{
+							sender.sendMessage(ColorOptions.error + "No siege found with number " + siegeIndex);
+							return false;
+						}
+						
+						sender.sendMessage(ColorOptions.messageachievement + "Skipped the current stage of siege " + siegeArg);
+						siege.skipStage(null);
+					} else
+					{
+						sender.sendMessage(ColorOptions.error + "Siegenumber must be a number: /siege skip <siegeNumber>");
+					}
+				} else
+				{
+					sender.sendMessage(ColorOptions.falsecommand + "Only players with donator title " + this.donator.getDonatorName(1) + " or higher can skip stages");
+					sender.sendMessage(ColorOptions.message + "Check 'personal menu > Current rank' or type /donator");
 					return false;
 				}
 				

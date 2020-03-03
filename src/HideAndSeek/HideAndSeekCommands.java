@@ -148,7 +148,7 @@ public class HideAndSeekCommands implements CommandExecutor
 						main.HideAndSeek.skipStage(user);
 					} else
 					{
-						player.sendMessage(ColorOptions.falsecommand + "Only players with donator title " + this.donator.getDonatorName(1) + " or higher can skip the cooldown");
+						player.sendMessage(ColorOptions.falsecommand + "Only players with donator title " + this.donator.getDonatorName(1) + " or higher can skip stages");
 						player.sendMessage(ColorOptions.message + "Check 'personal menu > Current rank' or type /donator");
 						return false;
 					}
