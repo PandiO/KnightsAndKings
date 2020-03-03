@@ -10,10 +10,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 
 import Handlers.ColorOptions;
+import Main.Main;
 import Minigames.MiniGame;
 import Minigames.Participant;
 import Scoreboards.ActionBar;
@@ -485,8 +487,10 @@ public class Siege extends MiniGame
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
 		}
 		
-		Scoreboards.Scoreboard board = new Scoreboards.Scoreboard();
-		board.setBoard(this.getUserParticipants());
+//		Main.logMessage("Setting board while starting siege..");
+//		Scoreboards.Scoreboard board = new Scoreboards.Scoreboard();
+//		board.setBoard(this.getUserParticipants());
+//		Main.logMessage("Board set while starting siege..");
 		
 		
 		BukkitTask task = new BukkitRunnable()
@@ -498,6 +502,12 @@ public class Siege extends MiniGame
 				progressSeconds--;
 				
 				updateMenus(false);
+				
+				Users.Users.updateScoreBoard(getUserParticipants());
+				
+				getScenario().getMainObjective().setActive(true);
+				getScenario().getSideObjectives().forEach(q -> q.setActive(true));
+				
 				
 				if (progressSeconds == (progressExpire-2))
 				{
@@ -513,7 +523,6 @@ public class Siege extends MiniGame
 		}.runTaskTimer(main, 0, 20);
 		
 		this.progress = true;
-		Users.Users.updateScoreBoard(this.getUserParticipants());
 		this.updateMenus(true);
 	}
 	
@@ -549,13 +558,15 @@ public class Siege extends MiniGame
 	
 	public void setComplete()
 	{
-		
+		this.stopSiege();
 	}
 	
 	public void stopSiege()
 	{
 		this.startProgress(false);
 		main.logMessage("Stopping siege");
+		getScenario().getMainObjective().setActive(false);
+		getScenario().getSideObjectives().forEach(q -> q.setActive(false));
 		for (Participant participant : this.getParticipants())
 		{
 			participant.getUser().getPlayer().teleport(participant.getBeforeJoinLocation());
@@ -621,46 +632,57 @@ public class Siege extends MiniGame
 	
 	public org.bukkit.scoreboard.Objective createScoreboard(Scoreboard board, User user)
 	{
+		Main.logMessage("Setting siege scoreboard for user " + user.getUsername());
+
 		org.bukkit.scoreboard.Objective scoreboard = null;
 		scoreboard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this));
 		
 		if (scoreboard == null)
 		{
 			scoreboard = board.registerNewObjective("siege_" + Sieges.Sieges.indexOf(this), "Game");
+			scoreboard.setDisplaySlot(DisplaySlot.SIDEBAR);
 		}
 		SiegeMember member = (SiegeMember) this.getParticipant(user);
 		Integer teamNumber = member.getTeamNumber();
 		String teamName = this.getTeamName(teamNumber);
-		SiegeScenario Scenario = this.getScenario();
+		SiegeScenario scenario = this.getScenario();
+		Integer boardLength = 5;
+		
+		boardLength += scenario.getSideObjectives().size();
 		
 		scoreboard.setDisplayName(ColorOptions.KAKColor + "Siege");
 		
 		Score teamScore = scoreboard.getScore(ColorOptions.message + "Team: " + teamName);
-		teamScore.setScore(1);
+		teamScore.setScore(boardLength);
+		
+		boardLength--;
 		
 		Score spaceScore = scoreboard.getScore(" ");
-		spaceScore.setScore(2);
+		spaceScore.setScore(boardLength);
 		
-		MainObjective MO = Scenario.getMainObjective();
-		Score MOScore = scoreboard.getScore(ColorOptions.message + "Main Objective: " + MO.getCapturePercentage() + " Captured");
-		MOScore.setScore(3);
+		boardLength--;
 		
-		int ScoreNumber = 4;
-		for (SideObjective SO : Scenario.getSideObjectives())
+		MainObjective MO = scenario.getMainObjective();
+		Score MOScore = scoreboard.getScore(ColorOptions.message + "Main Objective: " + MO.getCapturePercentage() + "% Captured");
+		MOScore.setScore(boardLength);
+		
+		boardLength--;
+		
+		for (SideObjective SO : scenario.getSideObjectives())
 		{
-			Score SOScore = scoreboard.getScore(ColorOptions.message + "Side Objective: " + SO.getCapturePercentage() + " Captured");
-			SOScore.setScore(ScoreNumber);
-			ScoreNumber++;
+			Score SOScore = scoreboard.getScore(ColorOptions.message + "Side Objective " + SO.getSubID() + ": " + SO.getCapturePercentage() + "% Captured");
+			SOScore.setScore(boardLength);
+			boardLength--;
 		}
 		
-		Score spaceScore2 = scoreboard.getScore(" ");
-		spaceScore2.setScore(ScoreNumber);
+		Score spaceScore2 = scoreboard.getScore("  ");
+		spaceScore2.setScore(boardLength);
 		
-		ScoreNumber++;
+		boardLength--;
 		
 		HashMap<String, Integer> calcTime = main.getCalculatedTime(this.progressSeconds); 
 		Score timeScore = scoreboard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
-		timeScore.setScore(ScoreNumber);
+		timeScore.setScore(boardLength);
 		
 		return scoreboard;
 	}

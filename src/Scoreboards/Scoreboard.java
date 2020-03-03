@@ -86,6 +86,7 @@ public class Scoreboard
 	
 	public void setBoard(List<User> Users)
 	{
+		Main.logMessage("Setting board");
 		List<User> TargetUsers = null;
 		org.bukkit.scoreboard.Scoreboard board = getScoreBoard();
 		
@@ -99,17 +100,17 @@ public class Scoreboard
 		
 		for (User user : TargetUsers)
 		{
+			Main.logMessage("Setting board for user " + user.getUsername());
 			UUID uuid = user.getUUID();
 			Player player = user.getPlayer();
 			Team team = null;
 			
-			for (Siege Siege : Sieges.Sieges.Sieges)
+			Siege siege = Sieges.Sieges.findSiege(user);
+			if (siege != null && siege.getProgress())
 			{
-				if (Siege.getParticipating(user) && Siege.getProgress())
-				{
-					Siege.createScoreboard(board, user);
-				}
-			}
+				Main.logMessage("Found participating siege for user " + user.getUsername());
+				siege.createScoreboard(board, user);
+			} else
 			if (Main.HideAndSeek.getParticipating(user) && Main.HideAndSeek.getProgress())
 			{
 				Main.logMessage("Setting hs scoreboard for " + user.getUsername());
