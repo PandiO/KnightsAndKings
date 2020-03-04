@@ -100,7 +100,7 @@ public class Objective extends SiegeObject
 				
 				if (siege != null)
 				{
-					teamNumber = siege.getTeamNumber(siege.getParticipant(user));
+					teamNumber = siege.getParticipant(user).GetTeam().GetNumber();
 				}
 				
 				if (teamNumber == 1)
@@ -376,7 +376,10 @@ public class Objective extends SiegeObject
 	
 	public void stopCircleTask()
 	{
-		this.circleTask.cancel();
+		if (this.circleTask != null)
+		{
+			this.circleTask.cancel();
+		}
 	}
 	
 	public void startCircleTask()
@@ -418,7 +421,10 @@ public class Objective extends SiegeObject
 	
 	public void stopCaptureTask()
 	{
-		this.captureTask.cancel();
+		if (this.captureTask != null)
+		{
+			this.captureTask.cancel();
+		}
 	}
 	
 	public void startCaptureTask()

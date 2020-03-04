@@ -43,6 +43,7 @@ import Handlers.SoundHandler;
 import HideAndSeek.HideAndSeek;
 import Houses.House;
 import Main.Main;
+import Minigames.MGTeam;
 import Minigames.Participant;
 import Products.Product;
 import Products.ProductCategory;
@@ -4918,15 +4919,14 @@ public class Menu
 				}
 			}
 			String teamName = ColorOptions.error + "None";
-			if (siege.getTeam1Participants().contains(participant))
+			MGTeam team = participant.GetTeam();
+			
+			if (team != null)
 			{
-				teamName=  siege.getTeamName(1);
-				siegeBannerColor = 5;
-			} else if (siege.getTeam2Participants().contains(participant))
-			{
-				teamName = siege.getTeamName(2);
-				siegeBannerColor = 3;
+				teamName = team.GetColor() + team.GetName();
+				siegeBannerColor = team.GetBannerColor();
 			}
+			
 			joinDesc.addAll(Arrays.asList(
 					"",
 					ColorOptions.message + "Your team: " + teamName
@@ -4938,7 +4938,7 @@ public class Menu
 				short blockColor = 2;
 				boolean currentSpawnpoint = false;
 				Integer slot = 9;
-				Integer teamNumber = siege.getTeamNumber(participant);
+				Integer teamNumber = team.GetNumber();
 				List<SiegeSpawnpoint> spawnpoints = siege.getScenario().getTeamSpawnpoints(teamNumber);
 				for (SiegeSpawnpoint spawnpoint : spawnpoints)
 				{

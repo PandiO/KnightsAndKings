@@ -17,6 +17,7 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import Handlers.ColorOptions;
 import Main.Main;
+import Minigames.MGTeam;
 import Minigames.MiniGame;
 import Minigames.Participant;
 import Scoreboards.ActionBar;
@@ -25,6 +26,7 @@ import Users.User;
 
 public class Siege extends MiniGame
 {
+	private Scoreboards.Scoreboard scoreboard = new Scoreboards.Scoreboard();
 	private SpawnPoint spawnpoint = new SpawnPoint();
 	
 	protected static String name = "Siege";	//Stores the name of the mininame
@@ -32,12 +34,16 @@ public class Siege extends MiniGame
 	protected SiegeScenario scenario;
 	protected List<SiegeScenario> suggestedScenarioList = new ArrayList<SiegeScenario>();
 	
-	protected String team1Name = "Defenders";
-	protected String team2Name = "Attackers";
-	protected ChatColor team1Color = ColorOptions.KAKColor;
-	protected ChatColor team2Color = ColorOptions.error;
-	protected List<SiegeMember> team1 = new ArrayList<SiegeMember>();
-	protected List<SiegeMember> team2 = new ArrayList<SiegeMember>();
+	protected MGTeam Team1;
+	protected MGTeam Team2;
+//	protected String team1Name = "Defenders";
+//	protected String team2Name = "Attackers";
+//	protected ChatColor team1Color = ColorOptions.KAKColor;
+//	protected ChatColor team2Color = ColorOptions.error;
+//	protected List<SiegeMember> team1 = new ArrayList<SiegeMember>();
+//	protected List<SiegeMember> team2 = new ArrayList<SiegeMember>();
+//	protected Scoreboard team1Scoreboard = this.scoreboard.getScoreBoard();
+//	protected Scoreboard team2Scoreboard = this.scoreboard.getScoreBoard();
 	
 	/**
 	 * This region indicates if the match is skilled and for what title's it is joinable
@@ -76,6 +82,8 @@ public class Siege extends MiniGame
 		super(name, "/siege join");
 		
 		this.instance = this;
+		this.Team1 = new MGTeam(1, "Defenders", ColorOptions.KAKColor, (short)5, this.scoreboard.getScoreBoard());
+		this.Team2 = new MGTeam(2, "Attackers", ColorOptions.error, (short)3, this.scoreboard.getScoreBoard());
 		new BukkitRunnable()
 		{
 			public void run()
@@ -90,26 +98,25 @@ public class Siege extends MiniGame
 		return this.scenario;
 	}
 	
-	public String getTeamName(Integer teamNumber)
+	public MGTeam GetTeam1()
 	{
-		if (teamNumber == 1)
-		{
-			return this.team1Color + this.team1Name;
-		} else
-		{
-			return this.team2Color + this.team2Name;
-		}
+		return this.Team1;
 	}
 	
-	public List<SiegeMember> getTeam1Participants()
+	public MGTeam GetTeam2()
 	{
-		return this.team1;
+		return this.Team2;
 	}
 	
-	public List<SiegeMember> getTeam2Participants()
-	{
-		return this.team2;
-	}
+//	public List<SiegeMember> getTeam1Participants()
+//	{
+//		return this.team1;
+//	}
+//	
+//	public List<SiegeMember> getTeam2Participants()
+//	{
+//		return this.team2;
+//	}
 	
 	public boolean getSkilledMatch()
 	{
@@ -136,14 +143,14 @@ public class Siege extends MiniGame
 		return this.suggestedScenarioList;
 	}
 	
-	public int getTeamNumber(Participant participant)
+	public int getTeam(Participant participant)
 	{
 		int teamNumber = 1;
 		
-		if (this.getTeam1Participants().contains(participant))
+		if (this.Team1.GetMembers().contains(participant))
 		{
 			teamNumber = 1;
-		} else if (this.getTeam2Participants().contains(participant))
+		} else if (this.Team2.GetMembers().contains(participant))
 		{
 			teamNumber = 2;
 		}
@@ -358,19 +365,22 @@ public class Siege extends MiniGame
 			{
 				part = (SiegeMember) part;
 			}
+			ChatColor teamColor = null;
 			if (team1)
 			{
 				((SiegeMember)part).setTeamNumber(1);
-				this.team1.add((SiegeMember)part);
-				part.getUser().getPlayer().sendMessage(ColorOptions.KAKColor + "Your team is the " + this.team1Name);
+				this.Team1.AddMember((SiegeMember)part);
+				teamColor = this.Team1.GetColor();
 				team1 = false;
 			} else
 			{
 				((SiegeMember)part).setTeamNumber(2);
-				this.team2.add((SiegeMember)part);
-				part.getUser().getPlayer().sendMessage(ColorOptions.error + "Your team is the " + this.team2Name);
+				this.Team2.AddMember((SiegeMember)part);
+				teamColor = this.Team2.GetColor();
 				team1 = true;
 			}
+			part.getUser().getPlayer().sendMessage(ColorOptions.message + "Your team is the " + teamColor + this.Team1.GetName());
+
 		}
 	}
 	
@@ -479,11 +489,11 @@ public class Siege extends MiniGame
 			return;
 		}
 		
-		for (SiegeMember siegeMember : getTeam1Participants())
+		for (SiegeMember siegeMember : this.Team1.GetMembersAsSiegeMembers())
 		{
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
 		}
-		for (SiegeMember siegeMember : getTeam2Participants())
+		for (SiegeMember siegeMember : this.Team2.GetMembersAsSiegeMembers())
 		{
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
 		}
@@ -512,8 +522,8 @@ public class Siege extends MiniGame
 				
 				if (progressSeconds == (progressExpire-2))
 				{
-					announceTeam1(startMSGDefense);
-					announceTeam2(startMSGAttack);
+					Team1.AnnounceMembersActionBar(startMSGDefense);
+					Team2.AnnounceMembersActionBar(startMSGAttack);
 				}
 				
 				if (progressSeconds == 0)
@@ -589,8 +599,8 @@ public class Siege extends MiniGame
 		this.scenario = null;
 		this.suggestedScenarioList.clear();
 		
-		this.team1.clear();
-		this.team2.clear();
+		this.Team1.Reset();
+		this.Team2.Reset();
 		
 		this.skilledMatch = false;
 		this.titleIDMin = 0;
@@ -609,24 +619,6 @@ public class Siege extends MiniGame
 		for (Participant participant : this.getParticipants())
 		{
 			Player player = participant.getUser().getPlayer();
-			barMessage.sendToPlayer(player);
-		}
-	}
-	
-	public void announceTeam1(ActionBar barMessage)
-	{
-		for (SiegeMember member : this.getTeam1Participants())
-		{
-			Player player = member.getUser().getPlayer();
-			barMessage.sendToPlayer(player);
-		}
-	}
-	
-	public void announceTeam2(ActionBar barMessage)
-	{
-		for (SiegeMember member : this.getTeam2Participants())
-		{
-			Player player = member.getUser().getPlayer();
 			barMessage.sendToPlayer(player);
 		}
 	}
@@ -661,17 +653,15 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public org.bukkit.scoreboard.Objective createScoreboard(Scoreboard board, User user)
+	public org.bukkit.scoreboard.Objective createScoreboard(MGTeam team)
 	{
-		SiegeMember member = (SiegeMember) this.getParticipant(user);
-		Integer teamNumber = member.getTeamNumber();
-		String teamName = this.getTeamName(teamNumber);
+		Scoreboard board = team.GetScoreboard();
+		Integer teamNumber = team.GetNumber();
+		String teamName = team.GetName();
 		SiegeScenario scenario = this.getScenario();
 		Integer boardLength = 5;	
 		boardLength += scenario.getSideObjectives().size();
 		
-		Main.logMessage("Setting siege scoreboard for user " + user.getUsername() + ", teamnumber " + teamNumber + ", name " + teamName);
-
 		org.bukkit.scoreboard.Objective sideBoard = null;
 		sideBoard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + teamNumber);
 		
@@ -679,11 +669,18 @@ public class Siege extends MiniGame
 		{
 			sideBoard = board.registerNewObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + teamNumber, "dummy");
 			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
+		} else
+		{
+			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
+			HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(this.progressSeconds+1); 
+			board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
+//			Score timeScoreOld = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
+//			timeScoreOld.setScore(0);
 		}
 		
 		sideBoard.setDisplayName(ColorOptions.KAKColor + "Siege");
 		
-		Score teamScore = sideBoard.getScore(ColorOptions.message + "Team: " + teamName);
+		Score teamScore = sideBoard.getScore(ColorOptions.message + "Team: " + team.GetColor() + teamName);
 		teamScore.setScore(boardLength);
 		
 		boardLength--;
@@ -711,14 +708,10 @@ public class Siege extends MiniGame
 		
 		boardLength--;
 		
-		HashMap<String, Integer> calcTime = main.getCalculatedTime(this.progressSeconds); 
+		HashMap<String, Integer> calcTime = Main.getCalculatedTime(this.progressSeconds); 
 		Score timeScore = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
 		timeScore.setScore(boardLength);
-		
-		Main.logMessage("Set scoreboard for user " + user.getUsername() + ", teamnumber " + teamNumber + ", criteria " + sideBoard.getCriteria() + ", name " + sideBoard.getName());
-		
-		org.bukkit.scoreboard.Objective obj = user.getPlayer().getScoreboard().getObjective(DisplaySlot.SIDEBAR);
-		Main.logMessage("Sidebar board name " + obj.getName());
+				
 		return sideBoard;
 	}
 }

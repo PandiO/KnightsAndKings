@@ -13,8 +13,10 @@ public class Participant
 {
 	protected Main main = Main.getPlugin(Main.class);
 	protected User user;
+	protected MGTeam Team;
 	protected Location beforeJoinLocation;
 	protected HashMap<Integer, ItemStack> storedInventory = new HashMap<Integer, ItemStack>();
+	
 	
 	public Participant(User user) 
 	{
@@ -26,6 +28,11 @@ public class Participant
 		return this.user;
 	}
 	
+	public MGTeam GetTeam()
+	{
+		return this.Team;
+	}
+	
 	public Location getBeforeJoinLocation()
 	{
 		return this.beforeJoinLocation;
@@ -34,6 +41,11 @@ public class Participant
 	public HashMap<Integer, ItemStack> getStoredInventory()
 	{
 		return this.storedInventory;
+	}
+	
+	public void SetTeam(MGTeam team)
+	{
+		this.Team = team;
 	}
 	
 	public void setBeforeJoinLocation(Location location)

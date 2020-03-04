@@ -406,7 +406,6 @@ public class Main extends JavaPlugin
 			    this.startOcelotTask();
 			    this.startEventTask();
 			    Treasures.instantiateAll(-1);
-			    Users.updateScoreBoard(null);
 			    now.setTimeZone(TimeZone.getTimeZone("GMT-01:00"));
 			    try {
 					Broadcast.class.newInstance().startBroadcastTask();
@@ -432,6 +431,7 @@ public class Main extends JavaPlugin
 			    		target.kickPlayer(ColorOptions.error + "Please relog due to server reload");
 			    	}
 			    }
+			    Users.updateScoreBoard(null);
 			    //Treasures.activateTreasures();
 			    //Check if the 15 minutes for the database connection check have passed
 			    Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() 
@@ -1464,7 +1464,7 @@ public class Main extends JavaPlugin
     }
     
     //Returns a hashmap with the keys hour, minute, second. The value is the value of that timevalue
-    public HashMap<String, Integer> getCalculatedTime(Integer seconds)
+    public static HashMap<String, Integer> getCalculatedTime(Integer seconds)
     {
     	HashMap<String, Integer> timeValues = new HashMap<String, Integer>();
     	
