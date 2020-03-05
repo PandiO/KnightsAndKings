@@ -2,7 +2,10 @@ package Scoreboards;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -327,13 +330,6 @@ public class Scoreboard
 			Player player = user.getPlayer();
 			Team team = null;
 			
-			player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
-			player.getScoreboard().clearSlot(DisplaySlot.BELOW_NAME);
-			for(OfflinePlayer score : player.getScoreboard().getPlayers())
-			{
-		        player.getScoreboard().resetScores(score);
-			}
-			
 			Siege siege = Sieges.Sieges.findSiege(user);
 			HideAndSeek hideAndSeek = Main.HideAndSeek;
 			
@@ -342,6 +338,12 @@ public class Scoreboard
 				defaultBoard = siege.getParticipant(user).GetTeam().GetScoreboard();
 			} else
 			{
+				player.getScoreboard().clearSlot(DisplaySlot.SIDEBAR);
+				player.getScoreboard().clearSlot(DisplaySlot.BELOW_NAME);
+				for(OfflinePlayer score : player.getScoreboard().getPlayers())
+				{
+			        player.getScoreboard().resetScores(score);
+				}
 				team = this.GetTeam(user, defaultBoard);
 			}
 			

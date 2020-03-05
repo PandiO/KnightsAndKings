@@ -20,6 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import Handlers.ColorOptions;
+import Main.Main;
 import Minigames.Participant;
 import Users.User;
 import net.minecraft.server.v1_8_R3.EnumParticle;
@@ -52,6 +53,8 @@ public class Objective extends SiegeObject
 		this.bannerBlock = this.location.getBlock();
 		this.banner = (Banner) this.bannerBlock.getState();
 		this.setBannerStages(originalColor, DyeColor.RED);
+		this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+		banner.update(true);
 	}
 	
 	public int getOriginalCapturePoints()
@@ -125,9 +128,11 @@ public class Objective extends SiegeObject
 					
 					if (captureAmount == 1)
 					{
-						capturePoints = 5;
+						capturePoints += 5;
 					} else
 					{
+						//TODO: Find out if we want a linear or exponential growth of capturing/defending when multiple teammates help capture it
+						//Right now it is probably not working correctly
 						Integer step = 2;
 						if (this instanceof MainObjective)
 						{
@@ -136,9 +141,6 @@ public class Objective extends SiegeObject
 						capturePoints+=step;
 					}
 				}
-			} else
-			{
-				Bukkit.getConsoleSender().sendMessage("Distance too large: " + this.getLocation().distance(player.getLocation()));
 			}
 		}
 		Bukkit.getConsoleSender().sendMessage("CapturePoints: " + capturePoints);
@@ -178,7 +180,6 @@ public class Objective extends SiegeObject
 				break;
 			}
 		}
-		Bukkit.getConsoleSender().sendMessage("Size: " + receivers.size());
 
 		return receivers;
 	}
@@ -211,7 +212,6 @@ public class Objective extends SiegeObject
 			Location location = this.getLocation().clone().add(0, 1.6, 0);
 			if (location == null)
 			{
-				Bukkit.getConsoleSender().sendMessage("No location center could be found!");
 				return;
 			}
 			final ArmorStand arm = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
@@ -258,10 +258,35 @@ public class Objective extends SiegeObject
 	
 	public void setCurrentCapturePoints(int capturePoints)
 	{
-		if (this.currentCapturePoints <= 0)
+		boolean valueChanged = false;
+		int oldPercentage = this.getCapturePercentage();
+		
+		if (capturePoints <= 0)
 		{
-			return;
+			if (capturePoints < 0 
+					|| (capturePoints == 0 
+						&& this.getCurrentCapturePoints() > 0))
+			{
+				capturePoints = 0;
+			} else
+			{
+				return;
+			}
+		} else if (capturePoints >= this.originalCapturePoints)
+		{
+			if (capturePoints > this.originalCapturePoints 
+					|| (capturePoints == this.getOriginalCapturePoints() 
+						&& this.getCurrentCapturePoints() < this.getOriginalCapturePoints()))
+			{
+				capturePoints = this.originalCapturePoints;
+			} else
+			{
+				return;
+			}
 		}
+		valueChanged = this.currentCapturePoints != capturePoints;
+		
+		
 		this.currentCapturePoints = capturePoints;
 		Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "New Points: " + this.currentCapturePoints + "/" + this.originalCapturePoints);
 		
@@ -290,7 +315,13 @@ public class Objective extends SiegeObject
 		{
 			this.setCaptured(true);
 		}
-		this.changePercentageEntity();
+		
+		if (valueChanged)
+		{
+			Siege siege = Scenarios.findScenario(this.scenarioID).getSiege();
+			siege.UpdateScoreboard(this, oldPercentage);
+			this.changePercentageEntity();
+		}
 	}
 	
 	public void setCaptured(boolean captured)
@@ -321,7 +352,7 @@ public class Objective extends SiegeObject
 		}
 		this.isActive = active;
 		
-		if (this.isActive)
+		if (this.isActive && changedValue)
 		{
 			this.startCaptureTask();
 			this.startCircleTask();
@@ -332,17 +363,22 @@ public class Objective extends SiegeObject
 				SideObjective objective = (SideObjective) this;
 				objective.activate(true);
 			}
-		} else
+			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+			banner.update(true);
+		} else if (!this.isActive && changedValue)
 		{
 			this.stopCaptureTask();
 			this.stopCircleTask();
 			this.removePercentageEntity();
+			
 			
 			if (this.instance instanceof SideObjective)
 			{
 				SideObjective objective = (SideObjective) this;
 				objective.activate(false);
 			}
+			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+			banner.update(true);
 		}
 	}
 	
@@ -416,7 +452,7 @@ public class Objective extends SiegeObject
 //		            }
 //		        }
 			}
-		}.runTaskTimerAsynchronously(main, 0, 20);
+		}.runTaskTimerAsynchronously(main, 0, 2*20);
 	}
 	
 	public void stopCaptureTask()
@@ -434,6 +470,7 @@ public class Objective extends SiegeObject
 			public void run()
 			{
 				Integer removePoints = calculateCapturePoints();
+
 				setCurrentCapturePoints((getCurrentCapturePoints()-removePoints));
 			}
 		}.runTaskTimerAsynchronously(main, 0, 1*20);

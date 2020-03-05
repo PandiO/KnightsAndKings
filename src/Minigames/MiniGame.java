@@ -401,6 +401,7 @@ public class MiniGame
 		if (this.getParticipants().contains(participant))
 		{
 			this.Participants.remove(participant);
+			Users.Users.updateScoreBoard(Arrays.asList(participant.getUser()));
 		}
 	}
 	
@@ -447,9 +448,16 @@ public class MiniGame
 		{
 			participant.setBeforeJoinLocation(player.getLocation());
 			participant.setStoredInventory();
-			participant.clearContents();
+			
+			if (this.instance instanceof HideAndSeek)
+			{
+				participant.clearContents();
+			}
 		}
-		player.teleport(this.spawnpoint.getSpawnPointLocation(this.matchmakingLocationID));
+		if (this.matchmakingLocationID != null)
+		{
+			player.teleport(this.spawnpoint.getSpawnPointLocation(this.matchmakingLocationID));
+		}
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);
 		user.setOwnerMode(false);

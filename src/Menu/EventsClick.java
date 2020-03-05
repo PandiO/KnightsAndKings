@@ -9,6 +9,7 @@ import Handlers.ColorOptions;
 import Main.Main;
 import Products.Product;
 import Sieges.Siege;
+import Sieges.SiegeScenario;
 import Towns.Town;
 import Users.User;
 
@@ -132,6 +133,24 @@ public class EventsClick
 			{
 				this.menu.openSiegeInformation(user, siege, pageNumber--);
 				user.playSound("succesclick");
+			}
+		}
+		if (dc.equalsIgnoreCase("random"))
+		{
+			siege.setRandomVotes(siege.getParticipant(user));
+			user.sendMessage(ColorOptions.message + "Voted for a random scenario");
+			user.playSound("succesclick");
+			this.menu.openSiegeInformation(user, siege, 0);
+		}
+		for (SiegeScenario scenario : siege.getSuggestedScenarioList())
+		{
+			if (dc.equalsIgnoreCase(scenario.getName()))
+			{
+				siege.setScenarioVote(siege.getParticipant(user), scenario);
+				user.sendMessage(ColorOptions.message + "Voted for a scenario " + ColorOptions.messagesubjects + scenario.getName());
+				user.playSound("succesclick");
+				this.menu.openSiegeInformation(user, siege, 0);
+				break;
 			}
 		}
 	}

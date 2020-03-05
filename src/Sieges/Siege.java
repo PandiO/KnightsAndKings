@@ -181,6 +181,19 @@ public class Siege extends MiniGame
 		}
 	}
 	
+	public void setScenarioVote(Participant participant, SiegeScenario scenario)
+	{
+		if (!scenario.getVotes().contains(participant))
+		{
+			scenario.setVotes(participant);
+			List<SiegeScenario> otherScenarios = new ArrayList<SiegeScenario>(this.suggestedScenarioList);
+			otherScenarios.remove(scenario);
+			
+			otherScenarios.forEach(s -> s.removeVotes(participant));
+			this.removeRandomVotes(participant);
+		}
+	}
+	
 	public void setSkilledMatch(boolean skilled)
 	{
 		this.skilledMatch = skilled;
@@ -253,6 +266,7 @@ public class Siege extends MiniGame
 			return;
 		}
 		this.scenario = scenario;
+		scenario.siege = this;
 		this.entryTitle = scenario.getEntryTitle();
 	}
 	
@@ -339,12 +353,16 @@ public class Siege extends MiniGame
 	{
 		if (this.getParticipant(user) != null)
 		{
-			this.removeParticipant(this.getParticipant(user));
+			Participant participant = this.getParticipant(user);
+			participant.returnBeforeJoinLocation();
+			participant.GetTeam().RemoveMember(participant);
+			this.removeParticipant(participant);
 			this.updateMenus(true);
 		}
 		
 		if (this.progress)
 		{
+			Main.logMessage("Participant size after leaving " + this.getParticipants().size());
 			if (this.getParticipants().size() < this.scenario.getPlayersMin())
 			{
 				this.setComplete();
@@ -366,20 +384,23 @@ public class Siege extends MiniGame
 				part = (SiegeMember) part;
 			}
 			ChatColor teamColor = null;
+			String teamName = null;
 			if (team1)
 			{
 				((SiegeMember)part).setTeamNumber(1);
 				this.Team1.AddMember((SiegeMember)part);
 				teamColor = this.Team1.GetColor();
+				teamName = this.Team1.GetName();
 				team1 = false;
 			} else
 			{
 				((SiegeMember)part).setTeamNumber(2);
 				this.Team2.AddMember((SiegeMember)part);
 				teamColor = this.Team2.GetColor();
+				teamName = this.Team2.GetName();
 				team1 = true;
 			}
-			part.getUser().getPlayer().sendMessage(ColorOptions.message + "Your team is the " + teamColor + this.Team1.GetName());
+			part.getUser().getPlayer().sendMessage(ColorOptions.message + "Your team is the " + teamColor + teamName);
 
 		}
 	}
@@ -489,6 +510,14 @@ public class Siege extends MiniGame
 			return;
 		}
 		
+//		for (Participant participant : this.getParticipants())
+//		{
+//			if (participant.getBeforeJoinLocation() == null)
+//			{
+//				participant.setBeforeJoinLocation(participant.getUser().getPlayer().getLocation());
+//			}
+//		}
+		
 		for (SiegeMember siegeMember : this.Team1.GetMembersAsSiegeMembers())
 		{
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
@@ -498,10 +527,6 @@ public class Siege extends MiniGame
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
 		}
 		
-//		Main.logMessage("Setting board while starting siege..");
-//		Scoreboards.Scoreboard board = new Scoreboards.Scoreboard();
-//		board.setBoard(this.getUserParticipants());
-//		Main.logMessage("Board set while starting siege..");
 		
 		
 		BukkitTask task = new BukkitRunnable()
@@ -516,8 +541,8 @@ public class Siege extends MiniGame
 				
 				Users.Users.updateScoreBoard(getUserParticipants());
 				
-//				getScenario().getMainObjective().setActive(true);
-//				getScenario().getSideObjectives().forEach(q -> q.setActive(true));
+				getScenario().getMainObjective().setActive(true);
+				getScenario().getSideObjectives().forEach(q -> q.setActive(true));
 				
 				
 				if (progressSeconds == (progressExpire-2))
@@ -533,6 +558,7 @@ public class Siege extends MiniGame
 			}
 		}.runTaskTimer(main, 0, 20);
 		
+		this.setProgressTask(task, true);
 		this.progress = true;
 		this.updateMenus(true);
 	}
@@ -580,7 +606,8 @@ public class Siege extends MiniGame
 		getScenario().getSideObjectives().forEach(q -> q.setActive(false));
 		for (Participant participant : this.getParticipants())
 		{
-			participant.getUser().getPlayer().teleport(participant.getBeforeJoinLocation());
+			participant.returnBeforeJoinLocation();
+			participant.GetTeam().RemoveMember(participant);
 		}
 		this.resetSiege();
 		
@@ -627,6 +654,7 @@ public class Siege extends MiniGame
 	{
 		if (this.cooldown)
 		{
+			this.startCooldown(false);
 			this.startMatchmaking(true);
 			if (user != null)
 			{
@@ -671,6 +699,7 @@ public class Siege extends MiniGame
 			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
 		} else
 		{
+			Main.logMessage("Score of main objective: " + sideBoard.getScore(ColorOptions.message + "Main Objective: " + scenario.getMainObjective().getCapturePercentage() + "% Captured").getScore());
 			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
 			HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(this.progressSeconds+1); 
 			board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
@@ -713,5 +742,46 @@ public class Siege extends MiniGame
 		timeScore.setScore(boardLength);
 				
 		return sideBoard;
+	}
+	
+	public void UpdateScoreboard(Objective objective, int oldPercentage)
+	{
+		Main.logMessage("Updating scoreboard.... old percentage: " + oldPercentage + ", new percentage: " + objective.getCapturePercentage());
+		List<MGTeam> teams = new ArrayList<MGTeam>(Arrays.asList(this.Team1, this.Team2));
+		for (MGTeam team : teams)
+		{
+			Scoreboard board = team.GetScoreboard();
+			org.bukkit.scoreboard.Objective sideBoard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + team.GetNumber());
+			int boardSlot = 0;
+			
+			String objectiveKind = null;
+			
+			if (objective instanceof MainObjective)
+			{
+				Main.logMessage("objective is instanceof mainobjective..");
+				objectiveKind = ColorOptions.message + "Main Objective: ";
+			} else if (objective instanceof SideObjective)
+			{
+				Main.logMessage("Objective is instanceof sideobjective");
+				objectiveKind = ColorOptions.message + "Side Objective " + objective.getSubID() + ": ";
+			}
+			
+			if (objectiveKind != null)
+			{
+				Main.logMessage("Objectivekind is not null");
+				Score oldScore = sideBoard.getScore(objectiveKind + oldPercentage + "% Captured");
+				boardSlot = oldScore.getScore();
+				board.resetScores(objectiveKind + oldPercentage + "% Captured");
+			} else
+			{
+				Main.logMessage("Objectivekind is null!!");
+			}
+			
+			Score newScore = sideBoard.getScore(objectiveKind + objective.getCapturePercentage() + "% Captured");
+			if (boardSlot > 0)
+			{
+				newScore.setScore(boardSlot);
+			}
+		}
 	}
 }

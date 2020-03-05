@@ -57,12 +57,18 @@ public class SideObjective extends Objective
 	{
 		if (active)
 		{
-			this.originalGateState = gate.getActive();
-			this.gate.toggleActive(true);
+			if (this.gate != null)
+			{
+				this.originalGateState = gate.getActive();
+				this.gate.toggleActive(true);
+			}
 		} else
 		{
-			this.gate.toggleActive(this.originalGateState);
-			this.gate.tryRespawnGate();
+			if (this.gate != null)
+			{
+				this.gate.toggleActive(this.originalGateState);
+				this.gate.tryRespawnGate();
+			}
 		}
 	}
 	
