@@ -70,7 +70,7 @@ public class SiegeObject
 	
 	public void remove()
 	{
-		SiegeScenario scenario = Scenarios.findScenario(this.scenarioID);
+		Scenario scenario = Scenarios.findScenario(this.scenarioID);
 		if (this instanceof SiegeSpawnpoint)
 		{
 			SiegeSpawnpoint sp = (SiegeSpawnpoint) this;

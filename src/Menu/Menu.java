@@ -60,7 +60,7 @@ import Sieges.Scenarios;
 import Sieges.SideObjective;
 import Sieges.Siege;
 import Sieges.SiegeMember;
-import Sieges.SiegeScenario;
+import Sieges.Scenario;
 import Sieges.SiegeSpawnpoint;
 import Sieges.Sieges;
 import Skills.PickpocketSkill;
@@ -4196,7 +4196,7 @@ public class Menu
 				{
 					break;
 				}
-				SiegeScenario scenario = Sieges.Scenarios.get(index);
+				Scenario scenario = Sieges.Scenarios.get(index);
 		    	ItemStack scenarioItem = product.createItem(
 		    			ColorOptions.message + "Scenario: " + ColorOptions.messagesubjects + scenario.getID(), 
 		    			new ItemStack(Material.BANNER, 1, (short) 4), 
@@ -4237,7 +4237,7 @@ public class Menu
 		user.getPlayer().openInventory(menu);
 	}
 	
-	public void openScenarioManager(User user, SiegeScenario scenario)
+	public void openScenarioManager(User user, Scenario scenario)
 	{
 		Inventory menu = Bukkit.createInventory(null, 4*9+main.getMenuSize(scenario.getSideObjectives().size()), Menus.ScenarioManagerMenu);
 		
@@ -4324,7 +4324,7 @@ public class Menu
 		user.getPlayer().openInventory(menu);
 	}
 	
-	public void openSideObjectiveManager(User user, SideObjective objective, SiegeScenario scenario)
+	public void openSideObjectiveManager(User user, SideObjective objective, Scenario scenario)
 	{
 		Inventory menu = Bukkit.createInventory(null, 3*9, Menus.SideObjectiveManagerMenu);
 		
@@ -4370,7 +4370,7 @@ public class Menu
 		user.getPlayer().openInventory(menu);
 	}
 	
-	public void openSideObjectiveGate(User user, SideObjective objective, SiegeScenario scenario)
+	public void openSideObjectiveGate(User user, SideObjective objective, Scenario scenario)
 	{
 		Gates.Gates.instantiateAll(scenario.getTownID());
 		Integer activeGates = Gates.Gates.gates.size();
@@ -4426,7 +4426,7 @@ public class Menu
 		user.getPlayer().openInventory(menu);
 	}
 	
-	public void openSiegeSpawnpointsManager(User user, SiegeScenario scenario, int teamNumber)
+	public void openSiegeSpawnpointsManager(User user, Scenario scenario, int teamNumber)
 	{
 		ChatColor teamColor = null;
 		List<SiegeSpawnpoint> teamSpawnpoints = new ArrayList<SiegeSpawnpoint>();
@@ -4704,7 +4704,7 @@ public class Menu
 		
 		if (siege.getScenario() != null)
 		{
-			SiegeScenario scenario = siege.getScenario();
+			Scenario scenario = siege.getScenario();
 			scenarioName = ColorOptions.messagesubjects + siege.getScenario().getName();
 			
 			scenarioItemDesc.addAll(Arrays.asList(
@@ -4755,7 +4755,7 @@ public class Menu
 				scenarioItemDesc.addAll(Arrays.asList(
 						ColorOptions.message + "Voting for scenario..."
 						));
-				for (SiegeScenario scenarios : siege.getSuggestedScenarioList())
+				for (Scenario scenarios : siege.getSuggestedScenarioList())
 				{
 					scenarioItemDesc.addAll(Arrays.asList(
 							"",
@@ -4857,7 +4857,7 @@ public class Menu
 				if (!siege.getSuggestedScenarioList().isEmpty() && siege.getScenario() == null)
 				{
 					Integer slot = 9;
-					for (SiegeScenario scenarios : siege.getSuggestedScenarioList())
+					for (Scenario scenarios : siege.getSuggestedScenarioList())
 					{
 						List<String> scenariosDesc = new ArrayList<String>();
 						ItemStack scenariosItem = product.createItem(ColorOptions.messagesubjects + scenarios.getName(), 

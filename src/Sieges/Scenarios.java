@@ -29,7 +29,7 @@ public class Scenarios
 		//Creating the actual Scenario in the Database
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO Sieges(Name, TownID, PlayersMin, PlayersMax, Team1, Team2) VALUES(?, ?, ?, ?, ?, ?);");
+			PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO Sieges(Name, TownID, PlayersMin, PlayersMax, Team1, Team2, ExpRewardWin, CoinRewardWin, ExpRewardSideObjective, CoinRewardSideObjective, ExpRewardCapture, CoinRewardCapture) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setString(1, sc.name);
 			stmt.setInt(2, sc.townID);
@@ -37,6 +37,12 @@ public class Scenarios
 			stmt.setInt(4, sc.playersMax);
 			stmt.setInt(5, sc.spawnpointTeam1.size());
 			stmt.setInt(6, sc.spawnpointTeam2.size());
+			stmt.setInt(7, sc.expRewardWin);
+			stmt.setInt(8, sc.coinRewardWin);
+			stmt.setInt(9, sc.expRewardSideObjective);
+			stmt.setInt(10, sc.coinRewardSideObjective);
+			stmt.setInt(11, sc.expRewardCapture);
+			stmt.setInt(12, sc.coinRewardCapture);
 			
 			stmt.executeUpdate();
 			String succesMessage = ChatColor.GREEN + "New Siege scenario has succesfully been saved to the database!";
@@ -228,13 +234,13 @@ public class Scenarios
 	
 	public static void saveAll()
 	{
-		for (SiegeScenario scenario : Sieges.Scenarios)
+		for (Scenario scenario : Sieges.Scenarios)
 		{
 			scenario.remove();
 		}
 	}
 	
-	public static void saveScenario(SiegeScenario scenario)
+	public static void saveScenario(Scenario scenario)
 	{
 		try 
 		{
@@ -265,7 +271,7 @@ public class Scenarios
 			while (results.next())
 			{
 				boolean createInstance = true;
-				for (SiegeScenario scenario : Sieges.Scenarios)
+				for (Scenario scenario : Sieges.Scenarios)
 				{
 					if (scenario.getID() == results.getInt("ID"))
 					{
@@ -284,9 +290,9 @@ public class Scenarios
 		}
 	}
 	
-	public static SiegeScenario instantiateScenario(int scenarioID, boolean newScenario)
+	public static Scenario instantiateScenario(int scenarioID, boolean newScenario)
 	{
-		SiegeScenario scenario = null;
+		Scenario scenario = null;
 		
 		if (Scenarios.findScenario(scenarioID) != null)
 		{
@@ -304,7 +310,19 @@ public class Scenarios
 			
 			if (results.next())
 			{
-				scenario = new SiegeScenario(results.getInt("ID"), results.getString("Name"), results.getInt("TownID"), results.getInt("PlayersMin"), results.getInt("PlayersMax"), results.getInt("MainObjective"), newScenario);
+				scenario = new Scenario(results.getInt("ID"), 
+						results.getString("Name"), 
+						results.getInt("TownID"), 
+						results.getInt("PlayersMin"), 
+						results.getInt("PlayersMax"), 
+						results.getInt("ExpRewardWin"), 
+						results.getInt("CoinRewardWin"), 
+						results.getInt("ExpRewardSideObjective"), 
+						results.getInt("CoinRewardSideObjective"), 
+						results.getInt("ExpRewardCapture"), 
+						results.getInt("CoinRewardCapture"), 
+						results.getInt("MainObjective"), 
+						newScenario);
 			}
 		} catch (Exception ex)
 		{
@@ -362,11 +380,11 @@ public class Scenarios
 		return scenarioID;
 	}
 	
-	public static SiegeScenario findScenario(String name, int townID)
+	public static Scenario findScenario(String name, int townID)
 	{
-		SiegeScenario scenario = null;
+		Scenario scenario = null;
 		
-		for (SiegeScenario scenarios : Sieges.Scenarios)
+		for (Scenario scenarios : Sieges.Scenarios)
 		{
 			if (scenarios.getName().equalsIgnoreCase(name) && scenarios.getTownID() == townID)
 			{
@@ -377,11 +395,11 @@ public class Scenarios
 		return scenario;
 	}
 	
-	public static SiegeScenario findScenario(int ID)
+	public static Scenario findScenario(int ID)
 	{
-		SiegeScenario scenario = null;
+		Scenario scenario = null;
 		
-		for (SiegeScenario scenarios : Sieges.Scenarios)
+		for (Scenario scenarios : Sieges.Scenarios)
 		{
 			if (scenarios.getID() == ID)
 			{
@@ -427,7 +445,7 @@ public class Scenarios
 		}
 	}
 	
-	public static void destroyScenario(SiegeScenario scenario)
+	public static void destroyScenario(Scenario scenario)
 	{
 		scenario = null;
 		System.gc();

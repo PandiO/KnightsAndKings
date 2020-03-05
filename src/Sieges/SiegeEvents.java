@@ -46,7 +46,7 @@ public class SiegeEvents implements Listener
 			return;
 		}
 		
-		for (SiegeScenario scenario : Sieges.Scenarios)
+		for (Scenario scenario : Sieges.Scenarios)
 		{
 			
 		}

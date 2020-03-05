@@ -150,8 +150,8 @@ public class ScenarioCreationEvents implements Listener
 		
 		if (sc == null)
 		{
-			SiegeScenario scenario = null;
-			for (SiegeScenario scenarios : Sieges.Scenarios)
+			Scenario scenario = null;
+			for (Scenario scenarios : Sieges.Scenarios)
 			{
 				if (scenarios.editMode.containsKey(user))
 				{
@@ -401,6 +401,71 @@ public class ScenarioCreationEvents implements Listener
 						""
 				));
 			}
+		} else if (sc.Stage >= 7 && sc.Stage <= 11)
+		{
+			if (!main.isInt(e.getMessage()))
+			{
+				sc.falseCommand(Arrays.asList(
+						ColorOptions.message + "The reward amount must be a number!",
+						""
+						));
+				return;
+			}
+			if (Integer.valueOf(e.getMessage()) < 0)
+			{
+				sc.falseCommand(Arrays.asList(
+						ColorOptions.message + "The reward amount of players must be a number above 0!",
+						""
+						));
+				return;
+			}
+			int argument = Integer.valueOf(e.getMessage());
+			
+			if (sc.Stage == 7)
+			{
+				sc.expRewardWin = argument;
+				sc.sendMessage(Arrays.asList(
+						ColorOptions.messageachievement + "Saved the experience reward for the winning team (per team member) to  " + ColorOptions.messagesubjects + argument,
+						""
+						));
+			} else if (sc.Stage == 8)
+			{
+				sc.coinRewardWin = argument;
+				sc.sendMessage(Arrays.asList(
+						ColorOptions.messageachievement + "Saved the coin reward for the winning team (per team member) to  " + ColorOptions.messagesubjects + argument,
+						""
+						));
+			} else if (sc.Stage == 9)
+			{
+				sc.expRewardSideObjective = argument;
+				sc.sendMessage(Arrays.asList(
+						ColorOptions.messageachievement + "Saved the experience reward per captured/defended Side Objective (per team per team member) to  " + ColorOptions.messagesubjects + argument,
+						""
+						));
+			} else if (sc.Stage == 10)
+			{
+				sc.coinRewardSideObjective = argument;
+				sc.sendMessage(Arrays.asList(
+						ColorOptions.messageachievement + "Saved the coin reward per captured/defended Side Objective (per team per team member) to  " + ColorOptions.messagesubjects + argument,
+						""
+						));
+			} else if (sc.Stage == 11)
+			{
+				sc.expRewardCapture = argument;
+				sc.sendMessage(Arrays.asList(
+						ColorOptions.messageachievement + "Saved the experience reward per captured Side Objective (individual) to  " + ColorOptions.messagesubjects + argument,
+						""
+						));
+			} else if (sc.Stage == 12)
+			{
+				sc.coinRewardCapture = argument;
+				sc.sendMessage(Arrays.asList(
+						ColorOptions.messageachievement + "Saved the coin reward per captured Side Objective (individual) to  " + ColorOptions.messagesubjects + argument,
+						""
+						));
+			}
+			
+			sc.nextStage(sc.Stage+1);
 		}
 		
 	}
@@ -431,8 +496,8 @@ public class ScenarioCreationEvents implements Listener
 		
 		if (sc == null)
 		{
-			SiegeScenario scenario = null;
-			for (SiegeScenario scenarios : Sieges.Scenarios)
+			Scenario scenario = null;
+			for (Scenario scenarios : Sieges.Scenarios)
 			{
 				if (scenarios.editMode.containsKey(user))
 				{

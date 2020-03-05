@@ -120,7 +120,7 @@ public class ScenarioCommands implements CommandExecutor
 					return false;
 				}
 				
-				SiegeScenario Scenario = null;
+				Scenario Scenario = null;
 				Integer scenarioID = null;
 				
 				if (main.isInt(args[1]))

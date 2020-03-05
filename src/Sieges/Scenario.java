@@ -20,7 +20,7 @@ import SpawnPoints.SpawnPoint;
 import Towns.Town;
 import Users.User;
 
-public class SiegeScenario 
+public class Scenario 
 {
 	Town town = new Town();
 	SpawnPoint spawnpoint = new SpawnPoint();
@@ -35,6 +35,12 @@ public class SiegeScenario
 	protected int entryTitle;
 	protected int playersMin;
 	protected int playersMax;
+	protected int expRewardWin;
+	protected int coinRewardWin;
+	protected int expRewardSideObjective;
+	protected int coinRewardSideObjective;
+	protected int expRewardCapture;
+	protected int coinRewardCapture;
 	protected Integer mainObjectiveID;
 	protected MainObjective mainObjective;
 	protected List<SideObjective> sideObjectives = new ArrayList<SideObjective>();
@@ -54,7 +60,19 @@ public class SiegeScenario
 	protected Siege siege;
 	protected List<Participant> votes = new ArrayList<Participant>();
 	
-	public SiegeScenario(int ID, String name, int townID, int playersMin, int playersMax, int mainObjective, boolean newScenario)
+	public Scenario(int ID, 
+			String name, 
+			int townID, 
+			int playersMin, 
+			int playersMax, 
+			int expRewardWin, 
+			int coinRewardWin, 
+			int expRewardSideObjective, 
+			int coinRewardSideObjective, 
+			int expRewardCapture, 
+			int coinRewardCapture, 
+			int mainObjectiveID, 
+			boolean newScenario)
 	{
 		this.ID = ID;
 		this.name = name;
@@ -63,7 +81,13 @@ public class SiegeScenario
 		this.entryTitle = this.town.getRequiredTitleID(townID);
 		this.playersMin = playersMin;
 		this.playersMax = playersMax;
-		this.mainObjectiveID = mainObjective;
+		this.mainObjectiveID = mainObjectiveID;
+		this.expRewardWin = expRewardWin;
+		this.coinRewardWin = coinRewardWin;
+		this.expRewardSideObjective = expRewardSideObjective;
+		this.coinRewardSideObjective = coinRewardSideObjective;
+		this.expRewardCapture = expRewardCapture;
+		this.coinRewardCapture = coinRewardCapture;
 		try
 		{
 			this.mainObjective = new MainObjective(this.ID, this.mainObjectiveID);
@@ -201,6 +225,21 @@ public class SiegeScenario
 	public MainObjective getMainObjective()
 	{
 		return this.mainObjective;
+	}
+	
+	public int getCapturedSideObjectives()
+	{
+		int amount = 0;
+		
+		for (SideObjective objective : this.getSideObjectives())
+		{
+			if (objective.getCaptured())
+			{
+				amount += 1;
+			}
+		}
+		
+		return amount;
 	}
 	
 	public Siege getSiege()
@@ -359,7 +398,7 @@ public class SiegeScenario
 				{
 					this.siege.removeRandomVotes(participant);
 				}
-				for (SiegeScenario scenarios : this.siege.getSuggestedScenarioList())
+				for (Scenario scenarios : this.siege.getSuggestedScenarioList())
 				{
 					if (scenarios != this && scenarios.getVotes().contains(participant))
 					{
@@ -421,6 +460,7 @@ public class SiegeScenario
 	{
 		if (this.mainObjective == objective)
 		{
+			Main.logMessage("Setting main objective as captured");
 			this.setComplete();
 		} else if (this.sideObjectives.contains(objective))
 		{
@@ -434,12 +474,21 @@ public class SiegeScenario
 	
 	public void setComplete()
 	{
+		Main.logMessage("Setting complete after MO capture");
 		if (this.active)
 		{
+			Main.logMessage("Scenario is set to active");
 			if (this.siege != null)
 			{
+				Main.logMessage("Setting siege complete");
 				this.siege.setComplete();
+			} else
+			{
+				Main.logError("Siege is null!");
 			}
+		} else
+		{
+			Main.logError("Scenario is not active..");
 		}
 		if (!this.testingList.isEmpty())
 		{
@@ -493,11 +542,11 @@ public class SiegeScenario
 		try
 		{
 			this.spawnpoint.removeSpawnPoint(spawnpointID);
-			Bukkit.getConsoleSender().sendMessage(removeSideObjective);
+			Main.logMessage(removeSideObjective);
 			sender.sendMessage(removeSideObjective);
 		} catch (Exception ex)
 		{
-			Bukkit.getConsoleSender().sendMessage(SideObjectiveError);
+			Main.logMessage(SideObjectiveError);
 			sender.sendMessage(SideObjectiveError);
 			ex.printStackTrace();
 			noWarnings = false;
@@ -547,11 +596,11 @@ public class SiegeScenario
 			try
 			{
 				this.spawnpoint.removeSpawnPoint(spawnpointID);
-				Bukkit.getConsoleSender().sendMessage(removeSpawnpoint);
+				Main.logMessage(removeSpawnpoint);
 				sender.sendMessage(removeSpawnpoint);
 			} catch (Exception ex)
 			{
-				Bukkit.getConsoleSender().sendMessage(SpawnpointError);
+				Main.logMessage(SpawnpointError);
 				sender.sendMessage(SpawnpointError);
 				ex.printStackTrace();
 				noWarnings = false;
@@ -590,11 +639,11 @@ public class SiegeScenario
 		try
 		{
 			this.spawnpoint.removeSpawnPoint(spawnpointID);
-			Bukkit.getConsoleSender().sendMessage(removeSideObjective);
+			Main.logMessage(removeSideObjective);
 			sender.sendMessage(removeSideObjective);
 		} catch (Exception ex)
 		{
-			Bukkit.getConsoleSender().sendMessage(SideObjectiveError);
+			Main.logMessage(SideObjectiveError);
 			sender.sendMessage(SideObjectiveError);
 			ex.printStackTrace();
 			noWarnings = false;
@@ -674,11 +723,11 @@ public class SiegeScenario
 		try
 		{
 			this.spawnpoint.removeSpawnPoint(this.spawnpoint.getSpawnPointID("Siege." + this.ID + ".MO"));
-			Bukkit.getConsoleSender().sendMessage(removeMainObjective);
+			Main.logMessage(removeMainObjective);
 			sender.sendMessage(removeMainObjective);
 		} catch (Exception ex)
 		{
-			Bukkit.getConsoleSender().sendMessage(mainObjectiveError);
+			Main.logMessage(mainObjectiveError);
 			sender.sendMessage(mainObjectiveError);
 			ex.printStackTrace();
 			noWarnings = false;
@@ -689,11 +738,11 @@ public class SiegeScenario
 			stmt.setInt(1, this.ID);
 			
 			stmt.executeUpdate();
-			Bukkit.getConsoleSender().sendMessage(removeSiege);
+			Main.logMessage(removeSiege);
 			sender.sendMessage(removeSiege);
 		} catch (Exception ex)
 		{
-			Bukkit.getConsoleSender().sendMessage(mainObjectiveError);
+			Main.logMessage(mainObjectiveError);
 			sender.sendMessage(mainObjectiveError);
 			ex.printStackTrace();
 			noWarnings = false;

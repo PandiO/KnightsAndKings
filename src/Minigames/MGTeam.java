@@ -17,7 +17,7 @@ import Sieges.MainObjective;
 import Sieges.SideObjective;
 import Sieges.Siege;
 import Sieges.SiegeMember;
-import Sieges.SiegeScenario;
+import Sieges.Scenario;
 import Sieges.Sieges;
 import Users.User;
 
@@ -29,14 +29,16 @@ public class MGTeam
 	protected short BannerColor = 5;
 	protected Scoreboard Scoreboard;
 	protected List<Participant> Members = new ArrayList<Participant>();
+	protected List<String> winMessage;
 	
-	public MGTeam(int number, String name, ChatColor color, short bannerColor, Scoreboard scoreboard)
+	public MGTeam(int number, String name, ChatColor color, short bannerColor, Scoreboard scoreboard, ArrayList<String> winMessage)
 	{
 		this.Number = number;
 		this.Name = name;
 		this.Color = color;
 		this.BannerColor = bannerColor;
 		this.Scoreboard = scoreboard;
+		this.winMessage = winMessage;
 	}
 	
 	public int GetNumber()
@@ -62,6 +64,11 @@ public class MGTeam
 	public Scoreboard GetScoreboard()
 	{
 		return this.Scoreboard;
+	}
+	
+	public List<String> getWinMessage()
+	{
+		return this.winMessage;
 	}
 	
 	public List<Participant> GetMembers()
@@ -113,9 +120,14 @@ public class MGTeam
 		this.Scoreboard = scoreboard;
 	}
 	
+	public void SetWinMessage(List<String> winMessage)
+	{
+		this.winMessage = winMessage;
+	}
+	
 	public void CreateSideBarBoard(Siege siege)
 	{
-		SiegeScenario scenario = siege.getScenario();
+		Scenario scenario = siege.getScenario();
 		Integer boardLength = 5;	
 		boardLength += scenario.getSideObjectives().size();
 		

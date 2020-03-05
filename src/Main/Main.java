@@ -471,6 +471,10 @@ public class Main extends JavaPlugin
 		{
 			Gates.Gates.saveGate(gate);
 		}
+		for (Siege siege : Sieges.Sieges.Sieges)
+		{
+			siege.stopSiege();
+		}
 		for (Player player : Bukkit.getOnlinePlayers())
 		{
 			player.closeInventory();

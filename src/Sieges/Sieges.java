@@ -11,7 +11,7 @@ public class Sieges
 	static SpawnPoint spawnpoint = new SpawnPoint();
 	static Main main = Main.getPlugin(Main.class);
 	public static CopyOnWriteArrayList<Siege> Sieges = new CopyOnWriteArrayList<Siege>();
-	public static CopyOnWriteArrayList<SiegeScenario> Scenarios = new CopyOnWriteArrayList<SiegeScenario>();
+	public static CopyOnWriteArrayList<Scenario> Scenarios = new CopyOnWriteArrayList<Scenario>();
 	public static CopyOnWriteArrayList<ScenarioCreation> ScenarioCreations = new CopyOnWriteArrayList<ScenarioCreation>();
 	public static CopyOnWriteArrayList<ScenarioCreation> stashedSiegeCreations = new CopyOnWriteArrayList<ScenarioCreation>();
 

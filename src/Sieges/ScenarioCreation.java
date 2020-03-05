@@ -27,6 +27,12 @@ public class ScenarioCreation
 	protected int townID;
 	protected int playersMin;
 	protected int playersMax;
+	protected int expRewardWin;
+	protected int coinRewardWin;
+	protected int expRewardSideObjective;
+	protected int coinRewardSideObjective;
+	protected int expRewardCapture;
+	protected int coinRewardCapture;
 	protected List<Location> spawnpointTeam1 = new ArrayList<Location>();
 	protected List<Location> spawnpointTeam2 = new ArrayList<Location>();
 	protected Location mainObjective;
@@ -100,6 +106,46 @@ public class ScenarioCreation
 					ColorOptions.error + "To undo the last side objective type 'undo'",
 					ColorOptions.messagesubjects + "If you have all side objectives set, type 'next'", 
 					""
+					)),
+			new ArrayList<String>(Arrays.asList(
+					"",
+					ColorOptions.messagesubjects + "Setting the rewards for the winning team",
+					ColorOptions.messageformat + "Please type the reward-amount of " + ColorOptions.messagesubjects + "experience " + ColorOptions.messageformat + "per person on the winning team",
+					""
+					)),
+			new ArrayList<String>(Arrays.asList(
+					"",
+					ColorOptions.messagesubjects + "Setting the rewards for the winning team",
+					ColorOptions.messageformat + "Please type the reward-amount of " + ColorOptions.coinStats + "coins " + ColorOptions.messageformat + "per person on the winning team",
+					""
+					)),
+			new ArrayList<String>(Arrays.asList(
+					"",
+					ColorOptions.messagesubjects + "Setting the rewards for the amount of captured/defended Side Objectives",
+					ColorOptions.messageformat + "Please type the reward-amount of " + ColorOptions.messagesubjects + "experience " + ColorOptions.messageformat + "per person per Side Objective held by their team",
+					ColorOptions.message + "The rewards only count for Side Objectives, not the Main Objective",
+					""
+					)),
+			new ArrayList<String>(Arrays.asList(
+					"",
+					ColorOptions.messagesubjects + "Setting the rewards for the amount of captured/defended Side Objectives",
+					ColorOptions.messageformat + "Please type the reward-amount of " + ColorOptions.coinStats + "coins " + ColorOptions.messageformat + "per person per Side Objective held by their team",
+					ColorOptions.message + "The rewards only count for Side Objectives, not the Main Objective",
+					""
+					)),
+			new ArrayList<String>(Arrays.asList(
+					"",
+					ColorOptions.messagesubjects + "Setting the rewards for capturing a Side Objective",
+					ColorOptions.messageformat + "Please type the reward-amount of " + ColorOptions.messagesubjects + "experience " + ColorOptions.messageformat + "for the player capturing a Side Objective",
+					ColorOptions.message + "The rewards only count for Side Objectives, not the Main Objective",
+					""
+					)),
+			new ArrayList<String>(Arrays.asList(
+					"",
+					ColorOptions.messagesubjects + "Setting the rewards for capturing a Side Objective",
+					ColorOptions.messageformat + "Please type the reward-amount of " + ColorOptions.coinStats + "coins " + ColorOptions.messageformat + "for the player capturing a Side Objective",
+					ColorOptions.message + "The rewards only count for Side Objectives, not the Main Objective",
+					""
 					))
 			));
 	
@@ -134,61 +180,7 @@ public class ScenarioCreation
 				this.Stage = 0;
 			}
 			this.sendMessage(this.messages.get(0));
-		} else if (stage == 1)
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(1));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		} else if (stage == 2)
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(2));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		} else if (stage == 3)
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(3));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		} else if (stage == 4)
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(4));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		} else if (stage == 5)
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(5));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		} else if (stage == 6)
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(6));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		} else if (stage == 7)
+		} else if (stage == 12)
 		{
 			this.sendMessage(Arrays.asList(
 					"",
@@ -200,9 +192,23 @@ public class ScenarioCreation
 					ColorOptions.stats + "Town: " + ColorOptions.statsresults + this.town.getTownName(this.townID),
 					ColorOptions.stats + "Min. players: " + ColorOptions.statsresults + this.playersMin,
 					ColorOptions.stats + "Max. players: " + ColorOptions.statsresults + this.playersMax,
-					ColorOptions.stats + "Amount of side objectives: " + ColorOptions.statsresults + this.sideObjectives.size(),
+					ColorOptions.stats + "Amount of Side Objectives: " + ColorOptions.statsresults + this.sideObjectives.size(),
+					"",
+					ColorOptions.messageformat + "Rewards:",
+					ColorOptions.stats + "Winning team (per team member): " + ColorOptions.statsresults + this.expRewardWin + " experience, " + this.coinRewardWin + " coins",
+					ColorOptions.stats + "No. of Side Objectives (per team per team member): " + ColorOptions.statsresults + this.expRewardSideObjective + " experience, " + this.coinRewardSideObjective + " coins",
+					ColorOptions.stats + "Per captured Side Objective (individual): " + ColorOptions.statsresults + this.expRewardCapture + " experience, " + this.coinRewardCapture + " coins",
 					""
 					));
+		} else
+		{
+			new BukkitRunnable()
+			{
+				public void run()
+				{
+					sendMessage(messages.get(stage));
+				}
+			}.runTaskLaterAsynchronously(main, 20);
 		}
 		this.Stage = stage;
 	}

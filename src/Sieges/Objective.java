@@ -40,6 +40,7 @@ public class Objective extends SiegeObject
 	protected double captureRadius = 2.5;
 	protected ArmorStand percentageEntity;
 	protected boolean isCaptured;
+	protected Participant capturer;
 	
 	protected List<List<Pattern>> patternList = new ArrayList<List<Pattern>>();
 	
@@ -166,7 +167,7 @@ public class Objective extends SiegeObject
 	{
 		List<User> receivers = new ArrayList<User>();
 		
-		SiegeScenario scenario = Scenarios.findScenario(this.scenarioID);
+		Scenario scenario = Scenarios.findScenario(this.scenarioID);
 		receivers.addAll(this.testingList);
 		
 		for (Siege sieges : Sieges.Sieges)
@@ -202,6 +203,11 @@ public class Objective extends SiegeObject
 	public boolean getCaptured()
 	{
 		return this.isCaptured;
+	}
+	
+	public Participant getCapturer()
+	{
+		return this.capturer;
 	}
 	
 	public void setPercentageEntity()
@@ -300,7 +306,7 @@ public class Objective extends SiegeObject
 		{
 			part = 2;
 		}
-		Bukkit.getConsoleSender().sendMessage("Part: " + part + ", rawPart: " + rawPart + ", original: " + this.originalCapturePoints + ", current: " + this.currentCapturePoints);
+//		Bukkit.getConsoleSender().sendMessage("Part: " + part + ", rawPart: " + rawPart + ", original: " + this.originalCapturePoints + ", current: " + this.currentCapturePoints);
 		Integer index = part-1;
 		
 		if (index < 0)
@@ -330,16 +336,50 @@ public class Objective extends SiegeObject
 		{
 			this.isCaptured = captured;
 			
+			this.capturer = this.calculateCapturer();
+			
 			this.stopCaptureTask();
 			this.stopCircleTask();
-			SiegeScenario scenario = Scenarios.findScenario(this.scenarioID);
-			MainObjective mo = scenario.getMainObjective();
-			mo.setCurrentCapturePoints(mo.getCurrentCapturePoints()-100);
+			Scenario scenario = Scenarios.findScenario(this.scenarioID);
+			scenario.setObjectiveCaptured(this);
 			for (User user : this.getPlayers())
 			{
 				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully captured an Objective!");
 			}
 		}
+	}
+	
+	public Participant calculateCapturer()
+	{
+		Participant participant = null;
+		
+		User closestUser = null;
+		double closestDistance = -1;
+		for (User user : this.getPlayers())
+		{
+			Player player = user.getPlayer();
+			double distance = this.getLocation().distance(player.getLocation());
+			if (distance <= this.captureRadius)
+			{
+				if (closestUser == null)
+				{
+					closestUser = user;
+					closestDistance = distance;
+				} else if (closestDistance > distance)
+				{
+					closestUser = user;
+					closestDistance = distance;
+				}
+			}
+		}
+		
+		if (closestUser != null)
+		{
+			Scenario scenario = Scenarios.findScenario(this.getScenarioID());
+			participant = scenario.getSiege().getParticipant(closestUser);
+		}
+		
+		return participant;
 	}
 	
 	public void setActive(boolean active)

@@ -31,19 +31,12 @@ public class Siege extends MiniGame
 	
 	protected static String name = "Siege";	//Stores the name of the mininame
 	
-	protected SiegeScenario scenario;
-	protected List<SiegeScenario> suggestedScenarioList = new ArrayList<SiegeScenario>();
+	protected Scenario scenario;
+	protected List<Scenario> suggestedScenarioList = new ArrayList<Scenario>();
 	
 	protected MGTeam Team1;
 	protected MGTeam Team2;
-//	protected String team1Name = "Defenders";
-//	protected String team2Name = "Attackers";
-//	protected ChatColor team1Color = ColorOptions.KAKColor;
-//	protected ChatColor team2Color = ColorOptions.error;
-//	protected List<SiegeMember> team1 = new ArrayList<SiegeMember>();
-//	protected List<SiegeMember> team2 = new ArrayList<SiegeMember>();
-//	protected Scoreboard team1Scoreboard = this.scoreboard.getScoreBoard();
-//	protected Scoreboard team2Scoreboard = this.scoreboard.getScoreBoard();
+	protected MGTeam WinningTeam;
 	
 	/**
 	 * This region indicates if the match is skilled and for what title's it is joinable
@@ -51,7 +44,6 @@ public class Siege extends MiniGame
 	protected int titleIDMin = 0;
 	protected int titleIDMax = 18;
 	protected boolean skilledMatch = false;
-	
 	
 	/**
 	 * This region states the technical variables of the actual minigame
@@ -82,8 +74,8 @@ public class Siege extends MiniGame
 		super(name, "/siege join");
 		
 		this.instance = this;
-		this.Team1 = new MGTeam(1, "Defenders", ColorOptions.KAKColor, (short)5, this.scoreboard.getScoreBoard());
-		this.Team2 = new MGTeam(2, "Attackers", ColorOptions.error, (short)3, this.scoreboard.getScoreBoard());
+		this.Team1 = new MGTeam(1, "Defenders", ColorOptions.KAKColor, (short)5, this.scoreboard.getScoreBoard(), null);
+		this.Team2 = new MGTeam(2, "Attackers", ColorOptions.error, (short)3, this.scoreboard.getScoreBoard(), null);
 		new BukkitRunnable()
 		{
 			public void run()
@@ -93,7 +85,7 @@ public class Siege extends MiniGame
 		}.runTaskLaterAsynchronously(main, 2*20);
 	}
 	
-	public SiegeScenario getScenario()
+	public Scenario getScenario()
 	{
 		return this.scenario;
 	}
@@ -138,7 +130,7 @@ public class Siege extends MiniGame
 		return this.randomVotes;
 	}
 	
-	public List<SiegeScenario> getSuggestedScenarioList()
+	public List<Scenario> getSuggestedScenarioList()
 	{
 		return this.suggestedScenarioList;
 	}
@@ -163,7 +155,7 @@ public class Siege extends MiniGame
 		if (!this.randomVotes.contains(participant))
 		{
 			this.randomVotes.add(participant);
-			for (SiegeScenario scenarios : this.suggestedScenarioList)
+			for (Scenario scenarios : this.suggestedScenarioList)
 			{
 				if (scenarios.getVotes().contains(participant))
 				{
@@ -181,12 +173,12 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public void setScenarioVote(Participant participant, SiegeScenario scenario)
+	public void setScenarioVote(Participant participant, Scenario scenario)
 	{
 		if (!scenario.getVotes().contains(participant))
 		{
 			scenario.setVotes(participant);
-			List<SiegeScenario> otherScenarios = new ArrayList<SiegeScenario>(this.suggestedScenarioList);
+			List<Scenario> otherScenarios = new ArrayList<Scenario>(this.suggestedScenarioList);
 			otherScenarios.remove(scenario);
 			
 			otherScenarios.forEach(s -> s.removeVotes(participant));
@@ -217,7 +209,7 @@ public class Siege extends MiniGame
 				}
 				
 				Integer scenarioID = IDList.get(main.getRandom(0, IDList.size()-1));
-				SiegeScenario scenario = Scenarios.instantiateScenario(scenarioID, false);
+				Scenario scenario = Scenarios.instantiateScenario(scenarioID, false);
 				
 				if (!this.suggestedScenarioList.contains(scenario))
 				{
@@ -230,7 +222,7 @@ public class Siege extends MiniGame
 			}
 		} else if (!IDList.isEmpty())
 		{
-			SiegeScenario scenario = Scenarios.instantiateScenario(IDList.get(0), false);
+			Scenario scenario = Scenarios.instantiateScenario(IDList.get(0), false);
 			if (!this.suggestedScenarioList.contains(scenario))
 			{
 				this.setSuggestedScenario(scenario);
@@ -243,7 +235,7 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public void setSuggestedScenario(SiegeScenario scenario)
+	public void setSuggestedScenario(Scenario scenario)
 	{
 		if (!this.suggestedScenarioList.contains(scenario))
 		{
@@ -251,7 +243,7 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public void removeSuggestedScenario(SiegeScenario scenario)
+	public void removeSuggestedScenario(Scenario scenario)
 	{
 		if (this.suggestedScenarioList.contains(scenario))
 		{
@@ -259,27 +251,33 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public void setScenario(SiegeScenario scenario)
+	public void setScenario(Scenario scenario)
 	{
 		if (this.scenario == scenario)
 		{
 			return;
 		}
 		this.scenario = scenario;
-		scenario.siege = this;
+		double factor = (this.getTitleAverage()/10);
+		scenario.expRewardWin *= factor;
+		scenario.coinRewardWin *= factor;
+		scenario.expRewardSideObjective *= factor;
+		scenario.coinRewardSideObjective *= factor;
+		scenario.expRewardCapture *= factor;
+		scenario.coinRewardCapture *= factor;
 		this.entryTitle = scenario.getEntryTitle();
 	}
 	
 	public void drawScenario()
 	{
-		SiegeScenario scenario = null;
+		Scenario scenario = null;
 		
 		if (this.suggestedScenarioList.isEmpty())
 		{
 			scenario = this.getRandomScenario();
 		}
 		
-		for (SiegeScenario scenarios : this.suggestedScenarioList)
+		for (Scenario scenarios : this.suggestedScenarioList)
 		{
 			if (scenario == null)
 			{
@@ -312,7 +310,7 @@ public class Siege extends MiniGame
 				));
 	}
 	
-	public SiegeScenario getRandomScenario()
+	public Scenario getRandomScenario()
 	{
 		List<Integer> IDList = Scenarios.getIDList();
 		Integer scenarioID = IDList.get(main.getRandom(0, IDList.size()-1));
@@ -362,7 +360,6 @@ public class Siege extends MiniGame
 		
 		if (this.progress)
 		{
-			Main.logMessage("Participant size after leaving " + this.getParticipants().size());
 			if (this.getParticipants().size() < this.scenario.getPlayersMin())
 			{
 				this.setComplete();
@@ -527,7 +524,7 @@ public class Siege extends MiniGame
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
 		}
 		
-		
+		scenario.setActive(true, this);
 		
 		BukkitTask task = new BukkitRunnable()
 		{
@@ -540,10 +537,6 @@ public class Siege extends MiniGame
 				updateMenus(false);
 				
 				Users.Users.updateScoreBoard(getUserParticipants());
-				
-				getScenario().getMainObjective().setActive(true);
-				getScenario().getSideObjectives().forEach(q -> q.setActive(true));
-				
 				
 				if (progressSeconds == (progressExpire-2))
 				{
@@ -595,20 +588,148 @@ public class Siege extends MiniGame
 	
 	public void setComplete()
 	{
-		this.stopSiege();
+		Main.logMessage("Setting siege complete..");
+		WinningTeam = this.Team1;
+		Scenario scenario = this.getScenario();
+		scenario.setActive(false, this);
+		Integer sideObjectivesCaptured = scenario.getCapturedSideObjectives();
+		Integer sideObjectivesDefended = (scenario.getCapturedSideObjectives() - sideObjectivesCaptured);
+		
+		if (this.getScenario().mainObjective.getCaptured())
+		{
+			WinningTeam = this.Team2;
+		}
+		
+		List<String> winningTeamMessage = new ArrayList<String>(Arrays.asList(
+				"",
+				WinningTeam.GetColor() + "The " + WinningTeam.GetName() + " have won!",
+				ColorOptions.message + "They defended their Main Objective untill the end of the Game!",
+				ColorOptions.message + "Side Objectives succesfully defended: " + ColorOptions.messagesubjects + sideObjectivesDefended,
+				ColorOptions.message + "Side Objectives captured by attackers: " + ColorOptions.error + sideObjectivesCaptured,
+				""
+				));
+		
+		for (SideObjective objective : scenario.getSideObjectives())
+		{
+			Participant capturer = objective.getCapturer();
+			if (capturer != null)
+			{
+				winningTeamMessage.add(ColorOptions.message + ColorOptions.messageArrow + "Side Objective " + objective.getSubID() + " captured by: " + ColorOptions.messagesubjects + capturer.getUser().getUsername());
+			}
+		}
+		winningTeamMessage.add("");
+		
+		this.announceParticipants(this.getParticipants(), winningTeamMessage);
+		
+		Main.logMessage("Sending reward receive messages");
+		new BukkitRunnable()
+		{
+			public void run()
+			{
+				for (Participant participant : getParticipants())
+				{
+					Main.logMessage("Sending reward message to " + participant.getUser().getUsername());
+					int totalExpReward = 0;
+					int totalCoinReward = 0;
+					
+					List<String> rewardMessage = new ArrayList<String>(Arrays.asList(
+							"",
+							ColorOptions.messageachievement + "You received the following rewards:",
+							""
+							));
+					
+					MGTeam team = participant.GetTeam();
+					
+					if (WinningTeam == team)
+					{
+						totalExpReward += scenario.expRewardWin;
+						totalExpReward += scenario.coinRewardWin;
+						rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + scenario.expRewardWin + " experience " + ColorOptions.message + "and "
+								+ ColorOptions.messagesubjects + scenario.coinRewardWin + " coins "
+								+ ColorOptions.message + "for winning");
+					}
+					
+					if (team.GetNumber() == 1)
+					{
+						int defendedObjectives = 0;
+						
+						for (SideObjective objective : scenario.getSideObjectives())
+						{
+							if (!objective.getCaptured())
+							{
+								defendedObjectives++;
+							}
+						}
+						
+						int subTotalExpReward = defendedObjectives * scenario.expRewardSideObjective;
+						int subTotalCoinReward = defendedObjectives * scenario.coinRewardSideObjective;
+						
+						rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + subTotalExpReward + " experience " + ColorOptions.message + "and "
+								+ ColorOptions.messagesubjects + subTotalCoinReward + " coins "
+								+ ColorOptions.message + "for holding " + ColorOptions.messagesubjects + defendedObjectives + " Side Objectives");
+					} else if (team.GetNumber() == 2)
+					{
+						int capturedObjectives = 0;
+						
+						for (SideObjective objective : scenario.getSideObjectives())
+						{
+							if (objective.getCaptured())
+							{
+								capturedObjectives++;
+							}
+						}
+						
+						int subTotalExpReward = capturedObjectives * scenario.expRewardSideObjective;
+						int subTotalCoinReward = capturedObjectives * scenario.coinRewardSideObjective;
+						
+						rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + subTotalExpReward + " experience " + ColorOptions.message + "and "
+								+ ColorOptions.messagesubjects + subTotalCoinReward + " coins "
+								+ ColorOptions.message + "for capturing " + ColorOptions.messagesubjects + capturedObjectives + " Side Objectives");
+						
+						totalExpReward += subTotalExpReward;
+						totalCoinReward += subTotalCoinReward;
+					}
+					
+					for (SideObjective objective : scenario.getSideObjectives())
+					{
+						if (objective.getCaptured() && objective.getCapturer() == participant)
+						{
+							rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + scenario.expRewardCapture + " experience " + ColorOptions.message + "and " 
+									+ ColorOptions.messagesubjects + scenario.coinRewardCapture + " coins " 
+									+ ColorOptions.message + "for capturing Side Objective " + ColorOptions.messagesubjects + objective.getSubID());
+						}
+						totalExpReward += scenario.expRewardCapture;
+						totalCoinReward += scenario.coinRewardCapture;
+					}
+					
+					rewardMessage.addAll(Arrays.asList(
+							"",
+							ColorOptions.message + ColorOptions.messageArrow + "Total: " + ColorOptions.messagesubjects + totalExpReward + " experience " + ColorOptions.message + "and " + ColorOptions.messagesubjects + totalCoinReward + " coins",
+							""
+							));
+					
+					participant.getUser().sendMessage(rewardMessage);
+					participant.getUser().addCoins(totalCoinReward);
+					participant.getUser().addExperience(totalExpReward, true);
+				}
+				
+				stopSiege();
+			}
+		}.runTaskLaterAsynchronously(main, 2*20);
+		
 	}
 	
 	public void stopSiege()
 	{
 		this.startProgress(false);
 		main.logMessage("Stopping siege");
-		getScenario().getMainObjective().setActive(false);
-		getScenario().getSideObjectives().forEach(q -> q.setActive(false));
+		this.scenario.setActive(false, this);
 		for (Participant participant : this.getParticipants())
 		{
 			participant.returnBeforeJoinLocation();
 			participant.GetTeam().RemoveMember(participant);
 		}
+		Users.Users.updateScoreBoard(this.getUserParticipants());
 		this.resetSiege();
 		
 		new BukkitRunnable()
@@ -686,7 +807,7 @@ public class Siege extends MiniGame
 		Scoreboard board = team.GetScoreboard();
 		Integer teamNumber = team.GetNumber();
 		String teamName = team.GetName();
-		SiegeScenario scenario = this.getScenario();
+		Scenario scenario = this.getScenario();
 		Integer boardLength = 5;	
 		boardLength += scenario.getSideObjectives().size();
 		
@@ -699,7 +820,6 @@ public class Siege extends MiniGame
 			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
 		} else
 		{
-			Main.logMessage("Score of main objective: " + sideBoard.getScore(ColorOptions.message + "Main Objective: " + scenario.getMainObjective().getCapturePercentage() + "% Captured").getScore());
 			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
 			HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(this.progressSeconds+1); 
 			board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
@@ -746,7 +866,6 @@ public class Siege extends MiniGame
 	
 	public void UpdateScoreboard(Objective objective, int oldPercentage)
 	{
-		Main.logMessage("Updating scoreboard.... old percentage: " + oldPercentage + ", new percentage: " + objective.getCapturePercentage());
 		List<MGTeam> teams = new ArrayList<MGTeam>(Arrays.asList(this.Team1, this.Team2));
 		for (MGTeam team : teams)
 		{
@@ -758,23 +877,17 @@ public class Siege extends MiniGame
 			
 			if (objective instanceof MainObjective)
 			{
-				Main.logMessage("objective is instanceof mainobjective..");
 				objectiveKind = ColorOptions.message + "Main Objective: ";
 			} else if (objective instanceof SideObjective)
 			{
-				Main.logMessage("Objective is instanceof sideobjective");
 				objectiveKind = ColorOptions.message + "Side Objective " + objective.getSubID() + ": ";
 			}
 			
 			if (objectiveKind != null)
 			{
-				Main.logMessage("Objectivekind is not null");
 				Score oldScore = sideBoard.getScore(objectiveKind + oldPercentage + "% Captured");
 				boardSlot = oldScore.getScore();
 				board.resetScores(objectiveKind + oldPercentage + "% Captured");
-			} else
-			{
-				Main.logMessage("Objectivekind is null!!");
 			}
 			
 			Score newScore = sideBoard.getScore(objectiveKind + objective.getCapturePercentage() + "% Captured");

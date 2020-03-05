@@ -9,7 +9,7 @@ import Handlers.ColorOptions;
 import Main.Main;
 import Products.Product;
 import Sieges.Siege;
-import Sieges.SiegeScenario;
+import Sieges.Scenario;
 import Towns.Town;
 import Users.User;
 
@@ -142,7 +142,7 @@ public class EventsClick
 			user.playSound("succesclick");
 			this.menu.openSiegeInformation(user, siege, 0);
 		}
-		for (SiegeScenario scenario : siege.getSuggestedScenarioList())
+		for (Scenario scenario : siege.getSuggestedScenarioList())
 		{
 			if (dc.equalsIgnoreCase(scenario.getName()))
 			{

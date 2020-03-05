@@ -20,7 +20,7 @@ import Products.Product;
 import Sieges.Scenarios;
 import Sieges.SideObjective;
 import Sieges.SiegeObject;
-import Sieges.SiegeScenario;
+import Sieges.Scenario;
 import Sieges.SiegeSpawnpoint;
 import Towns.Town;
 import Users.User;
@@ -269,7 +269,7 @@ public class EventManagerClick
 		if (dc.contains("scenario: "))
 		{
 			Integer scenarioID = Integer.valueOf(dc.split(": ")[1]);
-			SiegeScenario scenario = Scenarios.findScenario(scenarioID);
+			Scenario scenario = Scenarios.findScenario(scenarioID);
 			
 			if (scenario == null)
 			{
@@ -291,7 +291,7 @@ public class EventManagerClick
 		ItemStack scenarioItem = e.getInventory().getItem(4);
 		List<String> scenarioLore = scenarioItem.getItemMeta().getLore();
 		Integer scenarioID = Integer.valueOf(ChatColor.stripColor(scenarioLore.get(0)).split(": ")[1]);
-		SiegeScenario scenario = Scenarios.findScenario(scenarioID);
+		Scenario scenario = Scenarios.findScenario(scenarioID);
 		
 		if (scenario == null)
 		{
@@ -415,7 +415,7 @@ public class EventManagerClick
 		List<String> scenarioLore = scenarioItem.getItemMeta().getLore();
 		Integer scenarioID = Integer.valueOf(ChatColor.stripColor(scenarioLore.get(0)).split(": ")[1]);
 		Integer objectiveIndex = Integer.valueOf(ChatColor.stripColor(scenarioItem.getItemMeta().getDisplayName()).split(" ")[2]);
-		SiegeScenario scenario = Scenarios.findScenario(scenarioID);
+		Scenario scenario = Scenarios.findScenario(scenarioID);
 		
 		if (scenario == null)
 		{
@@ -492,7 +492,7 @@ public class EventManagerClick
 		List<String> scenarioLore = scenarioItem.getItemMeta().getLore();
 		Integer scenarioID = Integer.valueOf(ChatColor.stripColor(scenarioLore.get(0)).split(": ")[1]);
 		Integer team  = Integer.valueOf(ChatColor.stripColor(scenarioItem.getItemMeta().getDisplayName()).split(" ")[2]);
-		SiegeScenario scenario = Scenarios.findScenario(scenarioID);
+		Scenario scenario = Scenarios.findScenario(scenarioID);
 		
 		if (scenario == null)
 		{
@@ -548,7 +548,7 @@ public class EventManagerClick
 		List<String> scenarioLore = scenarioItem.getItemMeta().getLore();
 		Integer scenarioID = Integer.valueOf(ChatColor.stripColor(scenarioLore.get(1)).split(": ")[1]);
 		Integer subID = Integer.valueOf(ChatColor.stripColor(scenarioLore.get(0)).split(": ")[1]);
-		SiegeScenario scenario = Scenarios.findScenario(scenarioID);
+		Scenario scenario = Scenarios.findScenario(scenarioID);
 		
 		if (scenario == null)
 		{
