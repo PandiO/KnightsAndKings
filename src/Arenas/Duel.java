@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.SoundHandler;
 import Main.Main;
@@ -184,7 +185,7 @@ public class Duel implements Listener
 	{
 		this.prepareExpire = null;
 		this.countDownMove = true;
-		ProtectedRegion arena = worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("arena_" + this.arenaID);
+		ProtectedRegion arena = Worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("arena_" + this.arenaID);
 		arena.getMembers().addPlayer(this.user1.getUUID());
 		arena.getMembers().addPlayer(this.user2.getUUID());
 		ActionBar countdownBar = new ActionBar(ColorOptions.error + "Duel will start in " + ChatColor.BOLD + this.countDown + ChatColor.RESET + ColorOptions.error + " seconds!");
@@ -364,7 +365,7 @@ public class Duel implements Listener
 				}
 			}
 		}
-		ProtectedRegion arena = worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("arena_" + this.arenaID);
+		ProtectedRegion arena = Worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("arena_" + this.arenaID);
 		arena.getMembers().clear();
 		if (!main.duelList.isEmpty())
 		{

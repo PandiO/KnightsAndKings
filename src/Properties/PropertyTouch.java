@@ -18,7 +18,7 @@ import org.bukkit.plugin.Plugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
@@ -31,7 +31,6 @@ import Users.offlineUser;
 
 public class PropertyTouch implements Listener
 {
-	WorldGuard worldguard = new WorldGuard();
 	offlineUser user = new offlineUser();
 	Room room = new Room();
 	Property property = new Property();
@@ -68,7 +67,7 @@ public class PropertyTouch implements Listener
 		RegionManager regionmanager = getWorldGuard().getRegionManager(player.getWorld());
 		if (e.getAction() == Action.RIGHT_CLICK_BLOCK)
 		{
-			Integer propertyID = worldguard.getStructureIDbyRegion("property", block.getLocation(), regionmanager);
+			Integer propertyID = Worldguard.getStructureIDbyRegion("property", block.getLocation(), regionmanager);
 			if (propertyID != null)
 			{
 				if (main.debug)
@@ -93,7 +92,7 @@ public class PropertyTouch implements Listener
 							{
 								Bukkit.getConsoleSender().sendMessage("Tavern found!");
 							}
-							Integer roomID = worldguard.getStructureIDbyRegion("room", block.getLocation(), regionmanager);
+							Integer roomID = Worldguard.getStructureIDbyRegion("room", block.getLocation(), regionmanager);
 							if (roomID != null)
 							{
 								if (main.debug)

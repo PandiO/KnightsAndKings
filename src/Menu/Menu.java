@@ -33,7 +33,6 @@ import Assignments.Assignment;
 import Assignments.AssignmentTravelRandom;
 import Donator.Donator;
 import Exceptions.UserNotFoundException;
-import Gates.Gate;
 import Genders.Gender;
 import Handlers.ColorOptions;
 import Handlers.EnchantmentGlow;
@@ -45,6 +44,7 @@ import Houses.House;
 import Main.Main;
 import Minigames.MGTeam;
 import Minigames.Participant;
+import Models.Structures.Gate;
 import Products.Product;
 import Products.ProductCategory;
 import Products.PropertyProduct;
@@ -56,11 +56,11 @@ import Quests.QuestDeliverPackage;
 import Quests.QuestHarvestResource;
 import Quests.QuestIntimidateRival;
 import Rooms.Room;
+import Sieges.Scenario;
 import Sieges.Scenarios;
 import Sieges.SideObjective;
 import Sieges.Siege;
 import Sieges.SiegeMember;
-import Sieges.Scenario;
 import Sieges.SiegeSpawnpoint;
 import Sieges.Sieges;
 import Skills.PickpocketSkill;
@@ -199,7 +199,7 @@ public class Menu
     		pmenu.setItem(itemmanager, MenuCommand.addpmenu(ColorOptions.stats + "ShopItems Manager", Material.NAME_TAG, ChatColor.GRAY + "Click here to add or remove", ChatColor.GRAY + "items which are sold", ChatColor.GRAY + "by properties"));
     		pmenu.setItem(playermanager, MenuCommand.addpmenu(ColorOptions.stats + "Player Manager", Material.SKULL_ITEM, ChatColor.GRAY + "Check all statistics from online players", ChatColor.GRAY + "and edit them"));
     		pmenu.setItem(pricerefresh, MenuCommand.addpmenu(ColorOptions.stats + "Refresh item-price", Material.GOLD_INGOT, ChatColor.GRAY + "Refresh the weekly item price", ChatColor.GRAY + "of all property-products."));
-    		pmenu.setItem(gateManager, MenuCommand.addpmenu(ColorOptions.stats + "Gate Manager", Material.FENCE, ColorOptions.message + "Manage the gates' properties"));
+    		pmenu.setItem(gateManager, MenuCommand.addpmenu(ColorOptions.stats + "Gate Manager", Material.FENCE, ColorOptions.message + "Manage the Gates' properties"));
     		pmenu.setItem(eventManager, MenuCommand.addpmenu(ColorOptions.stats + "Event Manager", Material.CAKE, ColorOptions.message + "Manage all active and inactive events"));
     	}
     	pmenu.setItem(ownedhouses, MenuCommand.addpmenu(ColorOptions.stats + "Houses", Material.BED, ChatColor.GRAY + "Click here to see all owned houses"));
@@ -3760,18 +3760,18 @@ public class Menu
 	
 	public void openGateManager(User user)
 	{
-		Integer activeGates = Gates.Gates.gates.size();
+		Integer activeGates = DataManager.Structures.Gates.Gates.size();
 		Inventory menu = Bukkit.createInventory(null, main.getMenuSize(activeGates), Menus.GateManagerMenu);
 		
-		menu.setItem(4, product.createItem(ColorOptions.stats + "Gate Manager", new ItemStack(Material.FENCE), false, ColorOptions.message + "You can edit all active gates", ColorOptions.message + "Click a gate to edit its properties", "", ColorOptions.message + "Tip: Activate gates by entering", ColorOptions.message + "the town they belong to", "", ColorOptions.stats + "Active: " + ColorOptions.statsresults + activeGates));
+		menu.setItem(4, product.createItem(ColorOptions.stats + "Gate Manager", new ItemStack(Material.FENCE), false, ColorOptions.message + "You can edit all active Gates", ColorOptions.message + "Click a gate to edit its properties", "", ColorOptions.message + "Tip: Activate Gates by entering", ColorOptions.message + "the town they belong to", "", ColorOptions.stats + "Active: " + ColorOptions.statsresults + activeGates));
 		menu.setItem(8, Menus.getBackButton(Menus.PersonalMenu));
 		
 		int slot = 9;
-		for (Gate gate : Gates.Gates.gates)
+		for (Gate gate : DataManager.Structures.Gates.Gates)
 		{
 			ItemStack material = product.createPropertyItem(gate.getMaterialID(), 1, false, false);
 			ItemStack gateItem = product.createItem(ColorOptions.messagesubjects + gate.getName(), material, false, 
-					ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getID(),
+					ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getId(),
 					ColorOptions.statsformat + "Location:",
 					ColorOptions.stats + "Town: " + ColorOptions.statsresults + town.getTownName(gate.getTownID()),
 					ColorOptions.stats + "Street: " + ColorOptions.statsresults + street.getStreetName(gate.getStreetID()),
@@ -3797,7 +3797,7 @@ public class Menu
 		
 		ItemStack gateMaterial = product.createPropertyItem(gate.getMaterialID(), 1, false, false);
 		ItemStack gateItem = product.createItem(ColorOptions.messagesubjects + gate.getName(), gateMaterial, false, 
-				ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getID(),
+				ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getId(),
 				ColorOptions.statsformat + "Location:",
 				ColorOptions.stats + "Town: " + ColorOptions.statsresults + town.getTownName(gate.getTownID()),
 				ColorOptions.stats + "Street: " + ColorOptions.statsresults + street.getStreetName(gate.getStreetID()),
@@ -3846,7 +3846,7 @@ public class Menu
 		
 		ItemStack gateMaterial = product.createPropertyItem(gate.getMaterialID(), 1, false, false);
 		ItemStack gateItem = product.createItem(ColorOptions.messagesubjects + gate.getName(), gateMaterial, false, 
-				ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getID(),
+				ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getId(),
 				ColorOptions.statsformat + "Location:",
 				ColorOptions.stats + "Town: " + ColorOptions.statsresults + town.getTownName(gate.getTownID()),
 				ColorOptions.stats + "Street: " + ColorOptions.statsresults + street.getStreetName(gate.getStreetID()),
@@ -4372,8 +4372,8 @@ public class Menu
 	
 	public void openSideObjectiveGate(User user, SideObjective objective, Scenario scenario)
 	{
-		Gates.Gates.instantiateAll(scenario.getTownID());
-		Integer activeGates = Gates.Gates.gates.size();
+		DataManager.Structures.Gates.instantiateAll(scenario.getTownID());
+		Integer activeGates = DataManager.Structures.Gates.Gates.size();
 		Inventory menu = Bukkit.createInventory(null, main.getMenuSize(activeGates), Menus.SOGateMenu);
 		
 		menu.setItem(4, product.createItem(ColorOptions.stats + "Change gate", new ItemStack(Material.FENCE), false, 
@@ -4382,18 +4382,18 @@ public class Menu
 				ColorOptions.message + "Gate: " + (objective.getGateID() != -1 ? ColorOptions.messagesubjects + "" + objective.getGateID() : ColorOptions.error + "Not set"),
 				"",
 				ColorOptions.message + "NOTE: This list is a list",
-				ColorOptions.message + "of the gates from the same town",
+				ColorOptions.message + "of the Gates from the same town",
 				ColorOptions.message + "as the scenario is based in"
 				));
 		menu.setItem(7, product.createItem(ColorOptions.error + "Remove Gate", new ItemStack(Material.LAVA_BUCKET), false, ColorOptions.message + "Remove gate from objective"));
 		menu.setItem(8, Menus.getBackButton(Menus.PersonalMenu));
 		
 		int slot = 9;
-		for (Gate gate : Gates.Gates.gates)
+		for (Gate gate : DataManager.Structures.Gates.Gates)
 		{
 			ItemStack material = product.createPropertyItem(gate.getMaterialID(), 1, false, false);
 			ItemStack gateItem = product.createItem(ColorOptions.message + "Gate: " + ColorOptions.messagesubjects + gate.getName(), material, false, 
-					ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getID(),
+					ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getId(),
 					ColorOptions.statsformat + "Location:",
 					ColorOptions.stats + "Town: " + ColorOptions.statsresults + town.getTownName(gate.getTownID()),
 					ColorOptions.stats + "Street: " + ColorOptions.statsresults + street.getStreetName(gate.getStreetID()),
@@ -4407,7 +4407,7 @@ public class Menu
 			List<String> description = new ArrayList<String>();
 			
 			description.add("");
-			if (objective.getGateID() == gate.getID())
+			if (objective.getGateID() == gate.getId())
 			{
 				description.add(ColorOptions.error + "Current selected gate");
 			} else
@@ -4730,7 +4730,7 @@ public class Menu
 				}
 			}
 			
-			objectiveDescription.add(ColorOptions.message + "Objectives with gates: " + (gateObjectives > 0 ? ColorOptions.messagesubjects : ColorOptions.error) + gateObjectives);
+			objectiveDescription.add(ColorOptions.message + "Objectives with Gates: " + (gateObjectives > 0 ? ColorOptions.messagesubjects : ColorOptions.error) + gateObjectives);
 			playerDescription.addAll(Arrays.asList(
 					ColorOptions.message + "Min. players: " + ColorOptions.messagesubjects + scenario.getPlayersMin(),
 					ColorOptions.message + "Max. players: " + ColorOptions.error + scenario.getPlayersMax()

@@ -176,10 +176,10 @@ public class TestTrait extends Trait
 		this.updateTargets();
 		
 		/**
-		 * Region start
+		 * Worldguard start
 		 * The following piece of code was originally located at the end of the updateTargets() method.
 		 * It was moved here because otherwise the tryAttack() method would be called before this was run. 
-		 * Same goes for the tryChase() call just below this region, it was located at the end of the findTarget() method.
+		 * Same goes for the tryChase() call just below this gateRegion, it was located at the end of the findTarget() method.
 		 */
 		if (this.currentTarget != null)
 		{
@@ -195,7 +195,7 @@ public class TestTrait extends Trait
 			this.findTarget();
 		}
 		/**
-		 * End of region
+		 * End of gateRegion
 		 */
 
 		if (this.currentTarget != null)

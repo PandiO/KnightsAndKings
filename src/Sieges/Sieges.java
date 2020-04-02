@@ -21,7 +21,7 @@ public class Sieges
 		
 		for (ScenarioCreation ScenarioCreations : ScenarioCreations)
 		{
-			if (ScenarioCreations.user == user)
+			if (ScenarioCreations.getUser() == user)
 			{
 				sc = ScenarioCreations;
 				break;

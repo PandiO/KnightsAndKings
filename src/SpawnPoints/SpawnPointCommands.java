@@ -93,7 +93,7 @@ public class SpawnPointCommands implements CommandExecutor
 												Location location = player.getLocation();
 												try
 												{
-													spawnpoint.saveSpawnPoint(name, titleID.toString(), price, donatorID.toString(), "", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+													spawnpoint.saveSpawnPoint(name, titleID.toString(), price, donatorID.toString(), location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 													player.sendMessage(ColorOptions.messageachievement + "Succesfully saved a new spawnpoint with name " + name);
 												} catch (Exception e)
 												{

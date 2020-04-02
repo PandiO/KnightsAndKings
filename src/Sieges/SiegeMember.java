@@ -1,14 +1,17 @@
 package Sieges;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import Handlers.ColorOptions;
 import Minigames.Participant;
 import Scoreboards.ActionBar;
+import SpawnPoints.SpawnPoint;
 import Users.User;
 
 public class SiegeMember extends Participant
 {
+	protected SpawnPoint spawnpoint = new SpawnPoint();
 	protected SiegeSpawnpoint currentSpawnpoint;
 	protected int teamNumber;
 	
@@ -45,7 +48,9 @@ public class SiegeMember extends Participant
 	public void spawnMember(SiegeSpawnpoint spawnpoint)
 	{
 		Player player = this.getUser().getPlayer();
-		player.teleport(spawnpoint.getLocation());
+		Location location = spawnpoint.getLocation();
+		
+		this.spawnpoint.TeleportNearby(3, this.getUser(), location, this.GetTeam().GetMemberUsers());
 		ActionBar spawnMSG = new ActionBar(ColorOptions.message + "You have spawned");
 		spawnMSG.sendToPlayer(player);
 	}

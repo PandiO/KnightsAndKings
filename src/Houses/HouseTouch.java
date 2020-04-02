@@ -18,6 +18,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
@@ -69,10 +70,10 @@ public class HouseTouch implements Listener
 			ApplicableRegionSet regionset = regionmanager.getApplicableRegions(block.getLocation());
 			if (regionset.size() > 0)
 			{
-				if (worldguard.getStructureIDbyRegion("house", block.getLocation(), regionmanager) != null)
+				if (Worldguard.getStructureIDbyRegion("house", block.getLocation(), regionmanager) != null)
 				{
 					
-						Integer houseID = worldguard.getStructureIDbyRegion("house", block.getLocation(), regionmanager);
+						Integer houseID = Worldguard.getStructureIDbyRegion("house", block.getLocation(), regionmanager);
 						if (houseID != null)
 						{
 							Integer streetID = house.getStreetID(houseID);

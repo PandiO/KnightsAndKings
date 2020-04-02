@@ -2,27 +2,33 @@ package Sieges;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Location;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 
-import API_methods.WorldGuard;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Main.Main;
+import Models.creations.Creation;
 import Towns.Town;
 import Users.User;
 
-public class ScenarioCreation 
+public class ScenarioCreation extends Creation
 {
 	Main main = Main.getPlugin(Main.class);
-	WorldGuard worldguard = new WorldGuard();
 	Town town = new Town();
-	protected int Stage = -1;
-	protected ScenarioCreation instance;
 	
-	protected User user;
 	protected String name;
 	protected int townID;
 	protected int playersMin;
@@ -33,15 +39,10 @@ public class ScenarioCreation
 	protected int coinRewardSideObjective;
 	protected int expRewardCapture;
 	protected int coinRewardCapture;
-	protected List<Location> spawnpointTeam1 = new ArrayList<Location>();
-	protected List<Location> spawnpointTeam2 = new ArrayList<Location>();
+	private List<Location> spawnpointTeam1 = new ArrayList<Location>();
+	private List<Location> spawnpointTeam2 = new ArrayList<Location>();
 	protected Location mainObjective;
-	protected List<Location> sideObjectives = new ArrayList<Location>();
-	
-	protected boolean confirmStop = false;
-	protected BukkitTask confirmTask;
-	protected boolean stashed = false;
-	protected BukkitTask stashTask;
+	private List<TempSideObjective> sideObjectives = new ArrayList<TempSideObjective>();
 	
 	protected List<String> startMessage = new ArrayList<String>(Arrays.asList(
 			"",
@@ -91,16 +92,17 @@ public class ScenarioCreation
 					)),
 			new ArrayList<String>(Arrays.asList(
 					"",
-					ColorOptions.messagesubjects + "Setting the main objective",
+					ColorOptions.messagesubjects + "Setting the Main Objective",
 					ColorOptions.messageformat + "The main objective is the block or flag the attacking team must destroy to win",
-					ColorOptions.messageformat + "Right-click a block/banner to set the main objective",
+					ColorOptions.messageformat + "Stand on the desired location and type 'save'",
 					""
 					)),
 			new ArrayList<String>(Arrays.asList(
 					"",
-					ColorOptions.messagesubjects + "Setting side objectives",
+					ColorOptions.messagesubjects + "Setting Side Objectives",
 					ColorOptions.messageformat + "Side objectives will grant bonusses to the attacking team when destroyed, or to the defending team if not",
-					ColorOptions.messageformat + "Right-click a block/banner to set a side objective",
+					ColorOptions.messageformat + "Right-click a gate/property to set as Side Objective",
+					ColorOptions.messageformat + "or stand on a location other than a gate/property to save",
 					ColorOptions.messageformat + "You can set as many as you want",
 					"",
 					ColorOptions.error + "To undo the last side objective type 'undo'",
@@ -151,144 +153,594 @@ public class ScenarioCreation
 	
 	public ScenarioCreation(User user)
 	{
-		this.user = user;
-		this.instance = this;
+		super(user);
 		
 		Location loc = user.getPlayer().getLocation();
-		this.townID = this.worldguard.getStructureIDbyRegion("town", loc, this.worldguard.getRegionManager(loc.getWorld()));
+		this.townID = Worldguard.getStructureIDbyRegion("town", loc, Worldguard.getRegionManager(loc.getWorld()));
 		Sieges.ScenarioCreations.add(this);
 		
+		this.setStageMessages(new HashMap<Integer, List<String>>() {{
+		    put(0, messages.get(0));
+		    put(1, messages.get(1));
+		    put(2, messages.get(2));
+		    put(3, messages.get(3));
+		    put(4, messages.get(4));
+		    put(5, messages.get(5));
+		    put(6, messages.get(6));
+		    put(7, messages.get(7));
+		    put(8, messages.get(8));
+		    put(9, messages.get(9));
+		    put(10, messages.get(10));
+		    put(11, messages.get(11));
+		    put(12, messages.get(12));
+		}});
 		this.sendMessage(startMessage);
 	}
 	
-	public void start()
-	{
-		this.nextStage(0);
+	public List<Location> getSpawnpointTeam1() {
+		return spawnpointTeam1;
 	}
-	
-	protected void nextStage(int stage)
-	{
-//		if (stage <= -1)
-//		{
-//			stage = 0;
-//			this.Stage = stage;
-//		}
-		if (stage == 0)
-		{
-			if (this.Stage == -1)
-			{
-				this.Stage = 0;
-			}
-			this.sendMessage(this.messages.get(0));
-		} else if (stage == 12)
-		{
-			this.sendMessage(Arrays.asList(
-					"",
-					ColorOptions.messagesubjects + "You have completed all steps in the siege creation",
-					ColorOptions.message + "Confirm the information below",
-					ColorOptions.message + "Type " + ColorOptions.messageachievement + "confirm" + ColorOptions.message + " to confirm or " + ColorOptions.error + "undo" + ColorOptions.message + " to undo",
-					"",
-					ColorOptions.stats + "Name: " + ColorOptions.statsresults + this.name,
-					ColorOptions.stats + "Town: " + ColorOptions.statsresults + this.town.getTownName(this.townID),
-					ColorOptions.stats + "Min. players: " + ColorOptions.statsresults + this.playersMin,
-					ColorOptions.stats + "Max. players: " + ColorOptions.statsresults + this.playersMax,
-					ColorOptions.stats + "Amount of Side Objectives: " + ColorOptions.statsresults + this.sideObjectives.size(),
-					"",
-					ColorOptions.messageformat + "Rewards:",
-					ColorOptions.stats + "Winning team (per team member): " + ColorOptions.statsresults + this.expRewardWin + " experience, " + this.coinRewardWin + " coins",
-					ColorOptions.stats + "No. of Side Objectives (per team per team member): " + ColorOptions.statsresults + this.expRewardSideObjective + " experience, " + this.coinRewardSideObjective + " coins",
-					ColorOptions.stats + "Per captured Side Objective (individual): " + ColorOptions.statsresults + this.expRewardCapture + " experience, " + this.coinRewardCapture + " coins",
-					""
-					));
-		} else
-		{
-			new BukkitRunnable()
-			{
-				public void run()
-				{
-					sendMessage(messages.get(stage));
-				}
-			}.runTaskLaterAsynchronously(main, 20);
-		}
-		this.Stage = stage;
+
+	public void setSpawnpointTeam1(List<Location> spawnpointTeam1) {
+		this.spawnpointTeam1 = spawnpointTeam1;
 	}
-	
-	protected void complete()
-	{
-		Scenarios.createScenario(this);
-		this.user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully completed the Siege scenario creation!");
-		this.confirmStop = true;
-		this.stop();
-		this.stash();
+
+	public List<Location> getSpawnpointTeam2() {
+		return spawnpointTeam2;
 	}
-	
-	protected void stash()
+
+	public void setSpawnpointTeam2(List<Location> spawnpointTeam2) {
+		this.spawnpointTeam2 = spawnpointTeam2;
+	}
+
+	public List<TempSideObjective> getSideObjectives() {
+		return sideObjectives;
+	}
+
+	public void setSideObjectives(List<TempSideObjective> sideObjectives) {
+		this.sideObjectives = sideObjectives;
+	}
+
+	@Override
+	protected List<String> getSpecificConfirmMessage()
 	{
-		this.stashed = true;
-		Sieges.stashedSiegeCreations.add(this);
+		List<String> message = new ArrayList<String>();
 		
-		this.stashTask = new BukkitRunnable()
-		{
-			public void run()
-			{
-				Sieges.stashedSiegeCreations.remove(instance);
-				user.getPlayer().sendMessage(ColorOptions.message + ColorOptions.messageArrow + "The stashed Siege scenario is no longer stashed");
-			}
-		}.runTaskLaterAsynchronously(main, 300*20);
-	}
-	
-	protected void stop()
-	{
-		
-		if (!this.confirmStop)
-		{
-			this.sendMessage(Arrays.asList(
-					"",
-					ColorOptions.error + "Are you sure you want to stop the siege creation?",
-					ColorOptions.error + "Type stop within 3 seconds to confirm",
-					""
-					));
-			this.confirmTask = new BukkitRunnable()
-			{
-				public void run()
-				{
-					confirmStop = false;
-				}
-			}.runTaskLaterAsynchronously(this.main, 3*20);
-			
-			confirmStop = true;
-		} else
-		{
-			Sieges.ScenarioCreations.remove(this);
-			user.getPlayer().sendMessage(ColorOptions.error + "Stopped siege creation mode");
-			if (this.stashed)
-			{
-				user.getPlayer().sendMessage(ColorOptions.message + ColorOptions.messageArrow + "The Siege scenario has been stashed for " + ColorOptions.messagesubjects + "5 minutes" + ColorOptions.message + " in case the save process fails");
-			}
-		}
-	}
-	
-	protected void sendMessage(List<String> message)
-	{
-		for (String msg : message)
-		{
-			this.user.getPlayer().sendMessage(msg);
-		}
-	}
-	
-	protected void falseCommand(List<String> error)
-	{
-		List<String> errormsg = new ArrayList<String>(Arrays.asList(
+		message.addAll(Arrays.asList(
+				ColorOptions.stats + "Name: " + ColorOptions.statsresults + this.name,
+				ColorOptions.stats + "Town: " + ColorOptions.statsresults + this.town.getTownName(this.townID),
+				ColorOptions.stats + "Min. players: " + ColorOptions.statsresults + this.playersMin,
+				ColorOptions.stats + "Max. players: " + ColorOptions.statsresults + this.playersMax,
+				ColorOptions.stats + "Amount of Side Objectives: " + ColorOptions.statsresults + this.getSideObjectives().size(),
 				"",
-				ColorOptions.error + "You are in siege scenario creation mode",
-				ColorOptions.message + "Type 'stop' to stop",
+				ColorOptions.messageformat + "Rewards:",
+				ColorOptions.stats + "Winning team (per team member): " + ColorOptions.statsresults + this.expRewardWin + " experience, " + this.coinRewardWin + " coins",
+				ColorOptions.stats + "No. of Side Objectives (per team per team member): " + ColorOptions.statsresults + this.expRewardSideObjective + " experience, " + this.coinRewardSideObjective + " coins",
+				ColorOptions.stats + "Per captured Side Objective (individual): " + ColorOptions.statsresults + this.expRewardCapture + " experience, " + this.coinRewardCapture + " coins",
 				""
 				));
-		if (error != null)
+		
+		return message;
+	}
+//	
+//	public void start()
+//	{
+//		this.nextStage(0);
+//	}
+//	
+//	protected void nextStage(int stage)
+//	{
+////		if (stage <= -1)
+////		{
+////			stage = 0;
+////			this.Stage = stage;
+////		}
+//		if (stage == 0)
+//		{
+//			if (this.Stage == -1)
+//			{
+//				this.Stage = 0;
+//			}
+//			this.sendMessage(this.messages.get(0));
+//		} else if (stage == 12)
+//		{
+//			this.sendMessage(Arrays.asList(
+//					"",
+//					ColorOptions.messagesubjects + "You have completed all steps in the siege creation",
+//					ColorOptions.message + "Confirm the information below",
+//					ColorOptions.message + "Type " + ColorOptions.messageachievement + "confirm" + ColorOptions.message + " to confirm or " + ColorOptions.error + "undo" + ColorOptions.message + " to undo",
+//					"",
+//					ColorOptions.stats + "Name: " + ColorOptions.statsresults + this.name,
+//					ColorOptions.stats + "Town: " + ColorOptions.statsresults + this.town.getTownName(this.townID),
+//					ColorOptions.stats + "Min. players: " + ColorOptions.statsresults + this.playersMin,
+//					ColorOptions.stats + "Max. players: " + ColorOptions.statsresults + this.playersMax,
+//					ColorOptions.stats + "Amount of Side Objectives: " + ColorOptions.statsresults + this.sideObjectives.size(),
+//					"",
+//					ColorOptions.messageformat + "Rewards:",
+//					ColorOptions.stats + "Winning team (per team member): " + ColorOptions.statsresults + this.expRewardWin + " experience, " + this.coinRewardWin + " coins",
+//					ColorOptions.stats + "No. of Side Objectives (per team per team member): " + ColorOptions.statsresults + this.expRewardSideObjective + " experience, " + this.coinRewardSideObjective + " coins",
+//					ColorOptions.stats + "Per captured Side Objective (individual): " + ColorOptions.statsresults + this.expRewardCapture + " experience, " + this.coinRewardCapture + " coins",
+//					""
+//					));
+//		} else
+//		{
+//			new BukkitRunnable()
+//			{
+//				public void run()
+//				{
+//					sendMessage(messages.get(stage));
+//				}
+//			}.runTaskLaterAsynchronously(main, 20);
+//		}
+//		this.Stage = stage;
+//	}
+	
+	@Override
+	protected void create()
+	{
+		Scenarios.CreateScenario(this);
+	}
+	
+	@Override
+	public void processEvent(Event event)
+	{
+		Player player = user.getPlayer();
+		boolean cancel = false;
+
+		if (event instanceof PlayerChatEvent
+				|| event instanceof PlayerCommandPreprocessEvent)
 		{
-			errormsg.addAll(error);
+			String message = null;
+			if (event instanceof PlayerChatEvent)
+			{
+				message = ((PlayerChatEvent) event).getMessage();
+			} else if (event instanceof PlayerCommandPreprocessEvent)
+			{
+				message = ((PlayerCommandPreprocessEvent) event).getMessage();
+				message.replace("/", "");
+			}
+			
+			if (message.equalsIgnoreCase("stop"))
+			{
+				this.stop();
+				cancel = true;
+			} else if (message.equalsIgnoreCase("start"))
+			{
+				this.start();
+				cancel = true;
+			} else if (message.equalsIgnoreCase("confirm"))
+			{
+				if (this.getStage() == this.getLastStage()+1)
+				{
+					this.complete();
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.error + "You must complete all previous steps first"
+							));
+				}
+				cancel = true;
+			} else if (message.equalsIgnoreCase("undo"))
+			{
+				int stage = this.getStage();
+				String undoMessage = ColorOptions.error + "Undone the last step";
+				if (this.getStage() == 3)
+				{
+					if (this.getSpawnpointTeam1().size() >= 9)
+					{
+						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+						return;
+					}
+					this.getSpawnpointTeam1().remove(this.getSpawnpointTeam1().size()-1);
+					undoMessage = ColorOptions.error + "Undone the last spawnpoint for team 1";
+				} else if (this.getStage() == 4)
+				{
+					if (this.getSpawnpointTeam2().size() >= 9)
+					{
+						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+						return;
+					}
+					this.getSpawnpointTeam2().remove(this.getSpawnpointTeam2().size()-1);
+					undoMessage = ColorOptions.error + "Undone the last spawnpoint for team 2";
+				} else
+				if (this.getStage() == 6)
+				{
+					this.getSideObjectives().remove(this.getSideObjectives().size()-1);
+					undoMessage = ColorOptions.error + "Undone the last side objective";
+				} else
+				{
+					stage -= 1;
+					undoMessage = ColorOptions.error + "Undone the last step";
+				}
+				this.nextStage(stage);
+				user.sendMessage(undoMessage);
+				cancel = true;
+			} else if (this.getStage() == -1) 
+			{
+				this.falseCommand(Arrays.asList(
+						ColorOptions.message + "Type 'start' or 'next' to start the creation process",
+						""
+						));
+			} else if (this.getStage() == 0)
+			{
+				if (Scenarios.existScenario(message, this.townID))
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "The name of the scenario already exists for this town!",
+							""
+							));
+					return;
+				}
+				if (message.length() > 3)
+				{
+					this.name = message;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the siege name to " + ColorOptions.messagesubjects + message,
+							""
+							));
+					this.nextStage(this.getStage()+1);
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "The name of the scenario must be more than 3 characters!",
+							""
+							));
+				}
+			} else if (this.getStage() == 1 || this.getStage() == 2)
+			{
+				if (!main.isInt(message))
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "The min/max amount of players must be a number!",
+							""
+							));
+					return;
+				}
+				if (Integer.valueOf(message) < 0)
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "The min/max amount of players must be a number above 0!",
+							""
+							));
+					return;
+				}
+				if (this.getStage() == 1)
+				{
+					this.playersMin = Integer.valueOf(message);
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the minimal amount of players to  " + ColorOptions.messagesubjects + this.playersMin,
+							""
+							));
+				} else if (this.getStage() == 2)
+				{
+					this.playersMax = Integer.valueOf(message);
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the maximal amount of players to  " + ColorOptions.messagesubjects + this.playersMax,
+							""
+							));
+				}
+				this.nextStage(this.getStage()+1);
+			} else if (this.getStage() == 3)
+			{
+				if (message.equalsIgnoreCase("next"))
+				{
+					this.nextStage(this.getStage()+1);
+				} else
+				if (message.equalsIgnoreCase("save"))
+				{
+					if (this.getSpawnpointTeam1().size() >= 9)
+					{
+						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+						return;
+					}
+					this.getSpawnpointTeam1().add(user.getPlayer().getLocation());
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved a spawnpoint of team 1 to your current location!",
+							ColorOptions.messageachievement + "type 'next' when you are done",
+							""
+							));
+					//sc.nextStage(sc.Stage+1);
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "Type 'save' to save the spawnpoint for team 1",
+							""
+					));
+				}
+				
+			} else if (this.getStage() == 4)
+			{
+				if (message.equalsIgnoreCase("next"))
+				{
+					this.nextStage(this.getStage()+1);
+				} else
+				if (message.equalsIgnoreCase("save"))
+				{
+					if (this.getSpawnpointTeam2().size() >= 9)
+					{
+						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+						return;
+					}
+					this.getSpawnpointTeam2().add(user.getPlayer().getLocation());
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved a spawnpoint of team 2 to your current location!",
+							ColorOptions.messageachievement + "type 'next' when you are done",
+							""
+							));
+					//sc.nextStage(sc.Stage+1);
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "Type 'save' to save the spawnpoint for team 2",
+							""
+					));
+				}
+			} else if (this.getStage() == 5)
+			{
+				if (message.equalsIgnoreCase("save"))
+				{
+					this.mainObjective = player.getLocation();
+					this.sendMessage(Arrays.asList(
+							"",
+							ColorOptions.messageachievement + "Saved the location for the Main Objective",
+							""
+							));
+					player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+					this.nextStage(this.getStage()+1);
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "Stand on the desired location of the Main Objective and type 'save'",
+							""
+					));
+				}
+			} else if (this.getStage() == 6)
+			{
+				if (message.equalsIgnoreCase("save"))
+				{
+					if (this.trySaveSideObjective(player.getLocation()))
+					{
+						player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+					}
+				} else
+				if (message.equalsIgnoreCase("next"))
+				{
+					this.nextStage(this.getStage()+1);
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "Right-click a gate/property to save as Side Objective",
+							ColorOptions.message + "or stand on a desired location to save other locations",
+							ColorOptions.message + "Type 'next' if you are done setting side objectives",
+							""
+					));
+				}
+			} else if (this.getStage() >= 7 && this.getStage() <= 12)
+			{
+				if (!main.isInt(message))
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "The reward amount must be a number!",
+							""
+							));
+					return;
+				}
+				if (Integer.valueOf(message) < 0)
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.message + "The reward amount of players must be a number above 0!",
+							""
+							));
+					return;
+				}
+				int argument = Integer.valueOf(message);
+				
+				if (this.getStage() == 7)
+				{
+					this.expRewardWin = argument;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the experience reward for the winning team (per team member) to  " + ColorOptions.messagesubjects + argument,
+							""
+							));
+				} else if (this.getStage() == 8)
+				{
+					this.coinRewardWin = argument;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the coin reward for the winning team (per team member) to  " + ColorOptions.messagesubjects + argument,
+							""
+							));
+				} else if (this.getStage() == 9)
+				{
+					this.expRewardSideObjective = argument;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the experience reward per captured/defended Side Objective (per team per team member) to  " + ColorOptions.messagesubjects + argument,
+							""
+							));
+				} else if (this.getStage() == 10)
+				{
+					this.coinRewardSideObjective = argument;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the coin reward per captured/defended Side Objective (per team per team member) to  " + ColorOptions.messagesubjects + argument,
+							""
+							));
+				} else if (this.getStage() == 11)
+				{
+					this.expRewardCapture = argument;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the experience reward per captured Side Objective (individual) to  " + ColorOptions.messagesubjects + argument,
+							""
+							));
+				} else if (this.getStage() == 12)
+				{
+					this.coinRewardCapture = argument;
+					this.sendMessage(Arrays.asList(
+							ColorOptions.messageachievement + "Saved the coin reward per captured Side Objective (individual) to  " + ColorOptions.messagesubjects + argument,
+							""
+							));
+				}
+				
+				this.nextStage(this.getStage()+1);
+			}
+		} else 
+		if (event instanceof PlayerInteractEvent)
+		{
+			event = (PlayerInteractEvent) event;
+			if (((PlayerInteractEvent) event).getAction() != Action.RIGHT_CLICK_BLOCK)
+			{
+				return;
+			}
+			
+			if (((PlayerInteractEvent) event).getClickedBlock() == null)
+			{
+				return;
+			}
+			
+//			SiegeObject object = scenario.editMode.get(user);
+//			if (object instanceof Objective)
+//			{
+//				if (event.getClickedBlock().getType() != Material.STANDING_BANNER)
+//				{
+//					user.getPlayer().sendMessage(ColorOptions.error + "The block must be a standing banner");
+//					user.getPlayer().sendMessage(ColorOptions.error + "Type 'stop' to stop editing");
+//					return;
+//				}
+//				event.setCancelled(true);
+//				
+//				Objective objective = (Objective) object;
+//				if (objective.getLocation().equals(event.getClickedBlock().getLocation()))
+//				{
+//					user.getPlayer().sendMessage(ColorOptions.error + "New location can't be the same as the original one");
+//					return;
+//				}
+//				Bukkit.getConsoleSender().sendMessage(objective.getLocation().toString());
+//				Bukkit.getConsoleSender().sendMessage(event.getClickedBlock().getLocation().toString());
+//
+//				user.getPlayer().sendMessage(ColorOptions.message + "Changing location...");
+//				objective.changeLocation(user.getPlayer(), event.getClickedBlock().getLocation());
+//				Block block = event.getClickedBlock();
+//		        BlockState bs = block.getState();
+//		        Banner banner = (Banner) block.getState();
+//		        banner.setBaseColor(DyeColor.WHITE);
+//		        banner.addPattern(new Pattern(DyeColor.BLUE, PatternType.GRADIENT));
+//		        banner.addPattern(new Pattern(DyeColor.WHITE, PatternType.GRADIENT_UP));
+//		        banner.update(true);
+//				scenario.removeEditMode(user);
+//				new Menu().openScenarioManager(user, scenario);
+//			}
+//			return;
+			if (this.getStage() == 5 || this.getStage() == 6)
+			{
+				if (((PlayerInteractEvent) event).getClickedBlock().getType() != Material.STANDING_BANNER)
+				{
+					this.falseCommand(Arrays.asList(ColorOptions.error + "The block must be a standing banner"));
+					return;
+				}
+			}
+				
+			
+			if (this.getStage() == 5)
+			{
+				this.mainObjective = ((PlayerInteractEvent) event).getClickedBlock().getLocation();
+				this.sendMessage(Arrays.asList(
+						"",
+						ColorOptions.messageachievement + "Saved the block as main objective",
+						""
+						));
+				player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+				this.nextStage(this.getStage()+1);
+			} else if (this.getStage() == 6)
+			{
+				this.trySaveSideObjective(((PlayerInteractEvent) event).getClickedBlock().getLocation());
+			}
 		}
 		
-		this.sendMessage(errormsg);
+		if (cancel)
+		{
+			if (event instanceof PlayerChatEvent)
+			{
+				((PlayerChatEvent) event).setCancelled(true);
+			} else if (event instanceof PlayerCommandPreprocessEvent)
+			{
+				((PlayerCommandPreprocessEvent) event).setCancelled(true);
+			}
+		}
 	}
+	
+	protected boolean trySaveSideObjective(Location location)
+	{
+		if (this.getSideObjectives().size() >= 9)
+		{
+			this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Side Objectives has been reached"));
+			return false;
+		}
+		RegionManager regionManager = Worldguard.getRegionManager(location.getWorld());
+		Integer structureID = null;
+		Integer propertyID = Worldguard.getStructureIDbyRegion("property", location, regionManager);
+		Integer gateID = Worldguard.getStructureIDbyRegion("gate", location, regionManager);
+		
+		if (gateID != null)
+		{
+			structureID = gateID;
+		} else
+		if (propertyID != null)
+		{
+			structureID = propertyID;
+		}
+		for (TempSideObjective so : this.getSideObjectives())
+		{
+			if (so.structureID != -1)
+			{
+				if (so.structureID == propertyID || so.structureID == gateID)
+				{
+					this.falseCommand(Arrays.asList(
+							ColorOptions.error + "This structure is already a side objective ID " + so.structureID
+							));
+					return false;
+				}
+			} else
+			if (so.location == location)
+			{
+				this.falseCommand(Arrays.asList(
+						ColorOptions.error + "This location is already a side objective"
+						));
+				return false;
+			}
+		}
+		this.getSideObjectives().add(new TempSideObjective(location, structureID));
+		if (structureID != null)
+		{
+			this.sendMessage(Arrays.asList(
+					"",
+					ColorOptions.messageachievement + "Saved the structure(" + structureID + ") as a side objective",
+					ColorOptions.messageachievement + "type 'next' when you are done",
+					""
+					));
+		} else
+		{
+			this.sendMessage(Arrays.asList(
+					"",
+					ColorOptions.messageachievement + "Saved the block as a side objective",
+					ColorOptions.messageachievement + "type 'next' when you are done",
+					""
+					));
+		}
+
+		this.getUser().getPlayer().playSound(this.getUser().getPlayer().getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+		return true;
+	}
+//	
+//	protected void stash()
+//	{
+//		this.stashed = true;
+//		Sieges.stashedSiegeCreations.add(this);
+//		
+//		this.stashTask = new BukkitRunnable()
+//		{
+//			public void run()
+//			{
+//				Sieges.stashedSiegeCreations.remove(instance);
+//				user.getPlayer().sendMessage(ColorOptions.message + ColorOptions.messageArrow + "The stashed Siege scenario is no longer stashed");
+//			}
+//		}.runTaskLaterAsynchronously(main, 300*20);
+//	}
 }

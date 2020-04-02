@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
@@ -66,8 +67,8 @@ public class DuelCommands implements CommandExecutor
 					return false;
 				}
 				Location location = player.getLocation();
-				RegionManager manager = worldguard.getRegionManager(location.getWorld());
-				Integer arenaID = worldguard.getStructureIDbyRegion("arena", location, manager);
+				RegionManager manager = Worldguard.getRegionManager(location.getWorld());
+				Integer arenaID = Worldguard.getStructureIDbyRegion("arena", location, manager);
 				if (args.length == 1)
 				{
 					if (args[0].equalsIgnoreCase("accept"))

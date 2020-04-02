@@ -25,6 +25,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion.CircularInheritan
 
 import API_methods.WorldEdit;
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Main.Main;
 import Regions.Region;
@@ -79,7 +80,7 @@ public class ArenaCommands implements CommandExecutor
 			if (sender instanceof Player)
 			{
 				Player player = (Player) sender;
-                RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+                RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
 				if (player.hasPermission("k&k.arena"))
 				{
 					if (args.length > 0)
@@ -107,18 +108,18 @@ public class ArenaCommands implements CommandExecutor
 				                    			Integer streetID = street.getStreetID(streetName, townID);
 				                    			if (arena.checkStreetNumber(streetNumber, streetID))
 				                    			{
-				                    				//The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+				                    				//The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 				                    				ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				                    						"arena",
 				                    						new BlockVector(selection.getNativeMinimumPoint()),
 				                    						new BlockVector(selection.getNativeMaximumPoint())
 				                    						);
-				                    				if (this.region.checkUniqueRegion(manager, region, "arena"))
+				                    				if (Worldguard.checkUniqueRegion(manager, region, "arena"))
 				                    				{
 			                    						createArena(player, name, townID, streetID, streetNumber, manager, selection);
 				                    				} else
 				                    				{
-				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different arena region!");
+				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different arena gateRegion!");
 				                    				}
 				                    			} else
 				                    			{
@@ -208,13 +209,13 @@ public class ArenaCommands implements CommandExecutor
 	                    						if (arena.getArenaIDList(null).contains(Integer.valueOf(args[2])))
 	                    						{
 	                    							Integer arenaID = Integer.valueOf(args[2]);
-	                    							//The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+	                    							//The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 				                    				ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				                    						"arena",
 				                    						new BlockVector(selection.getNativeMinimumPoint()),
 				                    						new BlockVector(selection.getNativeMaximumPoint())
 				                    						);
-				                    				if (this.region.checkSameRegionID(manager, region, "arena", arenaID))
+				                    				if (Worldguard.checkSameRegionID(manager, region, "arena", arenaID))
 				                    				{
 				                    					boolean battleground = false;
 				                    					if (args.length == 4 && args[3].equalsIgnoreCase("battleground"))
@@ -229,7 +230,7 @@ public class ArenaCommands implements CommandExecutor
 														}
 				                    				} else
 				                    				{
-				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different arena-region!");
+				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different arena-gateRegion!");
 				                    				}
 	                    						} else
 	                    						{
@@ -245,7 +246,7 @@ public class ArenaCommands implements CommandExecutor
 	                    				}
 	                    			} else
 	                    			{
-	                    				player.sendMessage(ColorOptions.falsecommand + "Usage: /arena part add <arenaID> <battleground>(add battleground if the region is a battleground)");
+	                    				player.sendMessage(ColorOptions.falsecommand + "Usage: /arena part add <arenaID> <battleground>(add battleground if the gateRegion is a battleground)");
 	                    			}
 	                    		} else
 	                    		if (args[1].equalsIgnoreCase("remove"))
@@ -309,11 +310,11 @@ public class ArenaCommands implements CommandExecutor
 		                    				Location location = player.getLocation();
 											if (manager.getApplicableRegions(location) != null)
 											{
-												if (this.region.getRegion(location, "arena", manager) != null)
+												if (Worldguard.getRegion(location, "arena", manager) != null)
 												{
-													ProtectedRegion region = this.region.getRegion(location, "arena", manager);
-													Integer arenaID = this.region.getRegionID(region);
-													spawnpoint.saveSpawnPoint("arena_" + arenaID + "_" + locationName, "0", 0, "0", "", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+													ProtectedRegion region = Worldguard.getRegion(location, "arena", manager);
+													Integer arenaID = Worldguard.getStructureIDbyRegion(region);
+													spawnpoint.saveSpawnPoint("arena_" + arenaID + "_" + locationName, "0", 0, "0", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 													try 
 													{
 														player.sendMessage(ColorOptions.messageachievement + "Succesfully set the spawnpoint for category " + locationName + " for arena " + arena.getArena(arenaID).getString("Name"));
@@ -323,7 +324,7 @@ public class ArenaCommands implements CommandExecutor
 													}
 												} else
 												{
-													player.sendMessage(ColorOptions.error + "You are not standing in a arena-region");
+													player.sendMessage(ColorOptions.error + "You are not standing in a arena-gateRegion");
 												}
 											} else
 											{
@@ -475,7 +476,7 @@ public class ArenaCommands implements CommandExecutor
 		//Get the houseID of the new house
 		Integer arenaID = arena.getArenaID(name);
 		
-		//The region will be created with the worldGuard API
+		//The gateRegion will be created with the worldGuard API
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				"arena_" + arenaID,
 				new BlockVector(worldEditSelection.getNativeMinimumPoint()),
@@ -484,7 +485,7 @@ public class ArenaCommands implements CommandExecutor
 		
 		regionManager.addRegion(region);
 		
-		//Set all flags for the region
+		//Set all flags for the gateRegion
 		region.setFlag(DefaultFlag.ENTRY, State.ALLOW);
 		region.setFlag(DefaultFlag.ENTRY_DENY_MESSAGE, "");
 		region.setFlag(DefaultFlag.GREET_MESSAGE, ColorOptions.messageformat + "You are entering the arena " + name);
@@ -527,7 +528,7 @@ public class ArenaCommands implements CommandExecutor
 		Integer partID = null;
 		ArrayList<Integer> partList = arena.getArenaPartList(arenaID);
 		
-		//Check for every partID if there is an existing region, if not, that id is the new partID
+		//Check for every partID if there is an existing gateRegion, if not, that id is the new partID
 		for (Integer id : partList)
 		{
 			if (!manager.getRegions().containsKey("arena_" + arenaID + "," + id) && !manager.getRegions().containsKey("arena_" + arenaID + "," + id + "-battleground"))
@@ -546,7 +547,7 @@ public class ArenaCommands implements CommandExecutor
 			regionName = regionName + "," + partID;
 		}
 
-		//Create the actual WorldGuard region
+		//Create the actual WorldGuard gateRegion
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
                 regionName,
                 new BlockVector(selection.getNativeMinimumPoint()),
@@ -562,8 +563,8 @@ public class ArenaCommands implements CommandExecutor
 			RegionGroupFlag pvpFlag = DefaultFlag.PVP.getRegionGroupFlag();
 			try 
 			{
-				entryFlag.parseInput(worldguard.getWorldGuard(), null, "non_members");
-				pvpFlag.parseInput(worldguard.getWorldGuard(), null, "non_members");
+				entryFlag.parseInput(Worldguard.getWorldGuard(), null, "non_members");
+				pvpFlag.parseInput(Worldguard.getWorldGuard(), null, "non_members");
 			} catch (InvalidFlagFormat e) 
 			{
 				// Auto-generated catch block
@@ -571,7 +572,7 @@ public class ArenaCommands implements CommandExecutor
 			}
 		}
 		
-		//Try to set the arena region as parent of the sub-region
+		//Try to set the arena gateRegion as parent of the sub-gateRegion
 		try 
 		{
 			region.setParent(manager.getRegion("arena_" + arenaID));

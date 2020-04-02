@@ -33,6 +33,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion.CircularInheritan
 
 import API_methods.WorldEdit;
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Donator.Donator;
 import Exceptions.UserNotFoundException;
 import Genders.Gender;
@@ -103,7 +104,7 @@ public class HouseCommands implements CommandExecutor
 			if (sender instanceof Player)
 			{
 				Player player = (Player) sender;
-                RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+                RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
 				if (args.length > 0)
 				{
 					if (player.hasPermission("k&k.house.*"))
@@ -148,19 +149,19 @@ public class HouseCommands implements CommandExecutor
 					                    		Integer StreetID = street.getStreetID(streetName, townID);
 					                    		if (house.checkStreetNumber(houseNumber, StreetID))
 					                    		{
-				                    				//The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+				                    				//The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 				                    				ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				                    						"house",
 				                    						new BlockVector(selection.getNativeMinimumPoint()),
 				                    						new BlockVector(selection.getNativeMaximumPoint())
 				                    						);
-				                    				if (this.region.checkUniqueRegion(manager, region, "house"))
+				                    				if (Worldguard.checkUniqueRegion(manager, region, "house"))
 				                    				{
 					                    				//Trigger the method that handles the creation of the house
 						                    			createHouse(player, houseName, townID, streetName, houseNumber, requiredTitleID, grade, manager, selection);
 				                    				} else
 				                    				{
-				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different house region!");
+				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different house gateRegion!");
 				                    				}
 					                    		} else
 					                    		{
@@ -261,18 +262,18 @@ public class HouseCommands implements CommandExecutor
 		                					   if (house.getHouseIDList(null).contains(Integer.valueOf(args[2])))
 		                					   {
 		                						   Integer propertyID = Integer.valueOf(args[2]);
-		                						   //The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+		                						   //The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 		                						   ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 		                								   "house",
 		                								   new BlockVector(selection.getNativeMinimumPoint()),
 		                								   new BlockVector(selection.getNativeMaximumPoint())
 		                								   );
-		                						   if (this.region.checkSameRegionID(manager, region, "house", propertyID))
+		                						   if (Worldguard.checkSameRegionID(manager, region, "house", propertyID))
 		                						   {
 		                							   this.addHouseRegion(player, propertyID, manager, selection);
 		                						   } else
 		                						   {	
-		                							   player.sendMessage(ColorOptions.error + "You tried to overlap a different house region!");
+		                							   player.sendMessage(ColorOptions.error + "You tried to overlap a different house gateRegion!");
 		                						   }
 		                					   } else
 		                					   {
@@ -341,13 +342,13 @@ public class HouseCommands implements CommandExecutor
 									Location location = player.getLocation();
 									if (manager.getApplicableRegions(location) != null)
 									{
-										if (this.region.getRegion(location, "house", manager) != null)
+										if (Worldguard.getRegion(location, "house", manager) != null)
 										{
-											ProtectedRegion region = this.region.getRegion(location, "house", manager);
-											Integer houseID = this.region.getRegionID(region);
+											ProtectedRegion region = Worldguard.getRegion(location, "house", manager);
+											Integer houseID = Worldguard.getStructureIDbyRegion(region);
 											if (house.getHouseSpawnPoint(houseID) == 0)
 											{
-												spawnpoint.saveSpawnPoint("house_" + houseID, "0", 0, "0", "", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+												spawnpoint.saveSpawnPoint("house_" + houseID, "0", 0, "0", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 												house.saveHouseSpawnPoint(houseID, spawnpoint.getSpawnPointID("house_" + houseID));
 												player.sendMessage(ColorOptions.messageachievement + "Succesfully set the spawnpoint for house " + house.getHouseName(houseID) + " on " + street.getStreetName(house.getStreetID(houseID)) + " with streetnumber " + house.getHouseNumber(houseID) + " in town " + town.getTownName(street.getTownID(house.getStreetID(houseID))));
 											} else
@@ -356,7 +357,7 @@ public class HouseCommands implements CommandExecutor
 											}
 										} else
 										{
-											player.sendMessage(ColorOptions.error + "You are not standing in a house-region");
+											player.sendMessage(ColorOptions.error + "You are not standing in a house-gateRegion");
 										}
 									} else
 									{
@@ -730,14 +731,14 @@ public class HouseCommands implements CommandExecutor
 		//Get the houseID of the new house
 		Integer houseID = house.getHouseID(name, StreetID, houseNumber);
 		
-		//The region will be created with the worldGuard API
+		//The gateRegion will be created with the worldGuard API
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				"house_" + houseID,
 				new BlockVector(worldEditSelection.getNativeMinimumPoint()),
 				new BlockVector(worldEditSelection.getNativeMaximumPoint())
 				);
 //		TEST
-//		Polygonal2DRegion weRegion = new Polygonal2DRegion((LocalWorld) worldEditSelection.getWorld(), region.getPoints(), region.getMinimumPoint().getBlockY(), region.getMaximumPoint().getBlockY());
+//		Polygonal2DRegion weRegion = new Polygonal2DRegion((LocalWorld) worldEditSelection.getWorld(), gateRegion.getPoints(), gateRegion.getMinimumPoint().getBlockY(), gateRegion.getMaximumPoint().getBlockY());
 		CuboidRegion curegion = new CuboidRegion(BukkitUtil.getLocalWorld(worldEditSelection.getWorld()), region.getMinimumPoint(), region.getMaximumPoint());
 		for (BlockVector block : curegion) 
 		{
@@ -761,7 +762,7 @@ public class HouseCommands implements CommandExecutor
 //		TEST
 		regionManager.addRegion(region);
 		
-		//Set all flags for the region
+		//Set all flags for the gateRegion
 		region.setFlag(DefaultFlag.ENTRY, State.DENY);
 		region.setFlag(DefaultFlag.FEED_AMOUNT, Integer.valueOf(20));
 		region.setFlag(DefaultFlag.FEED_DELAY, Integer.valueOf(1));
@@ -772,7 +773,7 @@ public class HouseCommands implements CommandExecutor
 		RegionGroupFlag entryFlag = DefaultFlag.ENTRY.getRegionGroupFlag();
 		try 
 		{
-			entryFlag.parseInput(worldguard.getWorldGuard(), null, "non_members");
+			entryFlag.parseInput(Worldguard.getWorldGuard(), null, "non_members");
 		} catch (InvalidFlagFormat e) 
 		{
 			// Auto-generated catch block
@@ -867,7 +868,7 @@ public class HouseCommands implements CommandExecutor
 		Integer partID = null;
 		ArrayList<Integer> partList = house.getHousePartList(houseID);
 		
-		//Check for every partID if there is an existing region, if not, that id is the new partID
+		//Check for every partID if there is an existing gateRegion, if not, that id is the new partID
 		for (Integer id : partList)
 		{
 			if (!manager.getRegions().containsKey("house_" + houseID + "," + id))
@@ -877,15 +878,15 @@ public class HouseCommands implements CommandExecutor
 			}
 		}
 		
-		//Create the actual WorldGuard region
+		//Create the actual WorldGuard gateRegion
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
                 "house_" + houseID + "," + partID,
                 new BlockVector(selection.getNativeMinimumPoint()),
                 new BlockVector(selection.getNativeMaximumPoint())
 				);
-		//manager.addRegion(region);
+		//manager.addRegion(gateRegion);
 		
-		//Try to set the house region as parent of the sub-region
+		//Try to set the house gateRegion as parent of the sub-gateRegion
 		try 
 		{
 			region.setParent(manager.getRegion("house_" + houseID));

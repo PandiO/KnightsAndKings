@@ -2,23 +2,18 @@ package Arenas;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 
 import Handlers.ColorOptions;
 import Main.Main;
 import Menu.DuelSetupClick;
-import Products.Product;
 import Users.User;
 import Users.Users;
 
@@ -31,35 +26,35 @@ public class DuelEvents implements Listener
 		// TODO Auto-generated constructor stub
 	}
 	
-	@EventHandler
-	public void onMove(PlayerMoveEvent e)
-	{
-		Player player = e.getPlayer();
-		UUID uuid = player.getUniqueId();
-		if (!main.duelList.isEmpty())
-		{
-			Duel duel = main.duelList.get(0);
-			if (duel.countDownMove)
-			{
-				for (User fighter : duel.getPlayers())
-				{
-					if (uuid == fighter.getUUID())
-					{
-						if (e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockY() != e.getTo().getBlockY() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
-						{
-							if (duel.user1.getUUID() == uuid)
-							{
-								player.teleport(duel.arenaPlayer1);
-							} else
-							{
-								player.teleport(duel.arenaPlayer2);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+//	@EventHandler
+//	public void onMove(PlayerMoveEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		UUID uuid = player.getUniqueId();
+//		if (!main.duelList.isEmpty())
+//		{
+//			Duel duel = main.duelList.get(0);
+//			if (duel.countDownMove)
+//			{
+//				for (User fighter : duel.getPlayers())
+//				{
+//					if (uuid == fighter.getUUID())
+//					{
+//						if (e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockY() != e.getTo().getBlockY() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
+//						{
+//							if (duel.user1.getUUID() == uuid)
+//							{
+//								player.teleport(duel.arenaPlayer1);
+//							} else
+//							{
+//								player.teleport(duel.arenaPlayer2);
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
 	
 	@EventHandler
 	public void onKill(PlayerDeathEvent e)
@@ -180,64 +175,64 @@ public class DuelEvents implements Listener
 			}
 		}
 	}
-	@EventHandler
-	@SuppressWarnings("deprecation")
-	public void onChat(PlayerChatEvent e)
-	{
-		Product product = new Product();
-		Player player = e.getPlayer();
-		User user = Users.getUser(player.getUniqueId());
-		UUID uuid = player.getUniqueId();
-		if (DuelSetupClick.coinBetList.containsKey(uuid))
-		{
-			e.setCancelled(true);
-			if (main.isInt(e.getMessage()))
-			{
-				Integer coins = Integer.valueOf(e.getMessage());
-				if (user.getCoins() >= coins)
-				{
-					Inventory inv = DuelSetupClick.coinBetList.get(player.getUniqueId());
-					if (ChatColor.stripColor(inv.getItem(45).getItemMeta().getDisplayName()).equalsIgnoreCase(player.getName()))
-					{
-						User target = Users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName())).getUniqueId());
-						if (target.getCoins() >= coins)
-						{
-							inv.setItem(48, product.addCoinBet(inv.getItem(48), coins));
-							inv.setItem(50, product.addCoinBet(inv.getItem(50), coins));
-						} else
-						{
-							player.sendMessage(ColorOptions.error + "Your opponent does not have that much coins! Both bets need to be equal!");
-						}
-					} else if (ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName()).equalsIgnoreCase(player.getName()))
-					{
-						User target = Users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(48).getItemMeta().getDisplayName())).getUniqueId());
-						if (target.getCoins() >= coins)
-						{
-							inv.setItem(48, product.addCoinBet(inv.getItem(48), coins));
-							inv.setItem(50, product.addCoinBet(inv.getItem(50), coins));
-						} else
-						{
-							player.sendMessage(ColorOptions.error + "Your opponent does not have that much coins! Both bets need to be equal!");
-						}
-					}
-					player.openInventory(inv);
-					DuelSetupClick.coinBetList.remove(player.getUniqueId());
-				} else
-				{
-					player.sendMessage(ColorOptions.error + "You don't have enough coins!");
-					player.sendMessage(ColorOptions.message + "Your coins: " + ColorOptions.formatCurrency(user.getCoins()));
-				}
-			} else if (e.getMessage().equalsIgnoreCase("cancel"))
-			{
-				Inventory inv = DuelSetupClick.coinBetList.get(player.getUniqueId());
-				player.openInventory(inv);
-				DuelSetupClick.coinBetList.remove(player.getUniqueId());
-			} else
-			{
-				player.sendMessage(ColorOptions.error + "Please specify a number of coins, or to cancel type 'cancel'");
-			}
-		}
-	}
+//	@EventHandler
+//	@SuppressWarnings("deprecation")
+//	public void onChat(PlayerChatEvent e)
+//	{
+//		Product product = new Product();
+//		Player player = e.getPlayer();
+//		User user = Users.getUser(player.getUniqueId());
+//		UUID uuid = player.getUniqueId();
+//		if (DuelSetupClick.coinBetList.containsKey(uuid))
+//		{
+//			e.setCancelled(true);
+//			if (main.isInt(e.getMessage()))
+//			{
+//				Integer coins = Integer.valueOf(e.getMessage());
+//				if (user.getCoins() >= coins)
+//				{
+//					Inventory inv = DuelSetupClick.coinBetList.get(player.getUniqueId());
+//					if (ChatColor.stripColor(inv.getItem(45).getItemMeta().getDisplayName()).equalsIgnoreCase(player.getName()))
+//					{
+//						User target = Users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName())).getUniqueId());
+//						if (target.getCoins() >= coins)
+//						{
+//							inv.setItem(48, product.addCoinBet(inv.getItem(48), coins));
+//							inv.setItem(50, product.addCoinBet(inv.getItem(50), coins));
+//						} else
+//						{
+//							player.sendMessage(ColorOptions.error + "Your opponent does not have that much coins! Both bets need to be equal!");
+//						}
+//					} else if (ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName()).equalsIgnoreCase(player.getName()))
+//					{
+//						User target = Users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(48).getItemMeta().getDisplayName())).getUniqueId());
+//						if (target.getCoins() >= coins)
+//						{
+//							inv.setItem(48, product.addCoinBet(inv.getItem(48), coins));
+//							inv.setItem(50, product.addCoinBet(inv.getItem(50), coins));
+//						} else
+//						{
+//							player.sendMessage(ColorOptions.error + "Your opponent does not have that much coins! Both bets need to be equal!");
+//						}
+//					}
+//					player.openInventory(inv);
+//					DuelSetupClick.coinBetList.remove(player.getUniqueId());
+//				} else
+//				{
+//					player.sendMessage(ColorOptions.error + "You don't have enough coins!");
+//					player.sendMessage(ColorOptions.message + "Your coins: " + ColorOptions.formatCurrency(user.getCoins()));
+//				}
+//			} else if (e.getMessage().equalsIgnoreCase("cancel"))
+//			{
+//				Inventory inv = DuelSetupClick.coinBetList.get(player.getUniqueId());
+//				player.openInventory(inv);
+//				DuelSetupClick.coinBetList.remove(player.getUniqueId());
+//			} else
+//			{
+//				player.sendMessage(ColorOptions.error + "Please specify a number of coins, or to cancel type 'cancel'");
+//			}
+//		}
+//	}
 	
 	public void removeInvite(DuelInvite invite)
 	{

@@ -25,7 +25,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion.CircularInheritanceException;
 
 import API_methods.WorldEdit;
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Genders.Gender;
 import Handlers.ColorOptions;
@@ -57,7 +57,6 @@ public class PropertyCommands implements CommandExecutor
 	Gender gender = new Gender();
 	Street street = new Street();
 	Region region = new Region();
-	WorldGuard worldguard = new WorldGuard();
 	WorldEdit worldedit = new WorldEdit();
 	public Main main;
 	public PropertyCommands(Main main) 
@@ -126,7 +125,7 @@ public class PropertyCommands implements CommandExecutor
 					ErrorHandlers.userNotFoundAction(null, player, true);
 					return false;
 				}
-                RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+                RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
 				if (player.hasPermission("k&k.property"))
 				{
 					if (args.length > 0)
@@ -165,13 +164,13 @@ public class PropertyCommands implements CommandExecutor
 						                    			Integer streetID = street.getStreetID(streetName, townID);
 						                    			if (property.checkStreetNumber(streetNumber, streetID))
 						                    			{
-						                    				//The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+						                    				//The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 						                    				ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 						                    						"property",
 						                    						new BlockVector(selection.getNativeMinimumPoint()),
 						                    						new BlockVector(selection.getNativeMaximumPoint())
 						                    						);
-						                    				if (this.region.checkUniqueRegion(manager, region, "property"))
+						                    				if (Worldguard.checkUniqueRegion(manager, region, "property"))
 						                    				{
 						                    					if (this.category.getCategoryID(category) != null)
 						                    					{
@@ -183,7 +182,7 @@ public class PropertyCommands implements CommandExecutor
 						                    					}
 						                    				} else
 						                    				{
-						                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different property region!");
+						                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different property gateRegion!");
 						                    				}
 						                    			} else
 						                    			{
@@ -294,18 +293,18 @@ public class PropertyCommands implements CommandExecutor
 	                    						if (property.getIDList(null, null).contains(Integer.valueOf(args[2])))
 	                    						{
 	                    							Integer propertyID = Integer.valueOf(args[2]);
-	                    							//The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+	                    							//The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 				                    				ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				                    						"property",
 				                    						new BlockVector(selection.getNativeMinimumPoint()),
 				                    						new BlockVector(selection.getNativeMaximumPoint())
 				                    						);
-				                    				if (this.region.checkSameRegionID(manager, region, "property", propertyID))
+				                    				if (Worldguard.checkSameRegionID(manager, region, "property", propertyID))
 				                    				{
 				                    					this.addPropertyRegion(player, propertyID, manager, selection);
 				                    				} else
 				                    				{
-				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different property region!");
+				                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different property gateRegion!");
 				                    				}
 	                    						} else
 	                    						{
@@ -374,13 +373,13 @@ public class PropertyCommands implements CommandExecutor
 	                    			Location location = player.getLocation();
 	                    			if (manager.getApplicableRegions(location) != null)
 	                    			{
-	                    				if (this.region.getRegion(location, "property", manager) != null)
+	                    				if (Worldguard.getRegion(location, "property", manager) != null)
 	                    				{
-	                    					ProtectedRegion region = this.region.getRegion(location, "property", manager);
-											Integer propertyID = this.region.getRegionID(region);
+	                    					ProtectedRegion region = Worldguard.getRegion(location, "property", manager);
+											Integer propertyID = Worldguard.getStructureIDbyRegion(region);
 											if (property.getPropertySpawnPoint(propertyID) == 0)
 											{
-												spawnpoint.saveSpawnPoint("property_" + propertyID, "0", 0, "0", "", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+												spawnpoint.saveSpawnPoint("property_" + propertyID, "0", 0, "0", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 												property.savePropertySpawnPoint(propertyID, spawnpoint.getSpawnPointID("property_" + propertyID));
 												player.sendMessage(ColorOptions.messageachievement + "Succesfully set the spawnpoint for property " + property.getPropertyName(propertyID) + " on " + street.getStreetName(property.getStreetID(propertyID)) + " with streetnumber " + property.getStreetNumber(propertyID) + " in town " + town.getTownName(street.getTownID(property.getStreetID(propertyID))));
 											} else
@@ -389,7 +388,7 @@ public class PropertyCommands implements CommandExecutor
 											}
 										} else
 										{
-											player.sendMessage(ColorOptions.error + "You are not standing in a property-region");
+											player.sendMessage(ColorOptions.error + "You are not standing in a property-gateRegion");
 										}
 									} else
 									{
@@ -816,7 +815,7 @@ public class PropertyCommands implements CommandExecutor
 		//Get the houseID of the new house
 		Integer propertyID = property.getPropertyID(name, streetID, streetNumber);
 		
-		//The region will be created with the worldGuard API
+		//The gateRegion will be created with the worldGuard API
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				"property_" + propertyID,
 				new BlockVector(worldEditSelection.getNativeMinimumPoint()),
@@ -825,7 +824,7 @@ public class PropertyCommands implements CommandExecutor
 		
 		regionManager.addRegion(region);
 		
-		//Set all flags for the region
+		//Set all flags for the gateRegion
 		region.setFlag(DefaultFlag.ENTRY, State.ALLOW);
 		region.setFlag(DefaultFlag.ENTRY_DENY_MESSAGE, "");
 		region.setFlag(DefaultFlag.DENY_MESSAGE, "");
@@ -883,7 +882,7 @@ public class PropertyCommands implements CommandExecutor
 		Integer partID = null;
 		ArrayList<Integer> partList = property.getPropertyPartList(propertyID);
 		
-		//Check for every partID if there is an existing region, if not, that id is the new partID
+		//Check for every partID if there is an existing gateRegion, if not, that id is the new partID
 		for (Integer id : partList)
 		{
 			if (!manager.getRegions().containsKey("property_" + propertyID + "," + id))
@@ -893,15 +892,15 @@ public class PropertyCommands implements CommandExecutor
 			}
 		}
 		
-		//Create the actual WorldGuard region
+		//Create the actual WorldGuard gateRegion
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
                 "property_" + propertyID + "," + partID,
                 new BlockVector(selection.getNativeMinimumPoint()),
                 new BlockVector(selection.getNativeMaximumPoint())
 				);
-		//manager.addRegion(region);
+		//manager.addRegion(gateRegion);
 		
-		//Try to set the property region as parent of the sub-region
+		//Try to set the property gateRegion as parent of the sub-gateRegion
 		try 
 		{
 			region.setParent(manager.getRegion("property_" + propertyID));

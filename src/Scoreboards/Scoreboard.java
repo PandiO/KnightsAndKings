@@ -2,10 +2,7 @@ package Scoreboards;
 
 import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -155,7 +152,7 @@ public class Scoreboard
 			Participant participant = siege.getParticipant(user);
 			MGTeam mGTeam = participant.GetTeam();
 			MGTeam enemyTeam = null;
-			Main.logMessage("Found participating siege for user " + user.getUsername());
+
 			siege.createScoreboard(participant.GetTeam());
 			team = FetchTeam(board, "siege" + mGTeam.GetNumber());
 			
@@ -174,7 +171,6 @@ public class Scoreboard
 		} else
 		if (Main.HideAndSeek != null && Main.HideAndSeek.getParticipating(user) && Main.HideAndSeek.getProgress())
 		{
-			Main.logMessage("Setting hs scoreboard for " + user.getUsername());
 			Participant participant = Main.HideAndSeek.getParticipant(user);
 			for (User target : main.users)
 			{
@@ -313,7 +309,6 @@ public class Scoreboard
 	
 	public void setBoard(List<User> Users)
 	{
-		Main.logMessage("Setting board");
 		List<User> TargetUsers = null;
 		org.bukkit.scoreboard.Scoreboard defaultBoard = getScoreBoard();
 		
@@ -333,7 +328,7 @@ public class Scoreboard
 			Siege siege = Sieges.Sieges.findSiege(user);
 			HideAndSeek hideAndSeek = Main.HideAndSeek;
 			
-			if (siege != null)
+			if (siege != null && siege.getProgress())
 			{
 				defaultBoard = siege.getParticipant(user).GetTeam().GetScoreboard();
 			} else

@@ -15,7 +15,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.SoundHandler;
 import Main.Main;
@@ -32,7 +32,6 @@ public class Transport
 	SpawnPoint spawnpoint = new SpawnPoint();
 	Town town = new Town();
 	Street street = new Street();
-	WorldGuard worldguard = new WorldGuard();
 	Property property = new Property();
 	Product product = new Product();
 	PropertyProduct proproduct = new PropertyProduct();
@@ -92,16 +91,16 @@ public class Transport
 	
 	public void addList()
 	{
-		TransportEvents.pending.add(this);
-		if (main.debug)
+		Main.transports.add(this);
+		if (Main.debug)
 		{
-			Bukkit.getConsoleSender().sendMessage("Added");
+			Bukkit.getConsoleSender().sendMessage("Added transport. >>Transport.java");
 		}
 	}
 	
 	public void removeList()
 	{
-		TransportEvents.pending.remove(this);
+		Main.transports.remove(this);
 	}
 	
 	public void saveInventory()
@@ -323,7 +322,7 @@ public class Transport
 		Location loc = this.player.getLocation();
 		if (this.townID == null)
 		{
-			Integer tryID = worldguard.getStructureIDbyRegion("town", loc, worldguard.getRegionManager(loc.getWorld()));
+			Integer tryID = Worldguard.getStructureIDbyRegion("town", loc, Worldguard.getRegionManager(loc.getWorld()));
 			
 			HashMap<Integer, Double> spawnpointDistance = new HashMap<Integer, Double>();
 			for (Integer id : town.getTownIDList())

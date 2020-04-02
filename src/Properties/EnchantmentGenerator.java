@@ -21,7 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
@@ -38,7 +38,6 @@ public class EnchantmentGenerator implements Listener
 	Integer price = 250000;
 	offlineUser user = new offlineUser();
 	Enchantment enchantment = new Enchantment();
-	WorldGuard worldguard = new WorldGuard();
 	Property property = new Property();
 	Product product = new Product();
 	PropertyCategory propertyCat = new PropertyCategory();
@@ -57,7 +56,7 @@ public class EnchantmentGenerator implements Listener
 		if (action.equals(Action.RIGHT_CLICK_BLOCK) && e.getClickedBlock().getType() == Material.ENDER_PORTAL_FRAME)
 		{
 			Location location = e.getClickedBlock().getLocation();
-			if (worldguard.getStructureIDbyRegion("property", location, worldguard.getRegionManager(location.getWorld())) != null)
+			if (Worldguard.getStructureIDbyRegion("property", location, Worldguard.getRegionManager(location.getWorld())) != null)
 			{
 				Player player = e.getPlayer();
 				UUID uuid = player.getUniqueId();
@@ -76,7 +75,7 @@ public class EnchantmentGenerator implements Listener
 					ErrorHandlers.userNotFoundAction(null, player, true);
 					return;
 				}
-				Integer propertyID = worldguard.getStructureIDbyRegion("property", location, worldguard.getRegionManager(location.getWorld()));
+				Integer propertyID = Worldguard.getStructureIDbyRegion("property", location, Worldguard.getRegionManager(location.getWorld()));
 				if (propertyCat.getCategoryName(property.getCategoryID(propertyID)).equalsIgnoreCase("witchery"))
 				{
 					if (inUse(location) == false)

@@ -11,9 +11,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import Gates.Gate;
-import Gates.Gates;
+import DataManager.Structures.Gates;
 import Handlers.ColorOptions;
+import Models.Structures.Gate;
 import Products.Product;
 import Users.User;
 
@@ -42,7 +42,7 @@ public class GateManagerClick
 			Gate gate = Gates.findGate(Integer.valueOf(IDLine.split(": ")[1]));
 			if (gate != null)
 			{
-				Bukkit.getConsoleSender().sendMessage("Gate click found: " + gate.getID());
+				Bukkit.getConsoleSender().sendMessage("Gate click found: " + gate.getId());
 				this.menu.openGateInformation(user, gate);
 				user.playSound("succesclick");
 			}
@@ -85,7 +85,7 @@ public class GateManagerClick
 		if (dc.equalsIgnoreCase("save changes"))
 		{
 			Gates.saveGate(gate);
-			user.getPlayer().sendMessage(ColorOptions.messageachievement + ColorOptions.messageArrow + "Succesfully saved Gate " + gate.getID() + " to the Database!");
+			user.getPlayer().sendMessage(ColorOptions.messageachievement + ColorOptions.messageArrow + "Succesfully saved Gate " + gate.getId() + " to the Database!");
 			user.playSound("succesclick");
 		}
 		if (dc.contains("Current name: "))

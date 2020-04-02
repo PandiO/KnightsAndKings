@@ -29,7 +29,6 @@ import org.bukkit.util.Vector;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
-import API_methods.WorldGuard;
 import Afk.Afk;
 import Assignments.Assignment;
 import Assignments.AssignmentEnterPropertySpecific;
@@ -39,6 +38,7 @@ import Assignments.AssignmentKill;
 import Assignments.AssignmentTravelDistance;
 import Assignments.AssignmentTravelRandom;
 import Assignments.AssignmentTravelSpecific;
+import DataManager.Worldguard;
 import Donator.Donator;
 import Genders.Gender;
 import Handlers.ColorOptions;
@@ -51,6 +51,7 @@ import Menu.Menu;
 import Properties.Property;
 import Quests.Quest;
 import Scoreboards.ActionBar;
+import Sieges.Siege;
 import Skills.Skill;
 import Skills.SpecialSkill;
 import SpawnPoints.SpawnPoint;
@@ -72,7 +73,6 @@ public class User
 	SpawnPoint spawnpoint = new SpawnPoint();
 	Gender gender = new Gender();
 	Donator donator = new Donator();
-	WorldGuard worldguard = new WorldGuard();
 	
 	boolean isOfflineUser = false;
 	boolean fetchedAddress = false;
@@ -186,7 +186,12 @@ public class User
 	int votes;
 	
 	Afk afk = null;
+	Long afkCommence;
 	HashMap<Integer, Integer> soldItems = new HashMap<Integer, Integer>(); 
+	Location banditLocation;
+	HashMap<UUID, Integer> mentionDelay = new HashMap<UUID, Integer>();
+	List<ItemStack> keepItems = new ArrayList<ItemStack>();
+	User avengerTarget;
 	
 	public User(UUID uuid)
 	{	
@@ -693,6 +698,7 @@ public class User
 	public void join(Player player)
 	{
 		this.player = player;
+    	Users.CheckDuplicateAddress(user);
     	new BukkitRunnable()
     	{
     		public void run()
@@ -702,9 +708,23 @@ public class User
         			this.cancel();
         			setDailyAssignments();
         			setLastLogin();
+        	    	setSkillHealth();
+        	    	setSkillSpeed();
+        	    	Users.CheckScheduledRank(user);
+        	    	Users.CheckScheduledItems(user);
     			}
     		}
     	}.runTaskTimerAsynchronously(main, 0, 10);
+		
+		if (this.isAfk())
+		{
+			if (this.getAfk().teleporting == false)
+			{
+				this.removeAfk();
+			}
+		}
+		this.afkCommence = (System.currentTimeMillis()+ main.afkTime*1000);
+		
 		Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "Before joining: " + main.users);
 		this.addList();
 		Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "After joining: " + main.users);
@@ -712,6 +732,7 @@ public class User
 	
 	public void quit()
 	{
+		this.checkMiniGames();
 		Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "Before leaving: " + main.users);
 		this.removeList();
 		Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "After leaving: " + main.users);
@@ -746,6 +767,19 @@ public class User
 			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Couldn't refresh data for player with username " + this.username);
 		}
 		
+	}
+	
+	public void checkMiniGames()
+	{
+		Siege siege = Sieges.Sieges.findSiege(this);
+		if (siege != null)
+		{
+			siege.leavePlayer(this);
+		}
+		if (Main.HideAndSeek.getParticipating(this))
+		{
+			Main.HideAndSeek.leave(this);
+		}
 	}
 	
 	public boolean isOfflineUser()
@@ -913,6 +947,11 @@ public class User
 	public Afk getAfk()
 	{
 		return this.afk;
+	}
+	
+	public Long GetAfkCommence()
+	{
+		return this.afkCommence;
 	}
 	
 	public InetAddress getAdress()
@@ -1306,8 +1345,27 @@ public class User
 		}
 	}
 	
+	public Location GetBanditLocation()
+	{
+		return this.banditLocation;
+	}
+	
+	public void SetBanditLocation(Location location)
+	{
+		this.banditLocation = location;
+	}
+	
+	public void RemoveBanditLocation()
+	{
+		this.banditLocation = null;
+	}
+	
 	public void setAfk()
 	{
+		if (this.afk != null)
+		{
+			return;
+		}
 		try
 		{
 			this.afk = new Afk(this);
@@ -1330,6 +1388,16 @@ public class User
 			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Couldn't stop afk for player with UUID " + this.getUUID());
 			e.printStackTrace();
 		}
+	}
+	
+	public void SetAfkCommence(Long futureCommence)
+	{
+		this.afkCommence = futureCommence;
+	}
+	
+	public void RemoveAfkCommence()
+	{
+		this.afkCommence = null;
 	}
 	
 	public void setCoins(int amount)
@@ -2884,6 +2952,52 @@ public class User
 		return prefix;
 	}
 	
+	public String getLeaveMessage()
+	{
+		String message = null;
+		String prefix = null;
+		ChatColor subject = null;
+		String suffix = null;
+		String rank = null;
+		if (player.hasPermission("k&k.owner"))
+	    {
+			if (!user.inOwnerModus())
+			{
+				prefix = ChatColor.DARK_PURPLE + "" + ChatColor.BOLD;
+				subject = ColorOptions.messagesubjects;
+				suffix = ChatColor.DARK_PURPLE + "" + ChatColor.BOLD;
+				rank = "★ Owner";
+	    		message = ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "★ Owner " + ColorOptions.messagesubjects + player.getName() + ChatColor.DARK_PURPLE + " left the kingdoms!";
+
+			}
+	    } else if (player.hasPermission("k&k.co-owner") && !player.hasPermission("k&k.owner"))
+	    {
+			if (!user.inOwnerModus())
+			{
+	    		message = ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "★ Co-Owner " + ColorOptions.messagesubjects + player.getName() + ChatColor.DARK_PURPLE + " left the kingdoms!";
+
+			}
+	    } else
+		if (player.hasPermission("k&k.staff") && !player.hasPermission("k&k.co-owner"))
+		{
+			if (!user.inStaffModus())
+			{
+				message = ColorOptions.falsecommand + "" + ChatColor.BOLD + "► Staff-member " + ColorOptions.messagesubjects + player.getName() + ColorOptions.falsecommand + " left the kingdoms!";
+			}
+		} else if (user.getDonatorName().equalsIgnoreCase("noble"))
+		{
+			message = ColorOptions.falsecommand + "► A " + ColorOptions.noblesubjects + "noble " + this.titleName + ColorOptions.falsecommand + " left the kingdoms!";
+		} else if (user.getDonatorName().equalsIgnoreCase("royal"))
+		{
+			message = ColorOptions.falsecommand + "► A " + ColorOptions.royalsubjects + "royal " + this.titleName + ColorOptions.falsecommand + " left the kingdoms!";
+		} else if (user.getDonatorName().equalsIgnoreCase("dragon blood"))
+		{
+			message = ColorOptions.falsecommand + "► A " + ColorOptions.dbsubjects + "dragon blood " + this.titleName + ColorOptions.falsecommand + " left the kingdoms!";
+		}
+				
+		return message;
+	}
+	
 	public Location getFrontLocation()
 	{
 		Location loc = null;
@@ -3013,13 +3127,13 @@ public class User
 	    	}
 		} else if (this.getDonatorName().equalsIgnoreCase("noble"))
 		{
-			e.setJoinMessage(donator.getDonatorColorSecondary(donatorID) + "► A " + donator.getDonatorColorPrimary(donatorID) + "noble " + this.getTitleName() + donator.getDonatorColorSecondary(donatorID) + " entered the kingdoms!");
+			e.setJoinMessage(Donator.getDonatorColorSecondary(donatorID) + "► A " + Donator.getDonatorColorPrimary(donatorID) + "noble " + this.getTitleName() + Donator.getDonatorColorSecondary(donatorID) + " entered the kingdoms!");
 		} else if (this.getDonatorName().equalsIgnoreCase("royal"))
 		{
-			e.setJoinMessage(donator.getDonatorColorSecondary(donatorID) + "► A " + donator.getDonatorColorPrimary(donatorID) + "royal " + this.getTitleName() + donator.getDonatorColorSecondary(donatorID) + " entered the kingdoms!");
+			e.setJoinMessage(Donator.getDonatorColorSecondary(donatorID) + "► A " + Donator.getDonatorColorPrimary(donatorID) + "royal " + this.getTitleName() + Donator.getDonatorColorSecondary(donatorID) + " entered the kingdoms!");
 		} else if (this.getDonatorName().equalsIgnoreCase("dragon blood"))
 		{
-			e.setJoinMessage(donator.getDonatorColorSecondary(donatorID) + "► A " + donator.getDonatorColorPrimary(donatorID) + "dragon blood " + this.getTitleName() + donator.getDonatorColorSecondary(donatorID) + " entered the kingdoms!");
+			e.setJoinMessage(Donator.getDonatorColorSecondary(donatorID) + "► A " + Donator.getDonatorColorPrimary(donatorID) + "dragon blood " + this.getTitleName() + Donator.getDonatorColorSecondary(donatorID) + " entered the kingdoms!");
 		} else
 		{
 			e.setJoinMessage(null);
@@ -3194,9 +3308,47 @@ public class User
 		}
 	}
 	
+	public HashMap<UUID, Integer> getMentionDelay() {
+		return mentionDelay;
+	}
+	
+	public void setMentionDelay(HashMap<UUID, Integer> mentionDelay) {
+		this.mentionDelay = mentionDelay;
+	}
+	
 	public List<Quest> getQuestList()
 	{
 		return this.QuestList;
+	}
+	
+	public User getAvengerTarget()
+	{
+		return this.avengerTarget;
+	}
+	
+	public void setAvengerTarget(User target)
+	{
+		this.avengerTarget = target;
+	}
+	
+	public List<ItemStack> getKeepItems()
+	{
+		return this.keepItems;
+	}
+	
+	public void setKeepItems(List<ItemStack> items)
+	{
+		this.keepItems.addAll(items);
+	}
+	
+	public void addKeepItems(ItemStack item)
+	{
+		this.keepItems.add(item);
+	}
+	
+	public void resetKeepItems()
+	{
+		this.keepItems.clear();
 	}
 	
 	public boolean inSafeZone()
@@ -3206,16 +3358,23 @@ public class User
 		boolean safe = false;
 		
 		Location location = this.getPlayer().getLocation();
-		RegionManager manager = this.worldguard.getRegionManager(location.getWorld());
-		Integer townID = this.worldguard.getStructureIDbyRegion("town", location, manager);
-		if (townID != null && townID != town.getTownID("wilderness") && !this.worldguard.isArenaBattleground(location, manager))
+		RegionManager manager = Worldguard.getRegionManager(location.getWorld());
+		Integer townID = Worldguard.getStructureIDbyRegion("town", location, manager);
+		Integer propertyID = Worldguard.getStructureIDbyRegion("property", location, manager);
+
+		if (propertyID != null)
 		{
 			safe = true;
-			Integer houseID = this.worldguard.getStructureIDbyRegion("house", location, manager);
-			if (houseID != null && house.getHouseOwnerID(houseID) == this.getID())
+		} else
+		if (townID != null && townID != town.getTownID("wilderness"))
+		{
+			if (!Worldguard.isArenaBattleground(location, manager))
 			{
 				safe = true;
 			}
+		} else
+		{
+			Main.logMessage("propertyID == null, townID == null or arenaground! townID: " + townID + ", ptopertyID: " + propertyID);
 		}
 		
 		return safe;
@@ -3258,5 +3417,34 @@ public class User
 	public void sendMessage(String message)
 	{
 		this.getPlayer().sendMessage(message);
+	}
+	
+	public void TeleportSpawn()
+	{
+		Town town = new Town();
+		//Later de discoer check toevoegen voor kardenna
+		if (spawnpoint.getSpawnPointID("spawn") != null)
+		{
+			Integer spawnpointID = spawnpoint.getSpawnPointID("spawn");
+			
+			if (user.getSpawnpointID() != spawnpointID)
+			{
+				Integer userSpawn = user.getSpawnpointID();
+				spawnpoint.teleport(user, spawnpoint.getSpawnPointLocation(userSpawn));
+			} else if (town.getUserIDListbyTown(town.getTownID("kardenna")).contains(user.getID()))
+			{
+				spawnpoint.teleport(user, spawnpoint.getSpawnPointLocation(spawnpointID));
+
+			} else
+			{
+				spawnpoint.teleport(user, spawnpoint.getSpawnPointLocation(spawnpoint.getSpawnPointID("new")));
+			}
+		} else
+		{
+			if (player.hasPermission("k&k.spawnpoint") || user.inOwnerModus() || player.isOp())
+			{
+				player.sendMessage(ColorOptions.falsecommand + "No spawn-location has been set! This might cause glitches or errors");
+			}
+		}
 	}
 }

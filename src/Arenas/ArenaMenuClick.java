@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Main.Main;
 import Menu.Menu;
 import Users.User;
@@ -50,7 +51,7 @@ public class ArenaMenuClick
 			String name = ChatColor.stripColor(e.getCurrentItem().getItemMeta().getDisplayName());
 			if (name.equalsIgnoreCase("back"))
 			{
-				this.menu.openArenaMenu(player, worldguard.getStructureIDbyRegion("arena", player.getLocation(), worldguard.getRegionManager(player.getLocation().getWorld())));
+				this.menu.openArenaMenu(player, Worldguard.getStructureIDbyRegion(Worldguard.getRegion(player.getLocation(), "arena", Worldguard.getRegionManager(player.getLocation().getWorld()))));
 			}
 			if (name.contains("Name: "))
 			{

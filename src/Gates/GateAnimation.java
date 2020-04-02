@@ -14,7 +14,9 @@ import com.sk89q.worldedit.bukkit.BukkitUtil;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import DataManager.Structures.Gates;
 import Main.Main;
+import Models.Structures.Gate;
 
 public class GateAnimation 
 {

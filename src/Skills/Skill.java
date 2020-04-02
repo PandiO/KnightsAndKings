@@ -50,7 +50,7 @@ public class Skill
 		try
 		{
 			//prepare the query to retrieve uuid of a user
-			PreparedStatement stmt = main.getConnection().prepareStatement("Select * From ?;");	
+			PreparedStatement stmt = Main.getConnection().prepareStatement("Select * From ?;");	
 			stmt.setString(1, skillName);
 			//Execute the query
 			ResultSet results = stmt.executeQuery();
@@ -93,23 +93,23 @@ public class Skill
 			//prepare the query to retrieve uuid of a user
 			if (skillName.equalsIgnoreCase("attackspeed"))
 			{
-				stmt = main.getConnection().prepareStatement("Select * From AttackSpeed WHERE ID=?;");	
+				stmt = Main.getConnection().prepareStatement("Select * From AttackSpeed WHERE ID=?;");	
 			} else
 			if (skillName.equalsIgnoreCase("health"))
 			{
-				stmt = main.getConnection().prepareStatement("Select * From Health WHERE ID=?;");	
+				stmt = Main.getConnection().prepareStatement("Select * From Health WHERE ID=?;");	
 			} else
 			if (skillName.equalsIgnoreCase("speed"))
 			{
-				stmt = main.getConnection().prepareStatement("Select * From Speed WHERE ID=?;");	
+				stmt = Main.getConnection().prepareStatement("Select * From Speed WHERE ID=?;");	
 			} else
 			if (skillName.equalsIgnoreCase("strength"))
 			{
-				stmt = main.getConnection().prepareStatement("Select * From Strength WHERE ID=?;");	
+				stmt = Main.getConnection().prepareStatement("Select * From Strength WHERE ID=?;");	
 			} else
 			if (skillName.equalsIgnoreCase("defense"))
 			{
-				stmt = main.getConnection().prepareStatement("Select * From Defense WHERE ID=?;");	
+				stmt = Main.getConnection().prepareStatement("Select * From Defense WHERE ID=?;");	
 			}
 			stmt.setInt(1, level);
 			//Execute the query
@@ -139,7 +139,7 @@ public class Skill
 			//prepare the query to retrieve uuid of a user
 			String stringquery = "Select * From $skill WHERE ID=?;";
 			String query = stringquery.replace("$skill", skillName);
-			PreparedStatement stmt = main.getConnection().prepareStatement(query);	
+			PreparedStatement stmt = Main.getConnection().prepareStatement(query);	
 			stmt.setInt(1, level);
 			//Execute the query
 			ResultSet results = stmt.executeQuery();

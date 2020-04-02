@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -151,8 +150,8 @@ public class SiegeCommands implements CommandExecutor
 							return false;
 						}
 						
-						sender.sendMessage(ColorOptions.messageachievement + "Skipped the current stage of siege " + siegeArg);
-						siege.skipStage(null);
+//						sender.sendMessage(ColorOptions.messageachievement + "Skipped the current stage of siege " + siegeArg);
+						siege.skipStage(sender);
 					} else
 					{
 						sender.sendMessage(ColorOptions.error + "Siegenumber must be a number: /siege skip <siegeNumber>");

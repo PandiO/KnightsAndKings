@@ -14,8 +14,8 @@ import org.bukkit.inventory.ItemStack;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
-import API_methods.WorldGuard;
 import Arenas.Arena;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.SoundHandler;
 import Menu.Menu;
@@ -27,7 +27,6 @@ public class ArenaMaster extends Trait
 {
 	Arena arena = new Arena();
 	Menu menu = new Menu();
-	WorldGuard worldguard = new WorldGuard();
 	Product product = new Product();
 	
 	public ArenaMaster()
@@ -52,8 +51,8 @@ public class ArenaMaster extends Trait
 	public void onSpawn()
 	{
 		Entity Enpc = npc.getEntity();
-		RegionManager manager = worldguard.getRegionManager(Enpc.getWorld());
-		Integer arenaID = worldguard.getStructureIDbyRegion("arena", Enpc.getLocation(), manager);
+		RegionManager manager = Worldguard.getRegionManager(Enpc.getWorld());
+		Integer arenaID = Worldguard.getStructureIDbyRegion("arena", Enpc.getLocation(), manager);
 		if (arenaID != null)
 		{
 			this.arenaID = arenaID;
@@ -92,7 +91,7 @@ public class ArenaMaster extends Trait
 					
 					npc.faceLocation(target.getLocation());
 					String arenaName = null;
-					RegionManager manager = worldguard.getRegionManager(Enpc.getWorld());
+					RegionManager manager = Worldguard.getRegionManager(Enpc.getWorld());
 					try {
 						arenaName = arena.getArena(arenaID).getString("Name");
 					} catch (SQLException e) {
@@ -101,7 +100,7 @@ public class ArenaMaster extends Trait
 					}
 					
 					welcomeMSG = ColorOptions.message + "Welcome to arena " + arenaName; 
-					if (worldguard.getStructureIDbyRegion("arena", target.getLocation(), manager) == arenaID)
+					if (Worldguard.getStructureIDbyRegion("arena", target.getLocation(), manager) == arenaID)
 					{
 						if (!greetingList.contains(tu))
 						{

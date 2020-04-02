@@ -11,7 +11,6 @@ import org.bukkit.Effect;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import Handlers.ColorOptions;
@@ -32,9 +31,7 @@ public class TitleChangeEvents implements Listener
 	{
 		this.main = main;
 	}
-	
-	HashMap<UUID, Integer> titleChangeList = new HashMap<UUID, Integer>();
-	
+		
 	@EventHandler
 	public void onChange(TitleChangeEvent e)
 	{
@@ -70,7 +67,7 @@ public class TitleChangeEvents implements Listener
 				userPromotion(user, newTitleID);
 			} else if (changeAmount >= 2)
 			{
-				titleChangeList.put(uuid, changeAmount);
+				Main.titleChangeList.put(uuid, changeAmount);
 				setPromoteLoop(user, oldTitleID);
 			}
 		} else
@@ -81,59 +78,59 @@ public class TitleChangeEvents implements Listener
 				userDemotion(user, newTitleID);
 			} else if (changeAmount >= 2)
 			{
-				titleChangeList.put(uuid, changeAmount);
+				Main.titleChangeList.put(uuid, changeAmount);
 				setDemoteLoop(user, oldTitleID);
 			}
 		}
 	}
 	
-	@EventHandler
-	public void onMove(PlayerMoveEvent e)
-	{
-		Player player = e.getPlayer();
-		UUID uuid = player.getUniqueId();
-		User user = null;
-		
-		try
-		{
-			user = Users.getUser(uuid);
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		}
-		if (!titleChangeList.containsKey(uuid))
-		{
-			Integer currentTitleID = user.getTitleID();
-			Integer newTitleID = title.getTitleIDbyExp(user.getExperience());
-			if (currentTitleID != newTitleID)
-			{
-				Integer change = newTitleID-currentTitleID;
-				if (change > 0)
-				{
-					if (change >= 2)
-					{
-						titleChangeList.put(uuid, change);
-						setPromoteLoop(user, currentTitleID);
-					} else
-					{
-						userPromotion(user, newTitleID);
-					}
-				} else
-				{
-					if (change == -1)
-					{
-						userDemotion(user, newTitleID);
-					} else if (change >= -2)
-					{
-						titleChangeList.put(uuid, currentTitleID-newTitleID);
-						setDemoteLoop(user, currentTitleID);
-					}
-				}
-			}
-		}
-	}
+//	@EventHandler
+//	public void onMove(PlayerMoveEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		UUID uuid = player.getUniqueId();
+//		User user = null;
+//		
+//		try
+//		{
+//			user = Users.getUser(uuid);
+//		} catch (Exception ex)
+//		{
+//			ex.printStackTrace();
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		}
+//		if (!Main.titleChangeList.containsKey(uuid))
+//		{
+//			Integer currentTitleID = user.getTitleID();
+//			Integer newTitleID = title.getTitleIDbyExp(user.getExperience());
+//			if (currentTitleID != newTitleID)
+//			{
+//				Integer change = newTitleID-currentTitleID;
+//				if (change > 0)
+//				{
+//					if (change >= 2)
+//					{
+//						Main.titleChangeList.put(uuid, change);
+//						setPromoteLoop(user, currentTitleID);
+//					} else
+//					{
+//						userPromotion(user, newTitleID);
+//					}
+//				} else
+//				{
+//					if (change == -1)
+//					{
+//						userDemotion(user, newTitleID);
+//					} else if (change >= -2)
+//					{
+//						Main.titleChangeList.put(uuid, currentTitleID-newTitleID);
+//						setDemoteLoop(user, currentTitleID);
+//					}
+//				}
+//			}
+//		}
+//	}
 	
 	
 	//The method to perform when promoting a user
@@ -318,16 +315,16 @@ public class TitleChangeEvents implements Listener
 		{
 			public void run()
 			{
-				if (titleChangeList.containsKey(uuid))
+				if (Main.titleChangeList.containsKey(uuid))
 				{
-					if (titleChangeList.get(uuid) > 0)
+					if (Main.titleChangeList.get(uuid) > 0)
 					{
-		        		titleChangeList.put(uuid, titleChangeList.get(uuid)-1);
+		        		Main.titleChangeList.put(uuid, Main.titleChangeList.get(uuid)-1);
 		        		userPromotion(user, user.getTitleID()+1);
 					} else
 					{
 						this.cancel();
-						titleChangeList.remove(uuid);
+						Main.titleChangeList.remove(uuid);
 					}
 				}
 			}
@@ -341,7 +338,7 @@ public class TitleChangeEvents implements Listener
 		{
 			public void run()
 			{
-				if (titleChangeList.get(uuid) > 0)
+				if (Main.titleChangeList.get(uuid) > 0)
 				{
 					Integer titleID = user.getTitleID();
 					if (titleID-1 < 0)
@@ -350,12 +347,12 @@ public class TitleChangeEvents implements Listener
 					} else
 					{
 		        		userDemotion(user, titleID-1);
-		        		titleChangeList.put(uuid, titleChangeList.get(uuid)-1);
+		        		Main.titleChangeList.put(uuid, Main.titleChangeList.get(uuid)-1);
 					}
 				} else
 				{
 					this.cancel();
-					titleChangeList.remove(uuid);
+					Main.titleChangeList.remove(uuid);
 				}
 			}
 		}.runTaskTimer(main, 0, 2*20);

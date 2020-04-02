@@ -50,7 +50,7 @@ public class HideAndSeekCommands implements CommandExecutor
 				{
 					message.addAll(Arrays.asList(
 							ColorOptions.stats + "-/hs stop (stops the current game)",
-							ColorOptions.stats + "-/hs autostart (toggles autostart on/off)"
+							ColorOptions.stats + "-/hs autostart (GateToggles autostart on/off)"
 							));
 				}
 				message.add(ColorOptions.statsbrackets);

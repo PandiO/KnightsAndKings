@@ -1,6 +1,8 @@
-package Gates;
+package Models.Structures;
 
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,51 +20,59 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
+import DataManager.Structures.Gates;
+import DataManager.spawnpoints.SpawnpointStructures;
+import Gates.GateAnimation;
 import Handlers.ColorOptions;
 import Main.Main;
+import Models.spawnpoint.SpawnpointGateGuard;
 import Products.Product;
 import Products.ProductCategory;
 import Users.User;
 
-public class Gate
+public class Gate extends Structure
 {
-	private Main main = Main.getPlugin(Main.class);
-	private WorldGuard worldguard = new WorldGuard();
-	private Product product = new Product();
-	private ProductCategory productCategory = new ProductCategory();
+	protected Main main = Main.getPlugin(Main.class);
+	protected Product product = new Product();
+	protected ProductCategory productCategory = new ProductCategory();
 	
-	private int ID;
-	private String name;
-	private int streetID;
-	private int townID;
-	private int materialID;
-	private String faceDirection;
-	private double originalHealth = 200;
-	private double health;
-	private int respawnRate = 10; //600
-	private ProtectedRegion region;
-	private boolean isClosed = false;
-	private boolean isInvincible = false;
-	private boolean isDestroyed = false;
-	private boolean canRespawn = true;
-	private boolean isActive = true;
-	private ArmorStand GateEntity;
+	protected int materialID;
+	protected String faceDirection;
+	protected double originalHealth = 200;
+	protected double health;
+	protected ProtectedRegion gateRegion;
+	protected boolean isClosed = false;
+	protected List<SpawnpointGateGuard> guardSpawnpoints = new ArrayList<SpawnpointGateGuard>();
+	protected int respawnRate = 10; //600
+	protected boolean isInvincible = false;
+	protected boolean isDestroyed = false;
+	protected boolean canRespawn = true;
+	protected boolean isActive = true;
+	protected ArmorStand GateEntity;
 	
-	public Gate(int ID, String name, int streetID, int townID, int materialID, double originalHealth, double health, String faceDirection, boolean isClosed, boolean newGate)
+	public Gate(int ID, 
+			String name, 
+			int streetID, 
+			int townID, 
+			int districtID,
+			int materialID, 
+			double originalHealth, 
+			double health, 
+			String faceDirection, 
+			boolean isClosed, 
+			boolean newGate)
 	{
-		this.ID = ID;
-		this.name = name;
-		this.streetID = streetID;
-		this.townID = townID;
+		super (ID, name, streetID, -1, townID, districtID, SpawnpointStructures.InstantiateSpawnpointStructure(ID));
+
 		this.materialID = materialID;
 		this.originalHealth = originalHealth;
 		this.health = health;
 		this.faceDirection = faceDirection;
 		this.isClosed = isClosed;
-		this.region = this.worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("gate_" + this.ID);
+		this.gateRegion = Worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("gate_" + this.id + "_gate");
 		
-		Gates.gates.add(this);
+		Gates.Gates.add(this);
 		if (!newGate)
 		{
 			this.changeGateBlocks(true);
@@ -70,29 +80,9 @@ public class Gate
 		}
 	}
 	
-	public int getID()
-	{
-		return this.ID;
-	}
-	
-	public String getName()
-	{
-		return this.name;
-	}
-	
-	public int getStreetID()
-	{
-		return this.streetID;
-	}
-	
-	public int getTownID()
-	{
-		return this.townID;
-	}
-	
 	public ProtectedRegion getRegion()
 	{
-		return this.region;
+		return this.gateRegion;
 	}
 	
 	public boolean getClosed()
@@ -181,7 +171,7 @@ public class Gate
 		this.GateEntity.setCustomName(ColorOptions.message + "Gate: " + this.health + "hp");
 		if (this.health <= 0)
 		{
-			this.destroyGate();
+			this.destroyGate(true);
 		}
 		if (this.health > this.originalHealth)
 		{
@@ -208,7 +198,7 @@ public class Gate
 	public void remove(CommandSender sender)
 	{
 		Gates.saveGate(this);
-		Gates.gates.remove(this);
+		Gates.Gates.remove(this);
 		Gates.destroyGate(this);
 		try
 		{
@@ -228,33 +218,33 @@ public class Gate
 		{
 			//Prepare the search query
 			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM Gates WHERE ID=?");
-			stmt.setInt(1, this.ID);
+			stmt.setInt(1, this.id);
 			
 			stmt.executeUpdate();
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "Deleted gate with ID " + ID + " from the Database at " + main.getTime());
+			Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "Deleted gate with ID " + id + " from the Database at " + main.getTime());
 		} catch (Exception ex)
 		{
-			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error while removing gate " + this.getID() + " from the database. Please note that the gate might not have an active region due to this");
+			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error while removing gate " + this.getId() + " from the database. Please note that the gate might not have an active gateRegion due to this");
 			ex.printStackTrace();
-			sender.sendMessage(ColorOptions.error + "Error while removing gate " + this.getID() + " from the database. Please notify a developer");
+			sender.sendMessage(ColorOptions.error + "Error while removing gate " + this.getId() + " from the database. Please notify a developer");
 			removed = false;
 		}
 		
 		try
 		{
-			this.worldguard.getRegionManager(Bukkit.getWorld("world")).removeRegion("gate_" + this.getID());
+			Worldguard.getRegionManager(Bukkit.getWorld("world")).removeRegion("gate_" + this.getId());
 			removed = true;
 		} catch (Exception ex)
 		{
-			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error while removing the WorldGuard region of gate " + this.getID() + ". Please note that the gate might have been removed from the database");
+			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error while removing the WorldGuard gateRegion of gate " + this.getId() + ". Please note that the gate might have been removed from the database");
 			ex.printStackTrace();
-			sender.sendMessage(ColorOptions.error + "Error while removing gate " + this.getID() + " from the database. Please notify a developer");
+			sender.sendMessage(ColorOptions.error + "Error while removing gate " + this.getId() + " from the database. Please notify a developer");
 			return removed;
 		}
 		
 		if (removed)
 		{
-			Gates.gates.remove(this);
+			Gates.Gates.remove(this);
 			Gates.destroyGate(this);
 			try
 			{
@@ -279,15 +269,15 @@ public class Gate
 		
         //Get top location
         Location top = new Location(world, 0, 0, 0);
-        top.setX(region.getMaximumPoint().getX());
-        top.setY(region.getMaximumPoint().getY());
-        top.setZ(region.getMaximumPoint().getZ());
+        top.setX(gateRegion.getMaximumPoint().getX());
+        top.setY(gateRegion.getMaximumPoint().getY());
+        top.setZ(gateRegion.getMaximumPoint().getZ());
        
         //Get bottom location
         Location bottom = new Location(world, 0, 0, 0);
-        bottom.setX(region.getMinimumPoint().getX());
-        bottom.setY(region.getMinimumPoint().getY());
-        bottom.setZ(region.getMinimumPoint().getZ());
+        bottom.setX(gateRegion.getMinimumPoint().getX());
+        bottom.setY(gateRegion.getMinimumPoint().getY());
+        bottom.setZ(gateRegion.getMinimumPoint().getZ());
        
         //Split difference
         double X =  ((bottom.getX() + top.getX())/2);
@@ -309,13 +299,13 @@ public class Gate
         {
         	location.add(-1.5, 0, 0.5);
         }
-
+        Main.logMessage(location.toString());
 		return location;
 	}
 	
 	public void addRegion(ProtectedRegion region)
 	{
-		this.region = region;
+		this.gateRegion = region;
 	}
 	
 	public void setInvincible(boolean invincible)
@@ -458,13 +448,16 @@ public class Gate
 		this.removeHealth(damage);
 	}
 	
-	public void destroyGate()
+	public void destroyGate(boolean respawn)
 	{
 		this.setDestroyed(true);
 		Bukkit.getWorld("world").playSound(this.getGateCenter(), Sound.EXPLODE, 6.0F, 1.0F);
 		Bukkit.getWorld("world").createExplosion(this.getGateCenter(), 0.0F);
 		this.GateEntity.setCustomName(ColorOptions.message + "Gate: " + ColorOptions.error + "Destroyed");
-		this.tryRespawnGate();
+		if (respawn)
+		{
+			this.tryRespawnGate();
+		}
 	}
 	
 	public void tryRespawnGate()

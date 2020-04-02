@@ -10,7 +10,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.CommandExceptions;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
@@ -22,7 +22,6 @@ import Users.Users;
 public class ScenarioCommands implements CommandExecutor
 {
 	private Main main;
-	private WorldGuard worldguard = new WorldGuard();
 	public ScenarioCommands(Main main)
 	{
 		this.main = main;
@@ -130,7 +129,7 @@ public class ScenarioCommands implements CommandExecutor
 				{
 					Location location = player.getLocation();
 					String scenarioName = args[1];
-					Integer townID = this.worldguard.getStructureIDbyRegion("town", location, this.worldguard.getRegionManager(location.getWorld()));
+					Integer townID = Worldguard.getStructureIDbyRegion("town", location, Worldguard.getRegionManager(location.getWorld()));
 					
 					if (townID == null)
 					{

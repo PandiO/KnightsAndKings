@@ -20,7 +20,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldEdit;
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
@@ -34,7 +34,6 @@ import Users.Users;
 public class BlockBreakEvents implements Listener
 {
 	WorldEdit worldedit = new WorldEdit();
-	WorldGuard worldguard = new WorldGuard();
 	ResourceProperty property = new ResourceProperty();
 	ResourceCategory category = new ResourceCategory();
 	YmlFile file = new YmlFile();
@@ -101,13 +100,13 @@ public class BlockBreakEvents implements Listener
 			return;
 		}
 		
-		RegionManager manager = worldguard.getRegionManager(blockLocation.getWorld());
-		Integer townID = worldguard.getStructureIDbyRegion("town", blockLocation, manager);
-		Integer propertyID = worldguard.getStructureIDbyRegion("property", blockLocation, manager);
+		RegionManager manager = Worldguard.getRegionManager(blockLocation.getWorld());
+		Integer townID = Worldguard.getStructureIDbyRegion("town", blockLocation, manager);
+		Integer propertyID = Worldguard.getStructureIDbyRegion("property", blockLocation, manager);
 		//Check if player is allowed to break the block and if it should drop loot
 		if (user.inOwnerModus() == false && user.inStaffModus() == false && player.getGameMode() == GameMode.SURVIVAL)
 		{
-			//Check if the block's location is inside the region of a resource-property (where breaking blocks is allowed)
+			//Check if the block's location is inside the gateRegion of a resource-property (where breaking blocks is allowed)
 			if (propertyID != null && property.getResourcePropertyIDList(false, null).contains(propertyID))
 			{
 //				Integer categoryID = property.getResourceCategory(propertyID);

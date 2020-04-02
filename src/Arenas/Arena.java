@@ -233,7 +233,7 @@ public class Arena
 		return unique;
 	}
 	
-	//Save a sub-region of a property
+	//Save a sub-gateRegion of a property
 	public void saveArenaPart(Integer arenaID)
 	{
 		try 
@@ -291,7 +291,7 @@ public class Arena
 	{
 		try
 		{
-			//prepare the query to delete a part-region
+			//prepare the query to delete a part-gateRegion
 			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM ArenaRegion WHERE SubID=? AND ArenaID=?;");	
 			stmt.setInt(1, PartID);
 			stmt.setInt(2, arenaID);

@@ -22,7 +22,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -64,6 +66,7 @@ import Currency.IncomePayout;
 import Currency.PlayerPayEvent;
 import Currency.RentPayment;
 import Currency.SalaryPayout;
+import DataManager.Structures.Gates;
 import Donator.DonatorChat;
 import Donator.DonatorCommands;
 import Donator.PlayerJoin_List;
@@ -77,7 +80,6 @@ import Friends.FriendInteract;
 import Friends.HitFriendEvent;
 import Friends.MentionNameEvent;
 import Friends.UpdateFriendRegions;
-import Gates.Gate;
 import Gates.GateCommands;
 import Gates.GateEvents;
 import Gates.GateToggle;
@@ -99,6 +101,9 @@ import KillsDeaths.CombatCheck;
 import KillsDeaths.KillCommands;
 import KillsDeaths.KillDeathStat;
 import KillsDeaths.RespawnLocation;
+import Listeners.DoubleDamageListener;
+import Listeners.EntityListener;
+import Listeners.PlayerListener;
 import Menu.CouponClick;
 import Menu.DuelSetupClick;
 import Menu.FriendManagerClick;
@@ -114,8 +119,10 @@ import Minigames.BanditSpawn;
 import Minigames.DiscoverTown;
 import Minigames.FishGame;
 import Minigames.OcelotSpawn;
+import Minigames.Participant;
 import Minigames.Transport;
 import Minigames.TransportEvents;
+import Models.Structures.Gate;
 import NPCs.ShopkeeperCommands;
 import Products.CraftEvents;
 import Products.DropItem;
@@ -146,10 +153,10 @@ import Rooms.RoomCommands;
 import Rooms.RoomSellEvent;
 import Scoreboards.ActionBar;
 import Sieges.ScenarioCommands;
+import Sieges.ScenarioCreationEvents;
 import Sieges.Scenarios;
 import Sieges.Siege;
 import Sieges.SiegeCommands;
-import Sieges.ScenarioCreationEvents;
 import Sieges.SiegeEvents;
 import Skills.AssassinSkill;
 import Skills.AttackSpeedEvent;
@@ -216,6 +223,9 @@ import Users.UserCommands;
 import Users.Users;
 import Votes.VoteCommand;
 import Votes.VoteEvent;
+import commands.CreationCommand;
+import commands.DistrictCommand;
+import commands.StructureCommand;
 import me.Pandi.Commands;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.trait.TraitInfo;
@@ -224,7 +234,7 @@ import net.citizensnpcs.api.trait.TraitInfo;
 public class Main extends JavaPlugin
 {
 	//Instance of the database connection
-	 public Connection connection;	
+	public static Connection connection;	
 	//Gets the description file of this plugin
 	PluginDescriptionFile description = this.getDescription();
 	public static boolean debug = true;
@@ -237,6 +247,8 @@ public class Main extends JavaPlugin
 	public static Integer largestDonatorID = 3;
 	public Integer afkTime = 300;
 	public Integer maxTitleID = 18;
+	public static Integer combat = 10;
+	public static Integer dropPercentage = 10;
 	
 	public static boolean enableSkills = true;
 	public static boolean leveledTownEnter = false;
@@ -274,8 +286,16 @@ public class Main extends JavaPlugin
 	public static HashMap<UUID, Integer> scheduledDonator = new HashMap<UUID, Integer>();
 	public static HashMap<UUID, Long> joinLong = new HashMap<UUID, Long>();
 	public static HashMap<Integer, Long> PropertyQuestLong = new HashMap<Integer, Long>();
-	public CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<User>();
-	public CopyOnWriteArrayList<User> offlineUsers = new CopyOnWriteArrayList<User>();
+	public static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<User>();
+	public static CopyOnWriteArrayList<User> offlineUsers = new CopyOnWriteArrayList<User>();
+	public static CopyOnWriteArrayList<UUID> newPlayers = new CopyOnWriteArrayList<UUID>();
+	public static CopyOnWriteArrayList<UUID> combatlogged = new CopyOnWriteArrayList<UUID>();
+	public static HashMap<User, Long> incombat = new HashMap<User, Long>();
+	public static HashMap<User, Long> ninjaSkill = new HashMap<User, Long>();
+	public static HashMap<User, User> avenger = new HashMap<User, User>();
+	public static CopyOnWriteArrayList<Transport> transports = new CopyOnWriteArrayList<Transport>();
+	public static HashMap<UUID, Integer> titleChangeList = new HashMap<UUID, Integer>();
+	public static Map<UUID, Integer> teleportconfirm = new HashMap<UUID, Integer>();
 	
 	public static HashMap<UUID, String> msgReceived = new HashMap<UUID, String>();
 	
@@ -467,9 +487,9 @@ public class Main extends JavaPlugin
 	public void onDisable() 
     {
 		this.saveUsers(null, true);
-		for (Gate gate : Gates.Gates.gates)
+		for (Gate gate : DataManager.Structures.Gates.Gates)
 		{
-			Gates.Gates.saveGate(gate);
+			DataManager.Structures.Gates.saveGate(gate);
 		}
 		for (Siege siege : Sieges.Sieges.Sieges)
 		{
@@ -554,6 +574,11 @@ public class Main extends JavaPlugin
 	
 	public void registercommands()
 	{
+		getCommand("district").setExecutor(new DistrictCommand(this));
+		getCommand("town2").setExecutor(new commands.TownCommand(this));
+		getCommand("structure").setExecutor(new StructureCommand(this));
+		getCommand("creation").setExecutor(new CreationCommand(this));
+		
 		getCommand("afk").setExecutor(new AfkCommand(this));
 		getCommand("initiate").setExecutor(new Commands(this));
 		getCommand("test").setExecutor(new Commands(this));
@@ -646,6 +671,9 @@ public class Main extends JavaPlugin
 	
 	public void registerEvents()
 	{
+		pluginManager.registerEvents(new EntityListener(this), this);
+		pluginManager.registerEvents(new DoubleDamageListener(this), this);
+		
 		pluginManager.registerEvents(new AfkEvents(this), this);
 		pluginManager.registerEvents(new Commands(this), this);
 		pluginManager.registerEvents(new DuelEvents(this), this);
@@ -676,6 +704,7 @@ public class Main extends JavaPlugin
 		pluginManager.registerEvents(new HouseTouch(this), this);
 		pluginManager.registerEvents(new KillDeathStat(this), this);
 		pluginManager.registerEvents(new CombatCheck(this), this);
+		pluginManager.registerEvents(new PlayerListener(this), this);
 		pluginManager.registerEvents(new TransportEvents(this), this);
 		pluginManager.registerEvents(new OcelotSpawn(this), this);
 		pluginManager.registerEvents(new RespawnLocation(this), this);
@@ -826,7 +855,7 @@ public class Main extends JavaPlugin
 		}
 	}
 
-	public Connection getConnection() 
+	public static Connection getConnection() 
 	{
 		return connection;
 	}
@@ -910,7 +939,7 @@ public class Main extends JavaPlugin
 	}
 	
 	//Checks if an object is an integer or not
-    public boolean isInt(String str) 
+    public static boolean isInt(String str) 
     {
         try 
         {
@@ -923,7 +952,7 @@ public class Main extends JavaPlugin
     }
     
     //Return a random number between the two given numbers
-    public int getRandom(int lower, int upper) 
+    public static int getRandom(int lower, int upper) 
     {
     	Integer random = 0;
     	
@@ -1047,6 +1076,33 @@ public class Main extends JavaPlugin
     					player.damage(2);
     				}
     			}
+    			Iterator<User> ninjaKeys = ninjaSkill.keySet().iterator();
+    			while(ninjaKeys.hasNext())
+    			{
+    				User user = ninjaKeys.next();
+    				if (current > ninjaSkill.get(user))
+    				{
+    					Player player = user.getPlayer();
+    					for (Player players : Bukkit.getOnlinePlayers())
+    	            	{
+                    		players.showPlayer(player);
+    	            	}
+    	            	player.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Ninja + "Ninja" + ChatColor.GRAY + "]" + ColorOptions.Ninja + "Ninja skill is deactivated!");
+                		Bukkit.getServer().getWorld(player.getWorld().getName()).playSound(player.getLocation(), SoundHandler.BLAZE_DEATH, 1.0F, 1.0F);
+    	            	ninjaKeys.remove();
+    				}
+    			}
+    			Iterator<User> inCombat = incombat.keySet().iterator();
+    			while(inCombat.hasNext())
+    			{
+    				User user = inCombat.next();
+    				if (current > incombat.get(user))
+    				{
+    					inCombat.remove();
+    					ActionBar bar = new ActionBar(ColorOptions.messagesubjects + "Out of combat!");
+    					bar.sendToPlayer(user.getPlayer());
+    				}
+    			}
     			FridayLottery fridayLot = new FridayLottery();
     			Date expireTime = fridayLot.getExpireTime();
     			if (getDate().getDayOfWeek() == fridayLot.getExpireDay() && getDate().getHour() == expireTime.getHours() && getDate().getMinute() == expireTime.getMinutes() && getDate().getSecond() == expireTime.getSeconds())
@@ -1091,14 +1147,21 @@ public class Main extends JavaPlugin
     					continue;
     				}
     			}
-    			for (User user : AfkEvents.possibleAfk.keySet())
+//    			for (User user : AfkEvents.possibleAfk.keySet())
+//    			{
+//    				if (AfkEvents.possibleAfk.get(user) < current)
+//    				{
+//    					user.setAfk();
+//    				}
+//    			}
+    			for (User user : users)
     			{
-    				if (AfkEvents.possibleAfk.get(user) < current)
+    				if (user.GetAfkCommence() < current)
     				{
     					user.setAfk();
     				}
     			}
-    			for (Transport transport : TransportEvents.pending)
+    			for (Transport transport : Main.transports)
     			{
     				Long expire = transport.getExpire();
     				if (current > expire)
@@ -1113,7 +1176,7 @@ public class Main extends JavaPlugin
     					Main.PropertyQuestLong.remove(PropertyID);
     				}
     			}
-    			for (GateToggle toggles : Gates.Gates.toggles)
+    			for (GateToggle toggles : Gates.GateToggles)
     			{
     				if (current >= toggles.getTimeOut())
     				{
@@ -1344,6 +1407,28 @@ public class Main extends JavaPlugin
 	    	}.runTaskTimer(this, 0, 930*20);
 		}
     }
+    
+    public static boolean getHideAndSeekParticipating(User user)
+    {
+    	boolean participating = false;
+    	
+    	if (HideAndSeek == null)
+    	{
+    		return participating;
+    	}
+    	
+    	for (Participant part : HideAndSeek.getParticipants())
+    	{
+    		if (part.getUser() == user)
+    		{
+    			participating = true;
+    			break;
+    		}
+    	}
+    	
+    	return participating;
+    }
+    
     public boolean checkContribution(Integer contribution)
     {
     	boolean exist = false;
@@ -1356,12 +1441,12 @@ public class Main extends JavaPlugin
     	return exist;
     }
     
-    public ZoneId getZoneId()
+    public static ZoneId getZoneId()
     {
     	return ZoneId.of("Europe/Amsterdam");
     }
     
-    public ZonedDateTime getCalendar()
+    public static ZonedDateTime getCalendar()
     {
     	ZoneId tz = getZoneId();
     	ZonedDateTime zdt = ZonedDateTime.now(tz);
@@ -1369,7 +1454,7 @@ public class Main extends JavaPlugin
     	return zdt;
     }
     
-    public ZonedDateTime getDate()
+    public static ZonedDateTime getDate()
     {
     	ZonedDateTime now = getCalendar();
 //    	test.set
@@ -1378,11 +1463,11 @@ public class Main extends JavaPlugin
     	return now;
     }
     
-    public String getTime()
+    public static String getTime()
     {    
     	DateTimeFormatter dt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 //	    SimpleDateFormat dt = new SimpleDateFormat("yyy-MM-dd HH:mm:ss");
-    	String time = dt.format(getDate());
+    	String time = dt.format(Main.getDate());
     	
     	return time;
     }
@@ -1516,7 +1601,7 @@ public class Main extends JavaPlugin
     	}
     }
     
-    public void notify(String message)
+    public static void Notify(String message)
     {
     	Bukkit.broadcastMessage(ColorOptions.KAKFormat + "" + ChatColor.BOLD + message);
     }
@@ -1535,7 +1620,7 @@ public class Main extends JavaPlugin
 				} else if (ChatColor.stripColor(e.getName()).contains("Gate: ") || ChatColor.stripColor(e.getName()).contains("Gate health: "))
 				{
 					boolean activeGate = false;
-					for (Gate gate : Gates.Gates.gates)
+					for (Gate gate : DataManager.Structures.Gates.Gates)
 					{
 						if (gate.getGateEntity() == e)
 						{
@@ -1592,105 +1677,105 @@ public class Main extends JavaPlugin
 	
 	public void refreshResources(User user)
 	{
-		new BukkitRunnable()
-		{
-			public void run()
-			{
-				Main main = Main.getPlugin(Main.class);
-				YmlFile file = new YmlFile();
-    			String oreName = "ore-resources";
-    			String woodName = "wood-resources";
-    			String harvestName = "harvest-resources";
-				Integer harvestBlocks = file.getBlockIDList(harvestName, false, null).size();
-				Integer oreBlocks = file.getBlockIDList(oreName, false, null).size();
-				Integer woodBlocks = file.getBlockIDList(woodName, false, null).size();
-				boolean orePart = false;
-				boolean woodPart = false;
-				boolean harvestPart = false;
-				if (oreBlocks > 50)
-				{
-					orePart = true;
-				}
-				if (woodBlocks > 50)
-				{
-					woodPart = true;
-				}
-				if (harvestBlocks > 50)
-				{
-					harvestPart = true;
-				}
-				
-				for (BlockRefresh block : BlockBreakEvents.refreshList)
-    			{
-					block.RefreshBlock();
-    			}
-				
-				if (orePart)
-				{
-					new BukkitRunnable()
-					{
-						public void run()
-						{
-			    			for (Integer blockID : file.getBlockIDList(oreName, file.getBlockIDList(oreName, false, null).size() > 50 ? true : false, 25))
-			    			{
-								file.changeBlock(oreName, blockID, true);
-			    			}
-						}
-					}.runTaskTimerAsynchronously(main, 0, 1*20);
-				} else
-				{
-	    			for (Integer blockID : file.getBlockIDList(oreName, orePart, 25))
-	    			{
-						file.changeBlock(oreName, blockID, true);
-	    			}
-				}
-				
-				if (woodPart)
-				{
-					new BukkitRunnable()
-					{
-						public void run()
-						{
-			    			for (Integer blockID : file.getBlockIDList(woodName, file.getBlockIDList(woodName, false, null).size() > 50 ? true : false, 25))
-			    			{
-								file.changeBlock(woodName, blockID, true);
-			    			}
-						}
-					}.runTaskTimerAsynchronously(main, 0, 1*20);
-				} else
-				{
-	    			for (Integer blockID : file.getBlockIDList(woodName, woodPart, 25))
-	    			{
-						file.changeBlock(woodName, blockID, true);
-	    			}
-				}
-				
-				if (harvestPart)
-				{
-					new BukkitRunnable()
-					{
-						public void run()
-						{
-			    			for (Integer blockID : file.getBlockIDList(harvestName, file.getBlockIDList(harvestName, false, null).size() > 50 ? true : false, 25))
-			    			{
-								file.changeBlock(harvestName, blockID, true);
-			    			}
-						}
-					}.runTaskTimerAsynchronously(main, 0, 1*20);
-				} else
-				{
-	    			for (Integer blockID : file.getBlockIDList(harvestName, harvestPart, 25))
-	    			{
-						file.changeBlock(harvestName, blockID, true);
-	    			}
-				}
-				
-				if (user != null)
-				{
-					user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully reloaded all resource blocks!");
-				}
-			}
-		}.runTaskAsynchronously(this);
+//		new BukkitRunnable()
+//		{
+//			public void run()
+//			{
+//				Main main = Main.getPlugin(Main.class);
+//				YmlFile file = new YmlFile();
+//    			String oreName = "ore-resources";
+//    			String woodName = "wood-resources";
+//    			String harvestName = "harvest-resources";
+//				Integer harvestBlocks = file.getBlockIDList(harvestName, false, null).size();
+//				Integer oreBlocks = file.getBlockIDList(oreName, false, null).size();
+//				Integer woodBlocks = file.getBlockIDList(woodName, false, null).size();
+//				boolean orePart = false;
+//				boolean woodPart = false;
+//				boolean harvestPart = false;
+//				if (oreBlocks > 50)
+//				{
+//					orePart = true;
+//				}
+//				if (woodBlocks > 50)
+//				{
+//					woodPart = true;
+//				}
+//				if (harvestBlocks > 50)
+//				{
+//					harvestPart = true;
+//				}
+//				
+//				for (BlockRefresh block : BlockBreakEvents.refreshList)
+//    			{
+//					block.RefreshBlock();
+//    			}
+//				
+//				if (orePart)
+//				{
+//					new BukkitRunnable()
+//					{
+//						public void run()
+//						{
+//			    			for (Integer blockID : file.getBlockIDList(oreName, file.getBlockIDList(oreName, false, null).size() > 50 ? true : false, 25))
+//			    			{
+//								file.changeBlock(oreName, blockID, true);
+//			    			}
+//						}
+//					}.runTaskTimerAsynchronously(main, 0, 1*20);
+//				} else
+//				{
+//	    			for (Integer blockID : file.getBlockIDList(oreName, orePart, 25))
+//	    			{
+//						file.changeBlock(oreName, blockID, true);
+//	    			}
+//				}
+//				
+//				if (woodPart)
+//				{
+//					new BukkitRunnable()
+//					{
+//						public void run()
+//						{
+//			    			for (Integer blockID : file.getBlockIDList(woodName, file.getBlockIDList(woodName, false, null).size() > 50 ? true : false, 25))
+//			    			{
+//								file.changeBlock(woodName, blockID, true);
+//			    			}
+//						}
+//					}.runTaskTimerAsynchronously(main, 0, 1*20);
+//				} else
+//				{
+//	    			for (Integer blockID : file.getBlockIDList(woodName, woodPart, 25))
+//	    			{
+//						file.changeBlock(woodName, blockID, true);
+//	    			}
+//				}
+//				
+//				if (harvestPart)
+//				{
+//					new BukkitRunnable()
+//					{
+//						public void run()
+//						{
+//			    			for (Integer blockID : file.getBlockIDList(harvestName, file.getBlockIDList(harvestName, false, null).size() > 50 ? true : false, 25))
+//			    			{
+//								file.changeBlock(harvestName, blockID, true);
+//			    			}
+//						}
+//					}.runTaskTimerAsynchronously(main, 0, 1*20);
+//				} else
+//				{
+//	    			for (Integer blockID : file.getBlockIDList(harvestName, harvestPart, 25))
+//	    			{
+//						file.changeBlock(harvestName, blockID, true);
+//	    			}
+//				}
+//				
+//				if (user != null)
+//				{
+//					user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully reloaded all resource blocks!");
+//				}
+//			}
+//		}.runTask(this);
 	}
 	
 	public boolean IsDay(World world)
@@ -1793,7 +1878,7 @@ public class Main extends JavaPlugin
 //						Users.sendStaffMessage("Saving Gates");
 //						try
 //						{
-//							Gates.Gates.saveAll();
+//							Gates.gates.saveAll();
 //							Users.sendStaffMessage("Gates saved.");
 //						} catch (Exception ex)
 //						{
@@ -1895,7 +1980,7 @@ public class Main extends JavaPlugin
 		Users.sendStaffMessage("Saving Gates");
 		try
 		{
-			Gates.Gates.saveAll();
+			DataManager.Structures.Gates.saveAll();
 			Users.sendStaffMessage("Gates saved.");
 		} catch (Exception ex)
 		{
@@ -1913,6 +1998,18 @@ public class Main extends JavaPlugin
 		{
 			ex.printStackTrace();
 			Users.sendStaffMessage(ColorOptions.error + "Error while clearing leftovers. Please notify a developer");
+			noWarnings = false;
+		}
+		
+		Users.sendStaffMessage("Clearing Temp. regions");
+		try
+		{
+			DataManager.Creations.ClearCreations();
+			Users.sendStaffMessage("Temporal regions cleared.");
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+			Users.sendStaffMessage(ColorOptions.error + "Error while clearing Temporal regions. Please notify a developer");
 			noWarnings = false;
 		}
 		

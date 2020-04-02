@@ -8,8 +8,8 @@ import org.bukkit.inventory.ItemStack;
 import Handlers.ColorOptions;
 import Main.Main;
 import Products.Product;
-import Sieges.Siege;
 import Sieges.Scenario;
+import Sieges.Siege;
 import Towns.Town;
 import Users.User;
 

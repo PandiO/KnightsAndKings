@@ -15,7 +15,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Main.Main;
 import Properties.Property;
@@ -26,7 +26,6 @@ import Users.offlineUser;
 
 public class Room 
 {
-	WorldGuard worldguard = new WorldGuard();
 	Town town = new Town();
 	Street street = new Street();
 	Main main = Main.getPlugin(Main.class);
@@ -214,7 +213,7 @@ public class Room
 		Integer userID = getOwnerID(roomID);
 		if (userID != 0)
 		{
-			RegionManager manager = worldguard.getRegionManager(Bukkit.getWorld("world"));
+			RegionManager manager = Worldguard.getRegionManager(Bukkit.getWorld("world"));
 			
 			this.removeRegionOwner(this.user.getUUIDbyID(userID), roomID, manager);
 			try 
@@ -401,7 +400,7 @@ public class Room
 	{
 		try
 		{
-			//prepare the query to delete a part-region
+			//prepare the query to delete a part-gateRegion
 			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM RoomRegion WHERE SubID=? AND roomID=?;");	
 			stmt.setInt(1, PartID);
 			stmt.setInt(2, roomID);
@@ -501,7 +500,7 @@ public class Room
 		UUID uuid = user.getUUID();
 		
 		this.removeOwnerID(roomID);
-		this.removeRegionOwner(user.getPlayer(), roomID, worldguard.getRegionManager(Bukkit.getWorld("world")));
+		this.removeRegionOwner(user.getPlayer(), roomID, Worldguard.getRegionManager(Bukkit.getWorld("world")));
 		this.purgeRoomOwner(roomID);
 		user.removeRoomAmount(false, 1);
 		user.removeRentTime();
@@ -542,7 +541,7 @@ public class Room
 	
 	public void purgeRoomOwner(Integer roomID)
 	{
-		ProtectedRegion region = worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("room_" + roomID);
+		ProtectedRegion region = Worldguard.getRegionManager(Bukkit.getWorld("world")).getRegion("room_" + roomID);
 		if (region != null)
 		{
 			region.setFlag(DefaultFlag.CHEST_ACCESS, State.ALLOW);

@@ -26,42 +26,42 @@ public class SoulboundEvents implements Listener
 	
 	HashMap<UUID, List<ItemStack>> keep = new HashMap<UUID, List<ItemStack>>();
 	
-  	@EventHandler
-  	public void onPlayerDeathe(PlayerDeathEvent event)
-  	{
-  		List<ItemStack> removed = new ArrayList<ItemStack>();
-  		List<ItemStack> ghosted = new ArrayList<ItemStack>();
-  		UUID uuid = event.getEntity().getUniqueId();
-  		for (ItemStack item : event.getDrops())
-  		{
-  			ItemMeta meta = item.getItemMeta();
-  			List<String> lore = meta.getLore();
-  			if ((lore != null) && (lore.contains(ChatColor.RED + "Soulbound"))) 
-  			{
-  				removed.add(item);
-  			} else if ((lore != null) && (lore.contains(ChatColor.DARK_GRAY + "Ghosted")))
-  			{
-  				ghosted.add(item);
-  				removed.add(item);
-  			}
-  		}
-		if (KillDeathStat.respawn.containsKey(uuid))
-		{
-			List<ItemStack> list = KillDeathStat.respawn.get(uuid);
-			for (ItemStack item : ghosted)
-			{
-				if (!list.contains(item))
-				{
-					list.add(item);
-				}
-			}
-			KillDeathStat.respawn.put(uuid, list);
-		} else
-		{
-			KillDeathStat.respawn.put(uuid, ghosted);
-		}
-  		event.getDrops().removeAll(removed);
-  	}
+//  	@EventHandler
+//  	public void onPlayerDeathe(PlayerDeathEvent event)
+//  	{
+//  		List<ItemStack> removed = new ArrayList<ItemStack>();
+//  		List<ItemStack> ghosted = new ArrayList<ItemStack>();
+//  		UUID uuid = event.getEntity().getUniqueId();
+//  		for (ItemStack item : event.getDrops())
+//  		{
+//  			ItemMeta meta = item.getItemMeta();
+//  			List<String> lore = meta.getLore();
+//  			if ((lore != null) && (lore.contains(ChatColor.RED + "Soulbound"))) 
+//  			{
+//  				removed.add(item);
+//  			} else if ((lore != null) && (lore.contains(ChatColor.DARK_GRAY + "Ghosted")))
+//  			{
+//  				ghosted.add(item);
+//  				removed.add(item);
+//  			}
+//  		}
+//		if (KillDeathStat.respawn.containsKey(uuid))
+//		{
+//			List<ItemStack> list = KillDeathStat.respawn.get(uuid);
+//			for (ItemStack item : ghosted)
+//			{
+//				if (!list.contains(item))
+//				{
+//					list.add(item);
+//				}
+//			}
+//			KillDeathStat.respawn.put(uuid, list);
+//		} else
+//		{
+//			KillDeathStat.respawn.put(uuid, ghosted);
+//		}
+//  		event.getDrops().removeAll(removed);
+//  	}
   	
 //  	@EventHandler
 //  	public void onRespawn(PlayerRespawnEvent e)

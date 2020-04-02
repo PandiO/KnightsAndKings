@@ -14,7 +14,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.PurchaseEvent;
 import Main.Main;
@@ -25,7 +25,6 @@ import Users.User;
 
 public class CouponClick implements Listener
 {
-	WorldGuard worldguard = new WorldGuard();
 	PropertyProduct proproduct = new PropertyProduct();
 	Menu menu = new Menu();
 	Product product = new Product();
@@ -41,7 +40,7 @@ public class CouponClick implements Listener
 		UUID uuid = player.getUniqueId();
 
 		e.setCancelled(true);
-		Integer propertyID = worldguard.getStructureIDbyRegion("property", player.getLocation(), worldguard.getRegionManager(player.getWorld()));
+		Integer propertyID = Worldguard.getStructureIDbyRegion("property", player.getLocation(), Worldguard.getRegionManager(player.getWorld()));
 		if (propertyID != null)
 		{
 			Integer productID = product.getProductIDbyDisplayName(e.getInventory().getItem(4).getItemMeta().getDisplayName(), false);

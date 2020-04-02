@@ -11,6 +11,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
 import Handlers.ColorOptions;
@@ -26,7 +27,7 @@ public class Scenario
 	SpawnPoint spawnpoint = new SpawnPoint();
 	Main main = Main.getPlugin(Main.class);
 	/**
-	 * This region states which location the siege game will be played in
+	 * This gateRegion states which location the siege game will be played in
 	 */
 	protected int ID;
 	protected String name;
@@ -62,7 +63,6 @@ public class Scenario
 	
 	public Scenario(int ID, 
 			String name, 
-			int townID, 
 			int playersMin, 
 			int playersMax, 
 			int expRewardWin, 
@@ -76,9 +76,6 @@ public class Scenario
 	{
 		this.ID = ID;
 		this.name = name;
-		this.townID = townID;
-		this.townName = this.town.getTownName(townID);
-		this.entryTitle = this.town.getRequiredTitleID(townID);
 		this.playersMin = playersMin;
 		this.playersMax = playersMax;
 		this.mainObjectiveID = mainObjectiveID;
@@ -253,13 +250,24 @@ public class Scenario
 		
 		try
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SiegeObjectives WHERE SiegeID = ?");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT Spawnpoint.ID, "
+					+ "ScenarioID, "
+					+ "Spawnpoint.World, "
+					+ "Spawnpoint.X, "
+					+ "Spawnpoint.Y, "
+					+ "Spawnpoint.Z, "
+					+ "Spawnpoint.Yaw, "
+					+ "Spawnpoint.Pitch "
+					+ "FROM SpawnpointSiegeScenario "
+					+ "INNER JOIN Spawnpoint On SpawnpointSiegeScenario.SpawnpointID = Spawnpoint.ID "
+					+ "WHERE ScenarioID = ? AND Objective = true");
 			stmt.setInt(1, this.ID);
 			
 			ResultSet results = stmt.executeQuery();
 			while (results.next())
 			{
-				sideObjectives.add(new SideObjective(results.getInt("ID"), ID, results.getInt("SpawnpointID"), results.getInt("GateID") == 0 ? -1 : results.getInt("GateID")));
+				sideObjectives.add(new SideObjective(results.getInt("Spawnpoint.ID"), results.getInt("ScenarioID"), 
+						new Location(Bukkit.getWorld(results.getString("World")), results.getDouble("X"), results.getDouble("Y"), results.getDouble("Z"), results.getFloat("Yaw"), results.getFloat("Pitch"))));
 			}
 		} catch (Exception ex)
 		{
@@ -272,11 +280,10 @@ public class Scenario
 	protected List<SiegeSpawnpoint> fetchTeam1Spawnpoints()
 	{
 		List<SiegeSpawnpoint> spawnpoints = new ArrayList<SiegeSpawnpoint>();
-		Main.logMessage(ColorOptions.coinStats + "Setting team 1 spawnpoints for scenario. Amount: " + this.getSpawn1Amount());
 		
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM ScenarioSpawnpoints WHERE ScenarioID = ? AND TeamNumber = ?;");
+			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SpawnpointSiegeScenario WHERE ScenarioID = ? AND TeamNumber = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, this.ID);
 			stmt.setInt(2, 1);
@@ -284,7 +291,7 @@ public class Scenario
 			ResultSet results = stmt.executeQuery();
 			if (results.next())
 			{
-				spawnpoints.add(new SiegeSpawnpoint(results.getInt("ID"), this.ID, results.getInt("SpawnPointID"), 1));
+				spawnpoints.add(new SiegeSpawnpoint(this.ID, results.getInt("SpawnpointID"), 1));
 			}
 		} catch (SQLException e) 
 		{
@@ -301,7 +308,7 @@ public class Scenario
 		
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM ScenarioSpawnpoints WHERE ScenarioID = ? AND TeamNumber = ?;");
+			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SpawnpointSiegeScenario WHERE ScenarioID = ? AND TeamNumber = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, this.ID);
 			stmt.setInt(2, TeamNumber);
@@ -309,7 +316,7 @@ public class Scenario
 			ResultSet results = stmt.executeQuery();
 			if (results.next())
 			{
-				spawnpoints.add(new SiegeSpawnpoint(results.getInt("ID"), this.ID, results.getInt("SpawnPointID"), TeamNumber));
+				spawnpoints.add(new SiegeSpawnpoint(this.ID, results.getInt("SpawnpointID"), TeamNumber));
 			}
 		} catch (SQLException e) 
 		{
@@ -317,29 +324,6 @@ public class Scenario
 		}
 		
 		return spawnpoints;
-	}
-	
-	protected Integer getSideObjectiveSpawnPoint(Integer sideObjectiveID)
-	{
-		Integer spawnpointID = null;
-		
-		try 
-		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SiegeObjectives WHERE ID = ?;");
-			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-			stmt.setInt(1, sideObjectiveID);
-			
-			ResultSet results = stmt.executeQuery();
-			if (results.next())
-			{
-				spawnpointID = results.getInt("SpawnpointID");
-			}
-		} catch (SQLException e) 
-		{
-			e.printStackTrace();
-		}
-		
-		return spawnpointID;
 	}
 	
 	public SiegeSpawnpoint getSiegeSpawnpoint(Integer team, Integer spawnCountID)
@@ -460,13 +444,14 @@ public class Scenario
 	{
 		if (this.mainObjective == objective)
 		{
-			Main.logMessage("Setting main objective as captured");
 			this.setComplete();
 		} else if (this.sideObjectives.contains(objective))
 		{
 			Integer part = (int) (this.mainObjective.getOriginalCapturePoints()/5)*2;
 			
 			Integer sideObjectivePart = (int)part/this.sideObjectives.size();
+			SideObjective so = (SideObjective) objective;
+			so.getGate().destroyGate(false);
 			
 			this.mainObjective.setCurrentCapturePoints(this.mainObjective.getCurrentCapturePoints()-sideObjectivePart);
 		}
@@ -474,21 +459,12 @@ public class Scenario
 	
 	public void setComplete()
 	{
-		Main.logMessage("Setting complete after MO capture");
 		if (this.active)
 		{
-			Main.logMessage("Scenario is set to active");
 			if (this.siege != null)
 			{
-				Main.logMessage("Setting siege complete");
 				this.siege.setComplete();
-			} else
-			{
-				Main.logError("Siege is null!");
 			}
-		} else
-		{
-			Main.logError("Scenario is not active..");
 		}
 		if (!this.testingList.isEmpty())
 		{
@@ -590,8 +566,8 @@ public class Scenario
 			boolean noWarnings = true;
 			
 			Integer spawnpointID = spawnpoint.getSpawnpointID();
-			String SpawnpointError = ColorOptions.error + "Error while removing Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " with spawnpointID " + spawnpointID + " from siege with ID " + this.ID;
-			String removeSpawnpoint = ColorOptions.message + "Removed Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " from siege " + this.ID + " with spawnpointID " + spawnpointID;
+			String SpawnpointError = ColorOptions.error + "Error while removing Team spawnpoint " + spawnpoint.getSpawnpointID() + " with spawnpoint " + spawnpointID + " from siege with ID " + this.ID;
+			String removeSpawnpoint = ColorOptions.message + "Removed Team spawnpoint " + spawnpoint.getSpawnpointID() + " from siege " + this.ID + " with spawnpoint " + spawnpointID;
 
 			try
 			{
@@ -609,11 +585,11 @@ public class Scenario
 			
 			if (noWarnings)
 			{
-				sender.sendMessage(ColorOptions.messageachievement + "Completed the removal of a Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " with no warnings");
+				sender.sendMessage(ColorOptions.messageachievement + "Completed the removal of a Team spawnpoint " + spawnpoint.getSpawnpointID() + " with no warnings");
 			} else
 			{
 				noWarningsAll = false;
-				sender.sendMessage(ColorOptions.error + "Completed the removal of a Team spawnpoint " + spawnpoint.getScenarioSpawnpointID() + " of Scenario " + this.ID + " with warnings! Please notify a developer");
+				sender.sendMessage(ColorOptions.error + "Completed the removal of a Team spawnpoint " + spawnpoint.getSpawnpointID() + " of Scenario " + this.ID + " with warnings! Please notify a developer");
 			}
 		}
 		
@@ -786,8 +762,10 @@ public class Scenario
 	{
 		for (SideObjective objective : this.getSideObjectives())
 		{
+			objective.getBannerBlock().setType(Material.AIR);
 			objective.saveSideObjective();
 		}
+		this.mainObjective.getBannerBlock().setType(Material.AIR);
 		Scenarios.saveScenario(this);
 		Sieges.Scenarios.remove(this);
 		Scenarios.destroyScenario(this);

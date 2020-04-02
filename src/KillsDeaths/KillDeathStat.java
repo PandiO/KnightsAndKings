@@ -21,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import API_methods.WorldGuard;
 import Assignments.Assignment;
 import Assignments.AssignmentKill;
+import DataManager.Worldguard;
 import Donator.Donator;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
@@ -46,191 +47,191 @@ public class KillDeathStat implements Listener
 	public HashMap<UUID, ItemStack> menu = new HashMap<UUID, ItemStack>();
 	public static HashMap<UUID, List<ItemStack>> respawn = new HashMap<UUID, List<ItemStack>>();
 	
-	@EventHandler
-	public void Kill(PlayerDeathEvent e)
-	{
-		String message = null;
-		Location deathLoc = e.getEntity().getLocation();
-		if (e.getEntity().getKiller() instanceof Player && e.getEntity() instanceof Player)
-		{
-			Player killer = (Player) e.getEntity().getKiller();
-			Player died = (Player) e.getEntity();
-			UUID ku = killer.getUniqueId();
-			UUID du = died.getUniqueId();
-			User userKiller = null;
-			User userDied = null;
-			
-			try
-			{
-				userKiller = Users.getUser(ku);
-			} catch (UserNotFoundException ex)
-			{
-				ErrorHandlers.userNotFoundAction(null, killer, true);
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			} catch (Exception ex)
-			{
-				ex.printStackTrace();
-				ErrorHandlers.userNotFoundAction(null, killer, true);
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			}
-			try
-			{
-				userDied = Users.getUser(du);
-			} catch (UserNotFoundException ex)
-			{
-				ErrorHandlers.userNotFoundAction(killer, died, false);
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			} catch (UserIsNpcException ex)
-			{
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			} catch (Exception ex)
-			{
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			}
-			Integer donatorID = userDied.getDonatorID();
-			Integer coins = userDied.getCoins();
-			Integer exp = userKiller.getMultipliedInt(userKiller.getExpPart(5));
-			if (worldguard.getStructureIDbyRegion("arena", deathLoc, worldguard.getRegionManager(died.getWorld())) == null)
-			{
-				Integer dropamount = (coins/10);
-				Integer blockamount = dropamount/10000;
-				Integer rest = (int) dropamount%10000;
-				userDied.setLastDeathLocation(deathLoc);
-				
-				userDied.removeCoins(dropamount);
-				
-				e.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, blockamount, ColorOptions.message + died.getName() + "'s coins", "Coins: " + 10000));
-				e.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, 1, ColorOptions.message + died.getName() + "'s coins", "Coins: " + rest));
-				died.sendMessage(ColorOptions.message + "You dropped " + part + "% of your coins when killed by " + killer.getName());
-			}
-			if (!CombatCheck.combatlogged.contains(du))
-			{
-				List<ItemStack> removable = new ArrayList<ItemStack>();
-				List<ItemStack> keep = new ArrayList<ItemStack>();
-				for (ItemStack content : e.getDrops())
-				{
-					if (content.hasItemMeta() && content.getItemMeta().hasDisplayName())
-					{
-						String display = content.getItemMeta().getDisplayName();
-						Integer productID = product.getProductIDbyDisplayName(display, false);
-						if (productID != null)
-						{
-							Integer grade = product.getGrade(productID, false);
-							if (grade > 3)
-							{
-								keep.add(content);
-							}
-						} else
-						{
-							removable.add(content);
-						}
-					} else
-					{
-						removable.add(content);
-					}
-				}
-				e.getDrops().removeAll(removable);
-				e.getDrops().removeAll(keep);
-				if (respawn.containsKey(du))
-				{
-					List<ItemStack> list = respawn.get(du);
-					for (ItemStack item : keep)
-					{
-						if (!list.contains(item))
-						{
-							list.add(item);
-						}
-					}
-					respawn.put(du, list);
-				} else
-				{
-					respawn.put(du, keep);
-				}
-				if (main.debug)
-				{
-					Bukkit.getConsoleSender().sendMessage("Respawn: " + respawn.keySet());
-				}
-			}
-			for (Assignment assignment : userKiller.getAssignmentList())
-			{
-				if (assignment instanceof AssignmentKill)
-				{
-					AssignmentKill Assignment = (AssignmentKill) assignment;
-					if (!Assignment.isOnlyBandits())
-					{
-						Assignment.addProgress(1);
-					}
-					break;
-				}
-			}
-			if (userKiller != null)
-			{
-				userKiller.addKills(false, 1, 1);
-				userKiller.addExperience(exp, true);
-			}
-			if (userDied != null)
-			{
-				userDied.addDeaths(1);
-			}
-			killer.sendMessage(ColorOptions.messageachievement + "You received " + ColorOptions.messagesubjects + exp + ColorOptions.messageachievement + " experience for killing " + ColorOptions.messagesubjects + died.getName());				
-		} else if (e.getEntity() instanceof Player)
-		{
-			Player died = (Player) e.getEntity();
-			User user = null;
-			
-			try
-			{
-				user = Users.getUser(died.getUniqueId());
-			} catch (UserNotFoundException ex)
-			{
-				ErrorHandlers.userNotFoundAction(null, died, true);
-				e.setDeathMessage(message);
-				e.setDroppedExp(0);
-				return;
-			} catch (UserIsNpcException ex)
-			{
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			} catch (Exception ex)
-			{
-				ex.printStackTrace();
-				ErrorHandlers.userNotFoundAction(null, died, true);
-				e.setDroppedExp(0);
-				e.setDeathMessage(message);
-				return;
-			}
-			UUID du = died.getUniqueId();
-			
-			Integer coins = user.getCoins()/5;
-			
-			user.removeCoins(coins);
-			user.setLastDeathLocation(deathLoc);
-			
-			user.addDeaths(1);
-			e.setDroppedExp(0);
-			for (ItemStack item : died.getInventory().getContents())
-			{
-				if (item != null && item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GOLD + "personal menu"))
-				{
-					menu.put(du, item);
-				}
-			}
-			died.sendMessage(ColorOptions.message + "You lost 20% of your coins when you died!");
-		}
-		e.setDroppedExp(0);
-		e.setDeathMessage(message);
-	}
+//	@EventHandler
+//	public void Kill(PlayerDeathEvent e)
+//	{
+//		String message = null;
+//		Location deathLoc = e.getEntity().getLocation();
+//		if (e.getEntity().getKiller() instanceof Player && e.getEntity() instanceof Player)
+//		{
+//			Player killer = (Player) e.getEntity().getKiller();
+//			Player died = (Player) e.getEntity();
+//			UUID ku = killer.getUniqueId();
+//			UUID du = died.getUniqueId();
+//			User userKiller = null;
+//			User userDied = null;
+//			
+//			try
+//			{
+//				userKiller = Users.getUser(ku);
+//			} catch (UserNotFoundException ex)
+//			{
+//				ErrorHandlers.userNotFoundAction(null, killer, true);
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			} catch (Exception ex)
+//			{
+//				ex.printStackTrace();
+//				ErrorHandlers.userNotFoundAction(null, killer, true);
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			}
+//			try
+//			{
+//				userDied = Users.getUser(du);
+//			} catch (UserNotFoundException ex)
+//			{
+//				ErrorHandlers.userNotFoundAction(killer, died, false);
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			} catch (UserIsNpcException ex)
+//			{
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			} catch (Exception ex)
+//			{
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			}
+//			Integer donatorID = userDied.getDonatorID();
+//			Integer coins = userDied.getCoins();
+//			Integer exp = userKiller.getMultipliedInt(userKiller.getExpPart(5));
+//			if (Worldguard.getStructureIDbyRegion("arena", deathLoc, Worldguard.getRegionManager(died.getWorld())) == null)
+//			{
+//				Integer dropamount = (coins/10);
+//				Integer blockamount = dropamount/10000;
+//				Integer rest = (int) dropamount%10000;
+//				userDied.setLastDeathLocation(deathLoc);
+//				
+//				userDied.removeCoins(dropamount);
+//				
+//				e.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, blockamount, ColorOptions.message + died.getName() + "'s coins", "Coins: " + 10000));
+//				e.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, 1, ColorOptions.message + died.getName() + "'s coins", "Coins: " + rest));
+//				died.sendMessage(ColorOptions.message + "You dropped " + part + "% of your coins when killed by " + killer.getName());
+//			}
+//			if (!Main.combatlogged.contains(du))
+//			{
+//				List<ItemStack> removable = new ArrayList<ItemStack>();
+//				List<ItemStack> keep = new ArrayList<ItemStack>();
+//				for (ItemStack content : e.getDrops())
+//				{
+//					if (content.hasItemMeta() && content.getItemMeta().hasDisplayName())
+//					{
+//						String display = content.getItemMeta().getDisplayName();
+//						Integer productID = product.getProductIDbyDisplayName(display, false);
+//						if (productID != null)
+//						{
+//							Integer grade = product.getGrade(productID, false);
+//							if (grade > 3)
+//							{
+//								keep.add(content);
+//							}
+//						} else
+//						{
+//							removable.add(content);
+//						}
+//					} else
+//					{
+//						removable.add(content);
+//					}
+//				}
+//				e.getDrops().removeAll(removable);
+//				e.getDrops().removeAll(keep);
+//				if (respawn.containsKey(du))
+//				{
+//					List<ItemStack> list = respawn.get(du);
+//					for (ItemStack item : keep)
+//					{
+//						if (!list.contains(item))
+//						{
+//							list.add(item);
+//						}
+//					}
+//					respawn.put(du, list);
+//				} else
+//				{
+//					respawn.put(du, keep);
+//				}
+//				if (main.debug)
+//				{
+//					Bukkit.getConsoleSender().sendMessage("Respawn: " + respawn.keySet());
+//				}
+//			}
+//			for (Assignment assignment : userKiller.getAssignmentList())
+//			{
+//				if (assignment instanceof AssignmentKill)
+//				{
+//					AssignmentKill Assignment = (AssignmentKill) assignment;
+//					if (!Assignment.isOnlyBandits())
+//					{
+//						Assignment.addProgress(1);
+//					}
+//					break;
+//				}
+//			}
+//			if (userKiller != null)
+//			{
+//				userKiller.addKills(false, 1, 1);
+//				userKiller.addExperience(exp, true);
+//			}
+//			if (userDied != null)
+//			{
+//				userDied.addDeaths(1);
+//			}
+//			killer.sendMessage(ColorOptions.messageachievement + "You received " + ColorOptions.messagesubjects + exp + ColorOptions.messageachievement + " experience for killing " + ColorOptions.messagesubjects + died.getName());				
+//		} else if (e.getEntity() instanceof Player)
+//		{
+//			Player died = (Player) e.getEntity();
+//			User user = null;
+//			
+//			try
+//			{
+//				user = Users.getUser(died.getUniqueId());
+//			} catch (UserNotFoundException ex)
+//			{
+//				ErrorHandlers.userNotFoundAction(null, died, true);
+//				e.setDeathMessage(message);
+//				e.setDroppedExp(0);
+//				return;
+//			} catch (UserIsNpcException ex)
+//			{
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			} catch (Exception ex)
+//			{
+//				ex.printStackTrace();
+//				ErrorHandlers.userNotFoundAction(null, died, true);
+//				e.setDroppedExp(0);
+//				e.setDeathMessage(message);
+//				return;
+//			}
+//			UUID du = died.getUniqueId();
+//			
+//			Integer coins = user.getCoins()/5;
+//			
+//			user.removeCoins(coins);
+//			user.setLastDeathLocation(deathLoc);
+//			
+//			user.addDeaths(1);
+//			e.setDroppedExp(0);
+//			for (ItemStack item : died.getInventory().getContents())
+//			{
+//				if (item != null && item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GOLD + "personal menu"))
+//				{
+//					menu.put(du, item);
+//				}
+//			}
+//			died.sendMessage(ColorOptions.message + "You lost 20% of your coins when you died!");
+//		}
+//		e.setDroppedExp(0);
+//		e.setDeathMessage(message);
+//	}
 	
 	@EventHandler
 	public void ExpMobKill(EntityDeathEvent e)
@@ -284,24 +285,24 @@ public class KillDeathStat implements Listener
 		}
 	}
 	
-	@EventHandler
-	public void respawn(PlayerRespawnEvent e)
-	{
-		Player player = e.getPlayer();
-		UUID uuid = player.getUniqueId();
-		if (menu.containsKey(uuid))
-		{
-			e.getPlayer().getInventory().addItem(menu.get(uuid));
-			menu.remove(uuid);
-		}
-		if (respawn.containsKey(uuid))
-		{
-			for (ItemStack item : respawn.get(uuid))
-			{
-				player.getInventory().addItem(item);
-			}
-			player.updateInventory();
-			respawn.remove(uuid);
-		}
-	}
+//	@EventHandler
+//	public void respawn(PlayerRespawnEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		UUID uuid = player.getUniqueId();
+//		if (menu.containsKey(uuid))
+//		{
+//			e.getPlayer().getInventory().addItem(menu.get(uuid));
+//			menu.remove(uuid);
+//		}
+//		if (respawn.containsKey(uuid))
+//		{
+//			for (ItemStack item : respawn.get(uuid))
+//			{
+//				player.getInventory().addItem(item);
+//			}
+//			player.updateInventory();
+//			respawn.remove(uuid);
+//		}
+//	}
 }

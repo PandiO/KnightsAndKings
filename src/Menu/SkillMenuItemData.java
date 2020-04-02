@@ -58,26 +58,26 @@ public interface SkillMenuItemData
 	String DefenseLore1 = ColorOptions.skillsinfonotachieved + "Increases Chance with 5%";
 	
 	public List<String> StrengthLevel7 = new ArrayList<String>(Arrays.asList(
-			ColorOptions.message + "50% chance to get", 
+			ColorOptions.message + "25% chance to get", 
 			ColorOptions.message + "Strength III for 4 seconds", 
 			ColorOptions.message + "when hitting someone"
 			));
 	public List<String> SpeedLevel7 = new ArrayList<String>(Arrays.asList(
-			ColorOptions.message + "50% chance to get",
+			ColorOptions.message + "25% chance to get",
 			ColorOptions.message + "Speed II for 5 seconds",
 			ColorOptions.message + "on an incoming hit"
 			));
 	public List<String> HealthLevel7 = new ArrayList<String>(Arrays.asList(
-			ColorOptions.message + "50% chance to get",
+			ColorOptions.message + "25% chance to get",
 			ColorOptions.message + "Regeneration I for 10 seconds",
 			ColorOptions.message + "on an incoming hit"
 			));
 	public List<String> AttackSpeedLevel7 = new ArrayList<String>(Arrays.asList(
-			ColorOptions.message + "50% chance to inflict",
+			ColorOptions.message + "25% chance to inflict",
 			ColorOptions.message + "2x damage at once"
 			));
 	public List<String> DefenseLevel7 = new ArrayList<String>(Arrays.asList(
-			ColorOptions.message + "50% chance to remove",
+			ColorOptions.message + "25% chance to remove",
 			ColorOptions.message + "100% incoming damage"
 			));
 //Points/Back

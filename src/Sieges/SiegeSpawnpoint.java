@@ -1,25 +1,15 @@
 package Sieges;
 
-import org.bukkit.ChatColor;
-
 public class SiegeSpawnpoint extends SiegeObject
 {
-	protected int ScenarioSpawnpointID;
 	protected int teamNumber;
 	protected int spawnCountID;
 	
-	public SiegeSpawnpoint(int ScenarioSpawnpointID, int siegeID, int spawnpointID, int teamNumber)
+	public SiegeSpawnpoint(int scenarioID, int spawnpointID, int teamNumber)
 	{
-		super(siegeID, spawnpointID);
+		super(scenarioID, spawnpointID);
 		
-		this.ScenarioSpawnpointID = ScenarioSpawnpointID;
 		this.teamNumber = teamNumber;
-		this.fetchLocation();
-	}
-	
-	public int getScenarioSpawnpointID()
-	{
-		return this.ScenarioSpawnpointID;
 	}
 	
 	public int getTeamNumber()

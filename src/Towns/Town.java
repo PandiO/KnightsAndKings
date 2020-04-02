@@ -13,7 +13,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Main.Main;
 import Titles.Title;
 
@@ -22,7 +22,6 @@ public class Town
 	//Get instances of required classes
 	Main main = Main.getPlugin(Main.class);
 	Title title = new Title();
-	WorldGuard worldguard = new WorldGuard();
 	
 	//Save a city to the database
 	public void saveTown(String name, Integer requiredTitleID, String description)
@@ -71,12 +70,12 @@ public class Town
 		}
 	}
 	
-	//Check if a location is inside a city region
+	//Check if a location is inside a city gateRegion
 	public boolean checkTownbyLocation(Location location)
 	{
 		boolean exist = false;
 		
-        RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(location.getWorld());
+        RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(location.getWorld());
         ApplicableRegionSet regions = manager.getApplicableRegions(location);
         
         for (ProtectedRegion region : regions)
@@ -97,7 +96,7 @@ public class Town
 	{
 		Integer id = null;
 		
-		RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(location.getWorld());
+		RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(location.getWorld());
         ApplicableRegionSet regions = manager.getApplicableRegions(location);
         
         for (ProtectedRegion region : regions)
@@ -308,7 +307,7 @@ public class Town
 	{
 		try
 		{
-			//prepare the query to delete a part-region
+			//prepare the query to delete a part-gateRegion
 			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM TownRegion WHERE SubID=? AND TownID=?;");	
 			stmt.setInt(1, partID);
 			stmt.setInt(2, townID);
@@ -320,7 +319,7 @@ public class Town
 		}
 	}
 	
-	//Save a sub-region of a city
+	//Save a sub-gateRegion of a city
 	public void saveTownPart(Integer townID)
 	{
 		try 

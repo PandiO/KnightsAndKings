@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -16,18 +17,28 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import Donator.Donator;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
+import Handlers.ErrorHandlers;
 import Handlers.SoundHandler;
+import Kits.Kit;
 import Main.Main;
+import Minigames.Transport;
 import Products.Product;
 import Scoreboards.Scoreboard;
+import SpawnPoints.SpawnPoint;
+import Tutorial.Tutorial;
+import net.citizensnpcs.api.CitizensAPI;
 
 public final class Users implements Listener
 {
+	static SpawnPoint spawnpoint = new SpawnPoint();
+	static Kit kit = new Kit();
+	static offlineUser offlineUser = new offlineUser();
 	static Main main = Main.getPlugin(Main.class);
 
 	public static void destroy(User user)
@@ -308,6 +319,7 @@ public final class Users implements Listener
 	public static User getUser(UUID uuid)
 	{
 		User us = null;
+		
 		for (User user : main.users)
 		{
 			if (user.getUUID().equals(uuid))
@@ -318,16 +330,7 @@ public final class Users implements Listener
 		}
 		if (us == null)
 		{
-			Player player = Bukkit.getPlayer(uuid);
-			try
-			{
-				String name = player.getName();
-				if (name != null)
-				{
-					throw new UserNotFoundException("No user could be found with UUID: " + uuid);
-
-				}
-			} catch (Exception ex)
+			if (CitizensAPI.getNPCRegistry().getByUniqueId(uuid) != null)
 			{
 				throw new UserIsNpcException();
 			}
@@ -392,5 +395,149 @@ public final class Users implements Listener
 	    		op.playSound(op.getLocation(), SoundHandler.NOTE_PLING, 0.5F, 1.0F);
 			}
 		}
+	}
+	
+	public static void newPlayer(Player player)
+	{
+		UUID uuid = player.getUniqueId();
+		User user = null;
+		
+		try
+		{
+			user = Users.getUser(uuid);
+		} catch (UserNotFoundException ex)
+		{
+			ErrorHandlers.userNotFoundAction(null, player, true);
+			return;
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+			ErrorHandlers.userNotFoundAction(null, player, true);
+			return;
+		}
+		if (spawnpoint.getSpawnPointID("new") != null)
+    	{
+    		player.teleport(spawnpoint.getSpawnPointLocation(spawnpoint.getSpawnPointID("new")));
+    	} else if (spawnpoint.getSpawnPointID("spawn") != null)
+    	{
+    		player.teleport(spawnpoint.getSpawnPointLocation(spawnpoint.getSpawnPointID("spawn")));
+    	}
+    	user.sendTitle(ChatColor.BLUE + "Knights and Kings", ColorOptions.message + "Welcome " + ColorOptions.messageformat + player.getName() + ColorOptions.message + "!", 1, 2, 1);
+    	new BukkitRunnable()
+    	{
+    		public void run()
+    		{
+    			if (main.debug)
+    			{
+    				Bukkit.getConsoleSender().sendMessage("Second title fired!");
+    			}
+		    	offlineUser.sendTitle(player, ChatColor.BLUE + "Introduction", ColorOptions.message + "Please start the " + ColorOptions.messagesubjects + "Introduction Tutorial", 1, 4, 2);
+    		}
+    	}.runTaskLater(main, 5*20);
+    	player.sendMessage(ColorOptions.messageachievement + "Welcome " + ColorOptions.messagesubjects + player.getName() + ColorOptions.messageachievement + ", nice of you to come by!");
+		
+    	Tutorial tutorial = new Tutorial();
+    	tutorial.createTutorial(user, "intro");
+    	
+    	kit.starterKit(player);
+		Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(main, new Runnable()
+    	{
+            public void run()
+            {
+    	    	Main.newPlayers.remove(uuid);
+            }
+        }, 3*20);
+	}
+	
+	public static void CheckScheduledRank(User user)
+	{
+		UUID uuid = user.getUUID();
+    	if (Main.scheduledDonator.containsKey(uuid))
+    	{
+    		new BukkitRunnable()
+    		{
+    			public void run()
+    			{
+    				user.setDonatorRank(Main.scheduledDonator.get(uuid));
+    			}
+    		}.runTaskLater(main, 5*20);
+    	}
+	}
+	
+	public static void CheckScheduledItems(User user)
+	{
+		UUID uuid = user.getUUID();
+    	if (Main.scheduledgive.containsKey(uuid))
+    	{
+    		new BukkitRunnable()
+    		{
+    			public void run()
+    			{
+    	    		Product product = new Product();
+    	    		for (Integer productID : Main.scheduledgive.get(uuid).keySet())
+    	    		{
+    	    			product.giveProduct(Bukkit.getConsoleSender(), user, productID, Main.scheduledgive.get(uuid).get(productID));
+    	    		}
+    			}
+    		}.runTaskLater(main, 6*20);
+    	}
+	}
+	
+	public static void CheckDuplicateAddress(User user)
+	{
+		offlineUser offlineUser = new offlineUser();
+		Player player = user.getPlayer();
+    	if (offlineUser.isUsedAddress(player.getAddress().getAddress()))
+    	{
+    		for (Player target : Bukkit.getOnlinePlayers())
+    		{
+    			if (target.hasPermission("k&k.staff") && !player.hasPermission("k&k.owner"))
+    			{
+    				List<String> alternativeNames = new ArrayList<String>();
+    				for (Integer userID : offlineUser.getUserIDlistByAddress(player.getAddress().getAddress()))
+    				{
+    					String username = offlineUser.getUserName(Users.fetchUUIDbyID(userID));
+    					if (!username.equalsIgnoreCase(player.getName()))
+    					{
+	    					alternativeNames.add(offlineUser.getUserName(Users.fetchUUIDbyID(userID)));
+    					}
+    				}
+    				target.sendMessage(ColorOptions.message + "► Player " + ColorOptions.messagesubjects + player.getName() + ColorOptions.message + " joined using an IP address that has already been used!");
+    				target.sendMessage(ColorOptions.message + ColorOptions.messageArrow + "Other users(" + alternativeNames.size() +"): " + alternativeNames);
+    			}
+    		}
+    	}
+	}
+	
+	public static Transport GetTransport(User user)
+	{
+		Transport transport = null;
+		
+		for (Transport t : Main.transports)
+		{
+			if (t.getPlayer().getUniqueId() == user.getUUID())
+			{
+				transport = t;
+				break;
+			}
+		}
+		
+		return transport;
+	}
+	
+	public static User GetAvenger(User user)
+	{
+		User avenger = null;
+		
+		for (User u : Main.users)
+		{
+			if (u.getAvengerTarget() == user)
+			{
+				avenger = u;
+				break;
+			}
+		}
+		
+		return avenger;
 	}
 }

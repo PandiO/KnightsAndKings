@@ -9,27 +9,20 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.util.Vector;
 
 import API_methods.WorldGuard;
-import Exceptions.UserIsNpcException;
-import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
-import Handlers.ErrorHandlers;
 import Main.Main;
 import Products.Product;
 import Towns.Town;
 import Traits.Bandit_v2;
 import Users.User;
-import Users.Users;
 import Users.offlineUser;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -54,50 +47,50 @@ public class BanditSpawn implements Listener
 	Map<User, Location> locationList = new HashMap<User, Location>();
 
 	
-	@EventHandler
-	public void onWalk(PlayerMoveEvent e)
-	{
-		Player player = e.getPlayer();
-		UUID uuid = player.getUniqueId();
-		User user = null;
-		
-		try
-		{
-			user = Users.getUser(uuid);
-		} catch (UserNotFoundException ex)
-		{
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		} catch (UserIsNpcException ex)
-		{
-			return;
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		}
-		
-		if (!user.inStaffModus() &&
-				!user.inOwnerModus() &&
-				!user.inSafeZone() &&
-				player.getGameMode() == GameMode.SURVIVAL &&
-				!player.getAllowFlight() &&
-				!BanditAmbushes.hasAmbush(user))
-		{
-			if (!locationList.containsKey(user))
-			{
-				locationList.put(user, player.getLocation());
-				return;
-			}
-			
-			if (locationList.get(user).distance(player.getLocation()) >= 5)
-			{
-				BanditAmbushes.tryAmbush(user);
-				locationList.put(user, player.getLocation());
-			}
-		}
-	}
+//	@EventHandler
+//	public void onWalk(PlayerMoveEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		UUID uuid = player.getUniqueId();
+//		User user = null;
+//		
+//		try
+//		{
+//			user = Users.getUser(uuid);
+//		} catch (UserNotFoundException ex)
+//		{
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		} catch (UserIsNpcException ex)
+//		{
+//			return;
+//		} catch (Exception ex)
+//		{
+//			ex.printStackTrace();
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		}
+//		
+//		if (!user.inStaffModus() &&
+//				!user.inOwnerModus() &&
+//				!user.inSafeZone() &&
+//				player.getGameMode() == GameMode.SURVIVAL &&
+//				!player.getAllowFlight() &&
+//				!BanditAmbushes.hasAmbush(user))
+//		{
+//			if (!locationList.containsKey(user))
+//			{
+//				locationList.put(user, player.getLocation());
+//				return;
+//			}
+//			
+//			if (locationList.get(user).distance(player.getLocation()) >= 5)
+//			{
+//				BanditAmbushes.tryAmbush(user);
+//				locationList.put(user, player.getLocation());
+//			}
+//		}
+//	}
 //	@EventHandler
 //	public void onWalk(PlayerMoveEvent event)
 //	{

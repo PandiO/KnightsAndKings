@@ -9,6 +9,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.AddFriendEvent;
 import Handlers.RemoveFriendEvent;
 import Houses.House;
@@ -35,7 +36,7 @@ public class UpdateFriendRegions implements Listener
 	@EventHandler
 	public void onAdd(AddFriendEvent e)
 	{
-        RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(e.getWorld());
+        RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(e.getWorld());
 		UUID targetUUID = e.getFriendUUID();
 		User user = e.getUser();
 		UUID uuid = user.getUUID();
@@ -69,7 +70,7 @@ public class UpdateFriendRegions implements Listener
 	@EventHandler
 	public void onRemove(RemoveFriendEvent e)
 	{
-		RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(e.getWorld());
+		RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(e.getWorld());
 		UUID targetUUID = e.getFriendUUID();
 		User user = e.getUser();
 		UUID uuid = user.getUUID();

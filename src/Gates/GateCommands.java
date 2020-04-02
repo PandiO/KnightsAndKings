@@ -1,7 +1,5 @@
 package Gates;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -17,12 +15,15 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 
 import API_methods.WorldEdit;
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
+import DataManager.Structures.Gates;
 import Exceptions.CommandExceptions;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
 import Main.Main;
+import Models.Structures.Gate;
 import Streets.Street;
 import Towns.Town;
 import Users.User;
@@ -454,7 +455,7 @@ public class GateCommands implements CommandExecutor
 		
 		try
 		{
-			Gates.createGate(sender, name, streetID, townID, -1, faceDirection);
+//			Gates.createGate(sender, name, streetID, townID, -1, faceDirection);
 		} catch (Exception ex)
 		{
 			ex.printStackTrace();
@@ -468,17 +469,17 @@ public class GateCommands implements CommandExecutor
 			try
 			{
 				ProtectedCuboidRegion region = new ProtectedCuboidRegion(
-						"gate_" + gate.getID(),
+						"gate_" + gate.getId(),
 						new BlockVector(selection.getNativeMinimumPoint()),
 						new BlockVector(selection.getNativeMaximumPoint())
 						);
 				
-				this.worldguard.getRegionManager(selection.getWorld()).addRegion(region);
+				Worldguard.getRegionManager(selection.getWorld()).addRegion(region);
 				gate.addRegion(region);
 			} catch (Exception ex)
 			{
 				ex.printStackTrace();
-				sender.sendMessage(ColorOptions.error + "Something went wrong while creating the gate-region. Please notify a developer");
+				sender.sendMessage(ColorOptions.error + "Something went wrong while creating the gate-gateRegion. Please notify a developer");
 				return;
 			}
 		} else
@@ -492,7 +493,7 @@ public class GateCommands implements CommandExecutor
 	
 	private void removeGate(CommandSender sender, Gate gate)
 	{
-		Integer ID = gate.getID();
+		Integer ID = gate.getId();
 		boolean removed = false;
 		removed = gate.removePermanently(sender);
 		if (removed)
@@ -514,27 +515,22 @@ public class GateCommands implements CommandExecutor
 	
 	private void listGates(CommandSender sender)
 	{
-		ResultSet gates = Gates.getGateList(-1);
+		List<Integer> list = Gates.getGateList(-1);
 		sender.sendMessage("");
-		try {
-			while (gates.next())
+		for (Integer ID : list)
+		{
+			Gate gate = Gates.instantiateGate(ID, false);
+			sender.sendMessage("");
+			if (sender.hasPermission("k&k.gate"))
 			{
-				sender.sendMessage("");
-				if (sender.hasPermission("k&k.gate"))
-				{
-					sender.sendMessage(ColorOptions.stats + "ID: " + ColorOptions.statsresults + gates.getInt("ID"));
-				}
-				sender.sendMessage(ColorOptions.stats + "Gate name: " + ColorOptions.statsresults + gates.getString("Name"));
-				sender.sendMessage(ColorOptions.stats + "Street: " + ColorOptions.statsresults + street.getStreetName(gates.getInt("StreetID")));
-				sender.sendMessage(ColorOptions.stats + "Town: " + ColorOptions.statsresults + town.getTownName(gates.getInt("TownID")));
-				sender.sendMessage(ColorOptions.stats + "Status: " + ColorOptions.statsresults + ColorOptions.messagesubjects + "Opened");
-				sender.sendMessage(ColorOptions.stats + "Controllable by you: " + (sender.hasPermission("k&k.gate.toggle") ? ColorOptions.messagesubjects + "Yes" : ColorOptions.error + "No"));
-				sender.sendMessage("");
+				sender.sendMessage(ColorOptions.stats + "ID: " + ColorOptions.statsresults + gate.getId());
 			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			sender.sendMessage(ColorOptions.error + "No gates found!");
-			e.printStackTrace();
+			sender.sendMessage(ColorOptions.stats + "Gate name: " + ColorOptions.statsresults + gate.getName());
+			sender.sendMessage(ColorOptions.stats + "Street: " + ColorOptions.statsresults + street.getStreetName(gate.getStreetID()));
+			sender.sendMessage(ColorOptions.stats + "Town: " + ColorOptions.statsresults + town.getTownName(gate.getTownID()));
+			sender.sendMessage(ColorOptions.stats + "Status: " + ColorOptions.statsresults + ColorOptions.messagesubjects + "Opened");
+			sender.sendMessage(ColorOptions.stats + "Controllable by you: " + (sender.hasPermission("k&k.gate.toggle") ? ColorOptions.messagesubjects + "Yes" : ColorOptions.error + "No"));
+			sender.sendMessage("");
 		}
 		sender.sendMessage("");
 	}

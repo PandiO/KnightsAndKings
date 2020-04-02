@@ -10,9 +10,9 @@ import com.mewin.WGRegionEvents.events.RegionEnterEvent;
 import com.mewin.WGRegionEvents.events.RegionLeaveEvent;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
 import Assignments.Assignment;
 import Assignments.AssignmentEnterPropertySpecific;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ErrorHandlers;
 import Main.Main;
@@ -25,7 +25,6 @@ public class PropertyEvents implements Listener
 {
 	Town town = new Town();
 	Product product = new Product();
-	WorldGuard worldguard = new WorldGuard();
 	private Main main;
 	public PropertyEvents(Main main)
 	{
@@ -39,9 +38,9 @@ public class PropertyEvents implements Listener
 		UUID uuid = player.getUniqueId();
 		ProtectedRegion region = e.getRegion();
 		
-		if (this.worldguard.isPropertyRegion(region))
+		if (Worldguard.isPropertyRegion(region))
 		{
-			Integer propertyID = this.worldguard.getStructureIDbyRegion(region);
+			Integer propertyID = Worldguard.getStructureIDbyRegion(region);
 			User user = null;
 			
 			try

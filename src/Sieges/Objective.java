@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
@@ -20,7 +20,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import Handlers.ColorOptions;
-import Main.Main;
 import Minigames.Participant;
 import Users.User;
 import net.minecraft.server.v1_8_R3.EnumParticle;
@@ -49,9 +48,9 @@ public class Objective extends SiegeObject
 		super(siegeID, spawnpointID);
 		this.originalCapturePoints = capturePoints;
 		this.currentCapturePoints = this.originalCapturePoints;
-		this.fetchLocation();
 		this.instance = this;
-		this.bannerBlock = this.location.getBlock();
+		this.bannerBlock = this.spawnpoint.getLocation().getBlock();
+		this.bannerBlock.setType(Material.STANDING_BANNER);
 		this.banner = (Banner) this.bannerBlock.getState();
 		this.setBannerStages(originalColor, DyeColor.RED);
 		this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
@@ -144,7 +143,6 @@ public class Objective extends SiegeObject
 				}
 			}
 		}
-		Bukkit.getConsoleSender().sendMessage("CapturePoints: " + capturePoints);
 		return capturePoints;
 	}
 	
@@ -249,7 +247,7 @@ public class Objective extends SiegeObject
 	
 	public void fetchBanner()
 	{
-		this.bannerBlock = this.location.getBlock();
+		this.bannerBlock = this.spawnpoint.getLocation().getBlock();
 		this.banner = (Banner) this.bannerBlock.getState();
 	}
 	
@@ -294,7 +292,6 @@ public class Objective extends SiegeObject
 		
 		
 		this.currentCapturePoints = capturePoints;
-		Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "New Points: " + this.currentCapturePoints + "/" + this.originalCapturePoints);
 		
 		float rawPart = ((float) this.currentCapturePoints)/this.originalCapturePoints;
 		Integer part = (int)Math.ceil(rawPart*8);
@@ -464,8 +461,8 @@ public class Objective extends SiegeObject
 		
 		receivers.addAll(this.getPlayers());
 				
-		double originalX = this.getLocation().getX();
-		double originalZ = this.getLocation().getZ();
+		double originalX = this.bannerBlock.getLocation().getX();
+		double originalZ = this.bannerBlock.getLocation().getZ();
 		
 		this.circleTask = new BukkitRunnable()
 		{
@@ -492,7 +489,7 @@ public class Objective extends SiegeObject
 //		            }
 //		        }
 			}
-		}.runTaskTimerAsynchronously(main, 0, 2*20);
+		}.runTaskTimerAsynchronously(main, 0, 20);
 	}
 	
 	public void stopCaptureTask()

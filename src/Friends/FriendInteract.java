@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Houses.House;
 import Main.Main;
 import Streets.Street;
@@ -48,8 +49,8 @@ public class FriendInteract implements Listener
 				{
 					Block block = e.getClickedBlock();
 					Location blockLocation = block.getLocation();
-					RegionManager regionmanager = worldguard.getWorldGuard().getRegionManager(player.getWorld());
-					Integer houseID = worldguard.getStructureIDbyRegion("house", blockLocation, regionmanager);
+					RegionManager regionmanager = Worldguard.getWorldGuard().getRegionManager(player.getWorld());
+					Integer houseID = Worldguard.getStructureIDbyRegion("house", blockLocation, regionmanager);
 					if (houseID != null && house.getHouseIDList(null).contains(houseID))
 					{
 						Integer ownerID = house.getHouseOwnerID(houseID);

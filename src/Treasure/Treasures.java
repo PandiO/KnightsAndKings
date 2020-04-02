@@ -12,7 +12,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
-import Gates.Gate;
 import Handlers.ColorOptions;
 import Main.Main;
 import SpawnPoints.SpawnPoint;
@@ -43,7 +42,7 @@ public class Treasures
 		{
 			try 
 			{
-				spawnpoint.saveSpawnPoint("treasure_", "0", 0, "0", null, location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+				spawnpoint.saveSpawnPoint("treasure_", "0", 0, "0", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 				spawnpointID = spawnpoint.getSpawnPointIDbyLocation(location);
 				PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO Treasure(Grade, SpawnpointID) VALUES(?, ?);");
 				stmt.setInt(1, grade);

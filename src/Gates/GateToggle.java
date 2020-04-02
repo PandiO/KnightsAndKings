@@ -3,8 +3,10 @@ package Gates;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import DataManager.Structures.Gates;
 import Handlers.ColorOptions;
 import Main.Main;
+import Models.Structures.Gate;
 import Users.User;
 
 public class GateToggle 
@@ -29,7 +31,7 @@ public class GateToggle
 			toggleType = "Passthrough";
 		}
 		this.startRequestTimeOutTask();
-		Gates.toggles.add(this);
+		Gates.GateToggles.add(this);
 	}
 	
 	public User getUser()
@@ -114,7 +116,7 @@ public class GateToggle
 		{
 			
 		}
-		Gates.toggles.remove(this);
+		Gates.GateToggles.remove(this);
 		Gates.destroyGateToggle(this);
 	}
 }

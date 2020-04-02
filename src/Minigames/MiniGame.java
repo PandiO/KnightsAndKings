@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -111,6 +110,11 @@ public class MiniGame
 		{
 			User user = participant.getUser();
 			total += user.getTitleID();
+		}
+		
+		if (size == 0)
+		{
+			return average;
 		}
 		
 		average = (int)total/size;
@@ -270,11 +274,11 @@ public class MiniGame
 		return part;
 	}
 	
-	public List<User> getUserParticipants()
+	public List<User> getUserParticipants(List<Participant> participants)
 	{
 		List<User> Users = new ArrayList<User>();
 		
-		for (Participant Participant : this.getParticipants())
+		for (Participant Participant : participants)
 		{
 			Users.add(Participant.getUser());
 		}
@@ -407,11 +411,14 @@ public class MiniGame
 	
 	public void announceOnline(List<String> message)
 	{
-		for(Player player : Bukkit.getOnlinePlayers())
+		for(User user : Main.users)
 		{
-			for (String msg : message)
+			if (DataManager.Creations.FindCreation(user) == null)
 			{
-				player.sendMessage(msg);
+				for (String msg : message)
+				{
+					user.getPlayer().sendMessage(msg);
+				}
 			}
 		}
 	}
@@ -456,7 +463,10 @@ public class MiniGame
 		}
 		if (this.matchmakingLocationID != null)
 		{
-			player.teleport(this.spawnpoint.getSpawnPointLocation(this.matchmakingLocationID));
+			this.spawnpoint.TeleportNearby(3
+					, user
+					, this.spawnpoint.getSpawnPointLocation(this.matchmakingLocationID)
+					, this.getUserParticipants(this.getParticipants()));
 		}
 		player.setGameMode(GameMode.SURVIVAL);
 		player.setFlying(false);

@@ -12,7 +12,7 @@ public class WorldEdit
 	//Get instances of required classes
 	Main main = Main.getPlugin(Main.class);
 	
-    public WorldEditPlugin getWorldEdit() 
+    public static WorldEditPlugin getWorldEdit() 
     {
         Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("WorldEdit");
          

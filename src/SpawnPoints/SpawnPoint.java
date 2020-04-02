@@ -40,7 +40,7 @@ public class SpawnPoint
 	Arena arena = new Arena();
 	
 	//Save a spawnpoint with values (required title and donator can be both the name or the id)
-	public void saveSpawnPoint(String name, String requiredtitle, Integer price, String requireddonator, String arenaCategory, World world, Double x, Double y, Double z, Float yaw, Float pitch)
+	public void saveSpawnPoint(String name, String requiredtitle, Integer price, String requireddonator, World world, Double x, Double y, Double z, Float yaw, Float pitch)
 	{
 		Integer maxTitles = title.getTitleAmount()-1;
 		Integer totaldonators = donator.getDonatorRankAmount();
@@ -424,6 +424,23 @@ public class SpawnPoint
 		}
 	}
 	
+	//Remove a connection between a spawnpoint and a city
+	public void removeTownSpawnPoint1(Integer townID)
+	{
+		try 
+		{
+			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM TownSpawnPoint WHERE TownID=?;");
+			stmt.setInt(1, townID);
+			
+			stmt.executeUpdate();
+			//Send the console a message if the spawnpoint belongs to a city
+			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Spawnpoint for town " + townID + " has succesfully been removed to the database!");
+		} catch (SQLException e) 
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	//Save a cityspawnpoint to the database
 	public void saveTownSpawnPoint(Integer townID, Integer spawnpointID)
 	{
@@ -446,7 +463,7 @@ public class SpawnPoint
 				}
 			} else
 			{
-				throw new Exception("Error occured when saving a city-spawnpoint: cityID or spawnpointID does not exist!");
+				throw new Exception("Error occured when saving a city-spawnpoint: cityID or spawnpoint does not exist!");
 			}
 		} catch (Exception e)
 		{
@@ -801,7 +818,7 @@ public class SpawnPoint
 			if (!loc.getBlock().isEmpty())
 			{
 				Block block = loc.getBlock();
-				if (block.getType() != Material.AIR)
+				if (block.getType() != Material.AIR && block.getType() != Material.SNOW)
 				{
 					Bukkit.getConsoleSender().sendMessage("Location obstructed by " + block.getType().toString() + " on location " + loc.toString());
 					safe = false;
@@ -811,5 +828,65 @@ public class SpawnPoint
 		}
 		
 		return safe;
+	}
+	
+	public boolean FreeOfPlayers(Location location, List<User> users)
+	{
+		boolean free = true;
+		
+		if (users == null || users.isEmpty())
+		{
+			return free;
+		}
+		
+		for (User user : users)
+		{
+			if (user.getPlayer().getLocation().distance(location) <= 1)
+			{
+				free = false;
+				break;
+			}
+		}
+		
+		return free;
+	}
+	
+	//The mayNotObstruct param will be used to check every user in the list of it is standing on the desired teleport location. 
+	//If so, it will choose a new nearby location.
+	public void TeleportNearby(int radius, User user, Location location, List<User> mayNotObstruct)
+	{
+		boolean teleported = false; 
+		
+		List<Location> locs = new ArrayList<Location>(Arrays.asList(
+				location,
+				location.clone().add(1, 0, 0),
+				location.clone().subtract(1, 0, 0),
+				location.clone().add(0, 0, 1),
+				location.clone().subtract(0, 0, 1)
+				));
+		
+		for (int i = 1; i < radius; i++)
+		{
+			locs.addAll(Arrays.asList(
+					location.clone().add(i, 0, 0),
+					location.clone().subtract(i, 0, 0),
+					location.clone().add(0, 0, i),
+					location.clone().subtract(0, 0, i)
+					));
+		}
+		
+		for (Location loc : locs)
+		{
+			if (this.canTeleport(loc) && this.FreeOfPlayers(location, mayNotObstruct))
+			{
+				teleported = user.getPlayer().teleport(loc);
+				return;
+			}
+		}
+		
+		if (!teleported)
+		{
+			this.TeleportNearby(radius, user, location, null);
+		}
 	}
 }

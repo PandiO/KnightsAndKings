@@ -25,7 +25,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion.CircularInheritanceException;
 
 import API_methods.WorldEdit;
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Donator.Donator;
 import Handlers.ColorOptions;
 import Houses.House;
@@ -41,7 +41,6 @@ public class TownCommands implements CommandExecutor
 	House house = new House();
 	Town town = new Town();
 	WorldEdit worldedit = new WorldEdit();
-	WorldGuard worldguard = new WorldGuard();
 	public Main main;
 	public TownCommands(Main main) 
 	{
@@ -91,7 +90,7 @@ public class TownCommands implements CommandExecutor
 					{
 						//Get the selection of worldedit a user has made to register as a house
 						Selection selection = worldedit.getWorldEdit().getSelection(player);
-	                    RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+	                    RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
 	                    
 						if (args[0].equalsIgnoreCase("create"))
 						{
@@ -552,7 +551,7 @@ public class TownCommands implements CommandExecutor
 		//Get the town ID of the new town from the database
 		Integer townID = town.getTownID(name);
 		
-		//Create the actual wordguard region
+		//Create the actual wordguard gateRegion
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				"town_" + townID,
 				new BlockVector(worldEditSelection.getNativeMinimumPoint()),
@@ -570,7 +569,7 @@ public class TownCommands implements CommandExecutor
 		RegionGroupFlag entryFlag = DefaultFlag.ENTRY.getRegionGroupFlag();
 		try 
 		{
-			entryFlag.parseInput(worldguard.getWorldGuard(), null, "non_members");
+			entryFlag.parseInput(Worldguard.getWorldGuard(), null, "non_members");
 		} catch (InvalidFlagFormat e) 
 		{
 			// Auto-generated catch block
@@ -611,7 +610,7 @@ public class TownCommands implements CommandExecutor
 		Integer partID = null;
 		ArrayList<Integer> partList = town.getTownPartList(townID);
 		
-		//Check for every partID if there is an existing region, if not, that id is the new partID
+		//Check for every partID if there is an existing gateRegion, if not, that id is the new partID
 		for (Integer id : partList)
 		{
 			if (!manager.getRegions().containsKey("town_" + townID + "," + id))
@@ -621,15 +620,15 @@ public class TownCommands implements CommandExecutor
 			}
 		}
 		
-		//Create the actual WorldGuard region
+		//Create the actual WorldGuard gateRegion
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
                 "town_" + townID + "," + partID,
                 new BlockVector(selection.getNativeMinimumPoint()),
                 new BlockVector(selection.getNativeMaximumPoint())
 				);
-		//manager.addRegion(region);
+		//manager.addRegion(gateRegion);
 		
-		//Try to set the house region as parent of the sub-region
+		//Try to set the house gateRegion as parent of the sub-gateRegion
 		try 
 		{
 			region.setParent(manager.getRegion("town_" + townID));
@@ -708,7 +707,7 @@ public class TownCommands implements CommandExecutor
 			return;
 		}
 		sender.sendMessage(ColorOptions.message + ColorOptions.messageArrow + "Purging command not available yet");
-		RegionManager manager = this.worldguard.getRegionManager(Bukkit.getWorld("world"));
+		RegionManager manager = Worldguard.getRegionManager(Bukkit.getWorld("world"));
 		String townName = this.town.getTownName(townID);
 		ProtectedRegion region = manager.getRegion("town_" + townID);
 		
@@ -723,7 +722,7 @@ public class TownCommands implements CommandExecutor
 //		String townName = this.town.getTownName(townID);
 //		sender.sendMessage(ColorOptions.message + ColorOptions.messageArrow + "Purging " + townName + "...");
 //		Bukkit.getConsoleSender().sendMessage("Trying to purge town " + townName + "...");
-//		RegionManager manager = this.worldguard.getRegionManager(Bukkit.getWorld("world"));
+//		RegionManager manager = this.Worldguard.getRegionManager(Bukkit.getWorld("world"));
 //
 //		List<Integer> partList = town.getTownPartList(townID);
 //		
@@ -747,8 +746,8 @@ public class TownCommands implements CommandExecutor
 //			sender.sendMessage(ColorOptions.message + "Town still has child-regions, commencing removal..");
 //			for (Integer partID : partList)
 //			{
-//				Bukkit.getConsoleSender().sendMessage("Trying to remove child-region with ID " + townID + "," + partID);
-//				sender.sendMessage(ColorOptions.message + "Trying to remove child-region with ID " + townID + "," + partID);
+//				Bukkit.getConsoleSender().sendMessage("Trying to remove child-gateRegion with ID " + townID + "," + partID);
+//				sender.sendMessage(ColorOptions.message + "Trying to remove child-gateRegion with ID " + townID + "," + partID);
 //				try
 //				{
 //					manager.removeRegion("town_" + townID + "," + partID, RemovalStrategy.REMOVE_CHILDREN);
@@ -757,8 +756,8 @@ public class TownCommands implements CommandExecutor
 //				{
 //					noErrors = false;
 //					errors++;
-//					Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Removal of child-region with ID " + townID + "," + partID + " failed");
-//					sender.sendMessage(ColorOptions.error + "Removal of child-region with ID " + townID + "," + partID + " failed");
+//					Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Removal of child-gateRegion with ID " + townID + "," + partID + " failed");
+//					sender.sendMessage(ColorOptions.error + "Removal of child-gateRegion with ID " + townID + "," + partID + " failed");
 //					ex.printStackTrace();
 //				}
 //			}

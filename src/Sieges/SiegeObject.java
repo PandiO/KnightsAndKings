@@ -3,24 +3,26 @@ package Sieges;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
+import DataManager.spawnpoints.Spawnpoints;
 import Handlers.ColorOptions;
 import Main.Main;
+import Models.spawnpoint.Spawnpoint;
 import SpawnPoints.SpawnPoint;
 
 public class SiegeObject 
 {
 	Main main = Main.getPlugin(Main.class);
-	SpawnPoint spawnpoint = new SpawnPoint();
 	
 	protected int scenarioID;
 	protected int spawnpointID;
 	protected int subID;
-	protected Location location;
+	protected Spawnpoint spawnpoint;
 	
 	public SiegeObject(int siegeID, int spawnpointID)
 	{
 		this.scenarioID = siegeID;
 		this.spawnpointID = spawnpointID;
+		this.spawnpoint = Spawnpoints.InstantiateSpawnpoint(spawnpointID);
 	}
 	
 	public int getScenarioID()
@@ -40,27 +42,15 @@ public class SiegeObject
 	
 	public Location getLocation()
 	{
-		return this.location.clone().add(0.5, 0, 0.5);
-	}
-	
-	public void fetchLocation()
-	{
-		try
-		{
-			this.location = this.spawnpoint.getSpawnPointLocation(this.spawnpointID);
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-		}
+		return this.spawnpoint.getLocation().clone().add(0.5, 0, 0.5);
 	}
 	
 	public void changeLocation(CommandSender sender, Location location)
 	{		
 		try
 		{
-			this.spawnpoint.saveLocation(spawnpointID, location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+			this.spawnpoint.setLocation(location);
 			sender.sendMessage(ColorOptions.messageachievement + "Succesfully changed the location of the spawnpoint of this SiegeObject");
-			this.location = location;
 		} catch (Exception ex)
 		{
 			sender.sendMessage(ColorOptions.error + "Error while changing location of this SiegeObject!");

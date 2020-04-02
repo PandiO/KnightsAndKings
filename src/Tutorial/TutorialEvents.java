@@ -11,15 +11,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import Exceptions.UserNotFoundException;
-import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
 import Handlers.PurchaseEvent;
 import Main.Main;
@@ -46,50 +42,50 @@ public class TutorialEvents implements Listener
 		this.main = main;
 	}
 	
-	@EventHandler
-	public void onChat(PlayerChatEvent e)
-	{
-		Player player = e.getPlayer();
-//		if (tutorials.isEmpty() && main.debug)
+//	@EventHandler
+//	public void onChat(PlayerChatEvent e)
+//	{
+//		Player player = e.getPlayer();
+////		if (tutorials.isEmpty() && main.debug)
+////		{
+////			Bukkit.getConsoleSender().sendMessage("Tutorials is empty!");
+////		}
+////		if (introTutorials.isEmpty() && main.debug)
+////		{
+////			Bukkit.getConsoleSender().sendMessage("Intro Tutorials is empty!");
+////		}
+//		Tutorial introTutorial = Tutorials.getIntroTutorial(player);
+//		Tutorial tut = Tutorials.getTutorial(player);
+//		if (introTutorial != null && tut == null)
 //		{
-//			Bukkit.getConsoleSender().sendMessage("Tutorials is empty!");
+//			if (main.debug)
+//			{
+//				Bukkit.getConsoleSender().sendMessage("Intro Tutorial target detected: " + player.getName());
+//			}
+//			e.setCancelled(true);
+//			introTutorial.TryNext(e.getMessage());
+//			e.getRecipients().remove(introTutorial.target);
 //		}
-//		if (introTutorials.isEmpty() && main.debug)
+//		if (tut != null)
 //		{
-//			Bukkit.getConsoleSender().sendMessage("Intro Tutorials is empty!");
+//			if (main.debug)
+//			{
+//				Bukkit.getConsoleSender().sendMessage("Tutorial target detected: " + player.getName());
+//			}
+//			e.setCancelled(true);
+//			tut.TryNext(e.getMessage());
+//			e.getRecipients().remove(tut.target);
 //		}
-		Tutorial introTutorial = getIntroTutorial(player);
-		Tutorial tut = getTutorial(player);
-		if (introTutorial != null && tut == null)
-		{
-			if (main.debug)
-			{
-				Bukkit.getConsoleSender().sendMessage("Intro Tutorial target detected: " + player.getName());
-			}
-			e.setCancelled(true);
-			introTutorial.TryNext(e.getMessage());
-			e.getRecipients().remove(introTutorial.target);
-		}
-		if (tut != null)
-		{
-			if (main.debug)
-			{
-				Bukkit.getConsoleSender().sendMessage("Tutorial target detected: " + player.getName());
-			}
-			e.setCancelled(true);
-			tut.TryNext(e.getMessage());
-			e.getRecipients().remove(tut.target);
-		}
-
-	}
+//
+//	}
 	
 	public void onClick(InventoryClickEvent e, User user)
 	{
 		if (e.getWhoClicked() instanceof Player)
 		{
 			Player player = (Player) e.getWhoClicked();
-			Tutorial tut = getTutorial(player);
-			Tutorial intro = getIntroTutorial(player);
+			Tutorial tut = Tutorials.getTutorial(player);
+			Tutorial intro = Tutorials.getIntroTutorial(player);
 			
 			e.setCancelled(true);
 			ItemStack clicked = e.getCurrentItem();
@@ -125,87 +121,87 @@ public class TutorialEvents implements Listener
 		}
 	}
 	
-	@EventHandler
-	public void onCommand(PlayerCommandPreprocessEvent e)
-	{
-		Player player = e.getPlayer();
-		Tutorial tutorial = getTutorial(player);
-		Tutorial intro = getIntroTutorial(player);
-		if (tutorial != null || intro != null)
-		{
-			e.setCancelled(true);
-			if (e.getMessage().equalsIgnoreCase("/menu"))
-			{
-				if (tutorial.tutorialName.equalsIgnoreCase("room") || tutorial.tutorialName.equalsIgnoreCase("skills"))
-				{
-					tutorial.nextStage(null, null);
-				}
-			} else if (e.getMessage().equalsIgnoreCase("/next") || e.getMessage().equalsIgnoreCase("/yes") || e.getMessage().equalsIgnoreCase("/cancel"))
-			{
-				if (intro != null && tutorial == null)
-				{
-					intro.TryNext(e.getMessage().split("/")[1]);
-				} 
-				if (tutorial != null)
-				{
-					tutorial.TryNext(e.getMessage().split("/")[1]);
-				}
-			} else
-			{
-				notAllowed(player);
-			}
-		}
-	}
-	
-	@EventHandler
-	public void onMove(PlayerMoveEvent e)
-	{
-		Player player = e.getPlayer();
-		Tutorial tutorial = getTutorial(player);
-		Tutorial intro = getIntroTutorial(player);
-		if (tutorial != null || intro != null)
-		{
-			if (tutorial == null)
-			{
-				tutorial = intro;
-//				if (main.debug)
+//	@EventHandler
+//	public void onCommand(PlayerCommandPreprocessEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		Tutorial tutorial = Tutorials.getTutorial(player);
+//		Tutorial intro = Tutorials.getIntroTutorial(player);
+//		if (tutorial != null || intro != null)
+//		{
+//			e.setCancelled(true);
+//			if (e.getMessage().equalsIgnoreCase("/menu"))
+//			{
+//				if (tutorial.tutorialName.equalsIgnoreCase("room") || tutorial.tutorialName.equalsIgnoreCase("skills"))
 //				{
-//					Bukkit.getConsoleSender().sendMessage("Tutorial is null");
+//					tutorial.nextStage(null, null);
 //				}
-			} else
-			{
-				Bukkit.getConsoleSender().sendMessage("Intro is null");
-			}
-			if (e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockY() != e.getTo().getBlockY() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
-			{
-				if (tutorial.stage != null)
-				{
-					if (tutorial.getName().equalsIgnoreCase("armor tutorial") && tutorial.stage >= 4)
-					{
-						
-					} else if (tutorial.getName().equalsIgnoreCase("food tutorial") && tutorial.stage >= 4)
-					{
-					} else
-					{
-//						if (main.debug)
-//						{
-//							Bukkit.getConsoleSender().sendMessage("Found tutorial");
-//						}
-						player.teleport(tutorial.targetLoc);
-						notAllowed(player);
-					}
-				} else
-				{
-//					if (main.debug)
+//			} else if (e.getMessage().equalsIgnoreCase("/next") || e.getMessage().equalsIgnoreCase("/yes") || e.getMessage().equalsIgnoreCase("/cancel"))
+//			{
+//				if (intro != null && tutorial == null)
+//				{
+//					intro.TryNext(e.getMessage().split("/")[1]);
+//				} 
+//				if (tutorial != null)
+//				{
+//					tutorial.TryNext(e.getMessage().split("/")[1]);
+//				}
+//			} else
+//			{
+//				Tutorials.notAllowed(player);
+//			}
+//		}
+//	}
+	
+//	@EventHandler
+//	public void onMove(PlayerMoveEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		Tutorial tutorial = Tutorials.getTutorial(player);
+//		Tutorial intro = Tutorials.getIntroTutorial(player);
+//		if (tutorial != null || intro != null)
+//		{
+//			if (tutorial == null)
+//			{
+//				tutorial = intro;
+////				if (main.debug)
+////				{
+////					Bukkit.getConsoleSender().sendMessage("Tutorial is null");
+////				}
+//			} else
+//			{
+//				Bukkit.getConsoleSender().sendMessage("Intro is null");
+//			}
+//			if (e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockY() != e.getTo().getBlockY() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
+//			{
+//				if (tutorial.stage != null)
+//				{
+//					if (tutorial.getName().equalsIgnoreCase("armor tutorial") && tutorial.stage >= 4)
 //					{
-//						Bukkit.getConsoleSender().sendMessage("Found tutorial");
+//						
+//					} else if (tutorial.getName().equalsIgnoreCase("food tutorial") && tutorial.stage >= 4)
+//					{
+//					} else
+//					{
+////						if (main.debug)
+////						{
+////							Bukkit.getConsoleSender().sendMessage("Found tutorial");
+////						}
+//						player.teleport(tutorial.targetLoc);
+//						Tutorials.notAllowed(player);
 //					}
-					player.teleport(tutorial.targetLoc);
-					notAllowed(player);
-				}
-			}
-		}
-	}
+//				} else
+//				{
+////					if (main.debug)
+////					{
+////						Bukkit.getConsoleSender().sendMessage("Found tutorial");
+////					}
+//					player.teleport(tutorial.targetLoc);
+//					Tutorials.notAllowed(player);
+//				}
+//			}
+//		}
+//	}
 	
 	@EventHandler
 	public void onOpen(InventoryOpenEvent e)
@@ -229,7 +225,7 @@ public class TutorialEvents implements Listener
 				ErrorHandlers.userNotFoundAction(null, player, true);
 				return;
 			}
-			Tutorial tutorial = getTutorial(player);
+			Tutorial tutorial = Tutorials.getTutorial(player);
 			Inventory menu = e.getInventory();
 			String menuname = ChatColor.stripColor(menu.getName());
 			if (tutorial != null)
@@ -288,7 +284,7 @@ public class TutorialEvents implements Listener
 		}
 		Integer productID = proProduct.getProductID(e.getRelationID());
 		Integer propertyID = proProduct.getPropertyID(e.getRelationID());
-		Tutorial tutorial = getTutorial(user.getPlayer());
+		Tutorial tutorial = Tutorials.getTutorial(user.getPlayer());
 		if (tutorial != null)
 		{
 			if (propertyID == 22)
@@ -308,56 +304,19 @@ public class TutorialEvents implements Listener
 		}
 	}
 	
-	@EventHandler
-	public void onLeave(PlayerQuitEvent e)
-	{
-		Player player = e.getPlayer();
-		Tutorial intro = getIntroTutorial(player);
-		Tutorial tutorial = getTutorial(player);
-		if (intro != null)
-		{
-			intro.cancel(null);
-		} else if (tutorial != null)
-		{
-			tutorial.cancel(null);
-		}
-	}
+//	@EventHandler
+//	public void onLeave(PlayerQuitEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		Tutorial intro = Tutorials.getIntroTutorial(player);
+//		Tutorial tutorial = Tutorials.getTutorial(player);
+//		if (intro != null)
+//		{
+//			intro.cancel(null);
+//		} else if (tutorial != null)
+//		{
+//			tutorial.cancel(null);
+//		}
+//	}
 	
-	public Tutorial getTutorial(Player player)
-	{
-		Tutorial tutorial = null;
-		
-		for (Tutorial tut : tutorials)
-		{
-			if (tut.target == player)
-			{
-				tutorial = tut;
-				break;
-			}
-		}
-		
-		return tutorial;
-	}
-	
-	public Tutorial getIntroTutorial(Player player)
-	{
-		Tutorial tutorial = null;
-		
-		for (Tutorial tut : introTutorials)
-		{
-			if (tut.target == player)
-			{
-				tutorial = tut;
-				break;
-			}
-		}
-		
-		return tutorial;
-	}
-	
-	public void notAllowed(Player player)
-	{
-		player.sendMessage(ColorOptions.message + "If you wish to stop the tutorial, please type " + ColorOptions.error + "cancel");
-		player.sendMessage(ColorOptions.message + "If you wish to continue the tutorial, please type " + ColorOptions.messagesubjects + "next");
-	}
 }

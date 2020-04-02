@@ -16,10 +16,10 @@ import com.mewin.WGRegionEvents.events.RegionLeftEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
 import Assignments.Assignment;
 import Assignments.AssignmentTravelRandom;
 import Assignments.AssignmentTravelSpecific;
+import DataManager.Worldguard;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
@@ -41,7 +41,6 @@ public class TownEvents implements Listener
 {
 	Town town = new Town();
 	Title title = new Title();
-	WorldGuard worldguard = new WorldGuard();
 	private Main main;
 	public TownEvents(Main main)
 	{
@@ -57,9 +56,9 @@ public class TownEvents implements Listener
 		UUID uuid = player.getUniqueId();
 		ProtectedRegion region = e.getRegion();
 		
-		if (this.worldguard.isTownRegion(region))
+		if (Worldguard.isTownRegion(region))
 		{
-			Integer townID = this.worldguard.getStructureIDbyRegion(region);
+			Integer townID = Worldguard.getStructureIDbyRegion(region);
 			Integer requiredTitleID = town.getRequiredTitleID(townID);
 			User user = null;
 			
@@ -94,7 +93,7 @@ public class TownEvents implements Listener
 				
 				if (e.isCancelled() == false)
 				{
-					Gates.Gates.retrieveTownGates(townID);
+					DataManager.Structures.Gates.instantiateAll(townID);
 					
 					
 					ActionBar greetMessage = new ActionBar(ColorOptions.message + "Entering the town of " + ColorOptions.messagesubjects + this.town.getTownName(townID));
@@ -156,9 +155,9 @@ public class TownEvents implements Listener
 		UUID uuid = player.getUniqueId();
 		ProtectedRegion region = e.getRegion();
 		
-		if (this.worldguard.isTownRegion(region))
+		if (Worldguard.isTownRegion(region))
 		{
-			Integer townID = this.worldguard.getStructureIDbyRegion(region);
+			Integer townID = Worldguard.getStructureIDbyRegion(region);
 			User user = null;
 			
 			try
@@ -177,8 +176,8 @@ public class TownEvents implements Listener
 			
 			if (inTown.containsKey(user))
 			{
-				RegionManager regionmanager = worldguard.getRegionManager(player.getWorld());
-				if (worldguard.getStructureIDbyRegion("town", player.getLocation(), regionmanager) == null)
+				RegionManager regionmanager = Worldguard.getRegionManager(player.getWorld());
+				if (Worldguard.getStructureIDbyRegion("town", player.getLocation(), regionmanager) == null)
 				{
 					ActionBar greetMessage = new ActionBar(ColorOptions.message + "Leaving the town of " + ColorOptions.falsecommand + this.town.getTownName(townID));
 					greetMessage.sendToPlayer(player);
@@ -190,53 +189,53 @@ public class TownEvents implements Listener
 		}
 	}
 	
-	@EventHandler
-	public void onDamage(EntityDamageByEntityEvent e)
-	{
-		Entity entity = e.getEntity();
-		Location location = entity.getLocation();
-		RegionManager manager = this.worldguard.getRegionManager(location.getWorld());
-		Integer townID = this.worldguard.getStructureIDbyRegion("town", location, manager);
-		if (townID == null)
-		{
-			return;
-		}
-		
-		if (!(entity instanceof Player))
-		{
-			return;
-		}
-		
-		Player player = (Player) entity;
-		UUID uuid = player.getUniqueId();
-		User user = null;
-		
-		try
-		{
-			user = Users.getUser(uuid);
-		} catch (UserNotFoundException ex)
-		{
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		} catch (UserIsNpcException ex)
-		{
-			
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		}
-		
-		if (this.worldguard.isArenaBattleground(location, manager))
-		{
-			return;
-		}
-		
-		if (townID != this.town.getTownID("wilderness"))
-		{
-			e.setCancelled(true);
-			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Prevented pvp event");
-		}
-	}
+//	@EventHandler
+//	public void onDamage(EntityDamageByEntityEvent e)
+//	{
+//		Entity entity = e.getEntity();
+//		Location location = entity.getLocation();
+//		RegionManager manager = Worldguard.getRegionManager(location.getWorld());
+//		Integer townID = Worldguard.getStructureIDbyRegion("town", location, manager);
+//		if (townID == null)
+//		{
+//			return;
+//		}
+//		
+//		if (!(entity instanceof Player))
+//		{
+//			return;
+//		}
+//		
+//		Player player = (Player) entity;
+//		UUID uuid = player.getUniqueId();
+//		User user = null;
+//		
+//		try
+//		{
+//			user = Users.getUser(uuid);
+//		} catch (UserNotFoundException ex)
+//		{
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		} catch (UserIsNpcException ex)
+//		{
+//			
+//		} catch (Exception ex)
+//		{
+//			ex.printStackTrace();
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		}
+//		
+//		if (Worldguard.isArenaBattleground(location, manager))
+//		{
+//			return;
+//		}
+//		
+//		if (townID != this.town.getTownID("wilderness"))
+//		{
+//			e.setCancelled(true);
+//			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Prevented pvp event");
+//		}
+//	}
 }

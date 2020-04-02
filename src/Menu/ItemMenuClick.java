@@ -630,11 +630,11 @@ public class ItemMenuClick implements Listener
 //    	NPC shopkeeper = registry.getById(property.getNPCID(propertyID));
 //    	World world = shopkeeper.getStoredLocation().getWorld();
 //        RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(shopkeeper.getStoredLocation().getWorld());
-//        ProtectedRegion region = manager.getRegion("property_" + propertyID);
+//        ProtectedRegion gateRegion = manager.getRegion("property_" + propertyID);
 //        
-//        if (region != null)
+//        if (gateRegion != null)
 //        {
-//    		CuboidRegion curegion = new CuboidRegion(BukkitUtil.getLocalWorld(world), region.getMinimumPoint(), region.getMaximumPoint());
+//    		CuboidRegion curegion = new CuboidRegion(BukkitUtil.getLocalWorld(world), gateRegion.getMinimumPoint(), gateRegion.getMaximumPoint());
 //    		for (BlockVector blockv : curegion) 
 //    		{
 //    		    Block block = BukkitUtil.toBlock(new BlockWorldVector(BukkitUtil.getLocalWorld(world), blockv));

@@ -11,16 +11,16 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import Gates.Gate;
 import Handlers.ColorOptions;
 import HideAndSeek.HideAndSeek;
 import Main.Main;
 import Minigames.Participant;
+import Models.Structures.Gate;
 import Products.Product;
+import Sieges.Scenario;
 import Sieges.Scenarios;
 import Sieges.SideObjective;
 import Sieges.SiegeObject;
-import Sieges.Scenario;
 import Sieges.SiegeSpawnpoint;
 import Towns.Town;
 import Users.User;
@@ -585,7 +585,7 @@ public class EventManagerClick
 		if (dc.contains("gate: "))
 		{
 			Integer gateID = Integer.valueOf(ChatColor.stripColor(e.getInventory().getItem(e.getSlot()).getItemMeta().getLore().get(0)).split(": ")[1]);
-			Gate gate = Gates.Gates.findGate(gateID);
+			Gate gate = DataManager.Structures.Gates.findGate(gateID);
 			if (gate == null)
 			{
 				user.getPlayer().sendMessage(ColorOptions.error + "Error while retrieving Gate. Please notify a developer");

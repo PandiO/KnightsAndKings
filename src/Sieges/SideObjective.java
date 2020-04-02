@@ -3,28 +3,31 @@ package Sieges;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
 
-import Gates.Gate;
+import DataManager.Worldguard;
+import DataManager.Structures.Gates;
+import Main.Main;
+import Models.Structures.Gate;
 
 public class SideObjective extends Objective
 {
-	protected int GateID;
+	protected int structureID;
 	protected Gate gate;
 	protected boolean originalGateState;
 	
-	public SideObjective(int subID, int siegeID, int spawnpointID, int gateID)
+	public SideObjective(int spawnpointID, int scenarioID, Location location)
 	{
-		super(siegeID, spawnpointID, 100, DyeColor.WHITE);
-		this.subID = subID;
-		this.GateID = gateID;
+		super(scenarioID, spawnpointID, 100, DyeColor.WHITE);
+		this.structureID = Worldguard.getStructureIDbyRegion("gate", location, Worldguard.getRegionManager(location.getWorld()));
+		this.gate = Gates.instantiateGate(structureID, false);
 	}
 	
 	public int getGateID()
 	{
-		return this.GateID;
+		return this.structureID;
 	}
 	
 	public Gate getGate()
@@ -34,18 +37,18 @@ public class SideObjective extends Objective
 	
 	public Gate fetchGate()
 	{
-		if (this.GateID == -1)
+		if (this.structureID == -1)
 		{
 			return null;
 		}
 		
 		Gate gate = null;
 		
-		gate = Gates.Gates.findGate(this.GateID);
+		gate = DataManager.Structures.Gates.findGate(this.structureID);
 		
 		if (gate == null)
 		{
-			gate = Gates.Gates.instantiateGate(GateID, false);
+			gate = DataManager.Structures.Gates.instantiateGate(structureID, false);
 		}
 		
 		this.gate = gate;
@@ -61,6 +64,10 @@ public class SideObjective extends Objective
 			{
 				this.originalGateState = gate.getActive();
 				this.gate.toggleActive(true);
+				this.gate.setClosed(true);
+			} else
+			{
+				Main.logError("No Gate found for SO " + this.getSpawnpointID());
 			}
 		} else
 		{
@@ -75,20 +82,20 @@ public class SideObjective extends Objective
 	public void setGate(Gate gate)
 	{
 		this.gate = gate;
-		this.GateID = gate.getID();
+		this.structureID = gate.getId();
 	}
 	
 	public void saveGate()
 	{	
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE SiegeObjectives SET GateID = ? WHERE ID = ?;");
+			PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE SiegeObjectives SET structureID = ? WHERE ID = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-			stmt.setInt(1, this.gate.getID());
+			stmt.setInt(1, this.gate.getId());
 			stmt.setInt(2, this.subID);
 			
 			stmt.executeUpdate();
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "SideObjective  " + this.getSubID() + "'s gate with ID " + this.gate.getID() + " has succesfully been saved to the database!");
+			Main.logMessage(ChatColor.GREEN + "SideObjective  " + this.getSubID() + "'s gate with ID " + this.gate.getId() + " has succesfully been saved to the database!");
 		} catch (SQLException e) 
 		{
 			e.printStackTrace();
@@ -98,14 +105,14 @@ public class SideObjective extends Objective
 	public void removeGate()
 	{
 		this.gate = null;
-		this.GateID = -1;
+		this.structureID = -1;
 	}
 	
 	public void saveSideObjective()
 	{
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE SiegeObjectives SET GateID = ?, SiegeID = ?, SpawnpointID = ? WHERE ID = ?;");
+			PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE SiegeObjectives SET structureID = ?, SiegeID = ?, SpawnpointID = ? WHERE ID = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, this.getGateID());
 			stmt.setInt(2, this.getScenarioID());
@@ -113,7 +120,7 @@ public class SideObjective extends Objective
 			stmt.setInt(4, this.subID);
 			
 			stmt.executeUpdate();
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "Succesfully saved SideObjective to the database!");
+			Main.logMessage(ChatColor.GREEN + "Succesfully saved SideObjective to the database!");
 		} catch (SQLException e) 
 		{
 			e.printStackTrace();

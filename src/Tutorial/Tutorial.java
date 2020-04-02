@@ -38,7 +38,7 @@ public class Tutorial
 	protected Location targetLoc = null;
 	protected Location npcLoc = null;
 	protected Location npcDestination = null;
-	protected String tutorialName = null;
+	public String tutorialName = null;
 	protected Location previousLocation = null;
 	protected Integer talkInterval = 10;
 	protected Integer subjectInterval = 20;
@@ -109,6 +109,16 @@ public class Tutorial
 	public String getName()
 	{
 		return this.tutorialName + " Tutorial";
+	}
+	
+	public Location GetTargetLocation()
+	{
+		return this.targetLoc;
+	}
+	
+	public void SetTargetLocation(Location location)
+	{
+		this.targetLoc = location;
 	}
 	
 	public void cancel(List<String> message)

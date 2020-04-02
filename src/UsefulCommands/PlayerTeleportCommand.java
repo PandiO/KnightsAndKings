@@ -12,9 +12,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChatEvent;
 
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
@@ -40,7 +38,6 @@ public class PlayerTeleportCommand implements CommandExecutor, Listener
 	}
 	
 	public static Map<UUID, Boolean> teleportdelay = new HashMap<UUID, Boolean>();
-	public static Map<UUID, Integer> teleportconfirm = new HashMap<UUID, Integer>();
 
 	public static List<String> staffcommandhelp = Arrays.asList(new String[] {
 			ColorOptions.statsformat + "=================================================",
@@ -194,7 +191,7 @@ public class PlayerTeleportCommand implements CommandExecutor, Listener
 									
 								} else if (Bukkit.getOnlinePlayers().contains(args[0]))
 								{
-									teleportconfirm.put(uuid, Integer.valueOf(30));
+									Main.teleportconfirm.put(uuid, Integer.valueOf(30));
 									player.sendMessage(ColorOptions.falsecommand + "" + ChatColor.BOLD + "You are about to pay 10000 coins for teleporting, type cancel to cancel the tpa");
 									player.sendMessage(ColorOptions.messageformat + "Awaiting confirmation from " + ColorOptions.messagesubjects + args[0] + ColorOptions.messageformat + ", he/she has 30 seconds to confirm");
 									Bukkit.getPlayer(args[0]).sendMessage(ColorOptions.messageformat + "You received a teleport request from " + ColorOptions.messagesubjects + player.getName() + ColorOptions.messageformat + ", type /tpa <accept/deny> to accept or deny the request");
@@ -234,15 +231,15 @@ public class PlayerTeleportCommand implements CommandExecutor, Listener
 		
 	}
 	
-	@EventHandler
-	public void OnChat(PlayerChatEvent e)
-	{
-		if (e.getMessage().equalsIgnoreCase("cancel"))
-		{
-			if (teleportconfirm.containsKey(e.getPlayer().getUniqueId()))
-			{
-				teleportconfirm.remove(e.getPlayer().getUniqueId());
-			}
-		}
-	}
+//	@EventHandler
+//	public void OnChat(PlayerChatEvent e)
+//	{
+//		if (e.getMessage().equalsIgnoreCase("cancel"))
+//		{
+//			if (teleportconfirm.containsKey(e.getPlayer().getUniqueId()))
+//			{
+//				teleportconfirm.remove(e.getPlayer().getUniqueId());
+//			}
+//		}
+//	}
 }

@@ -105,8 +105,8 @@ public class SpawnShopkeepers implements Listener
 //			Integer NPCID = property.getNPCID(propertyID);
 //			if (NPCID == null || NPCID == 0)
 //			{
-//				Integer spawnpointID = property.getPropertySpawnPoint(propertyID);
-//				if (spawnpointID != null && spawnpointID != 0)
+//				Integer spawnpoint = property.getPropertySpawnPoint(propertyID);
+//				if (spawnpoint != null && spawnpoint != 0)
 //				{
 //				    NPC shopkeeper = registry.createNPC(EntityType.VILLAGER, "Shopkeeper");
 //				    
@@ -129,7 +129,7 @@ public class SpawnShopkeepers implements Listener
 //					}
 //				    shopkeeper.addTrait(Shopkeeper.class);
 //
-//				    shopkeeper.spawn(spawnpoint.getSpawnPointLocation(spawnpointID));
+//				    shopkeeper.spawn(spawnpoint.getSpawnPointLocation(spawnpoint));
 //				    shopkeeper.setProtected(true);
 //				    
 //				    
@@ -151,12 +151,12 @@ public class SpawnShopkeepers implements Listener
 //				NPC shopkeeper = registry.getById(NPCID);
 //				if (shopkeeper != null)
 //				{
-//					Integer spawnpointID = property.getPropertySpawnPoint(propertyID);
-//					if (spawnpointID != null && spawnpointID != 0)
+//					Integer spawnpoint = property.getPropertySpawnPoint(propertyID);
+//					if (spawnpoint != null && spawnpoint != 0)
 //					{
 //						if (!shopkeeper.isSpawned())
 //						{
-//							shopkeeper.spawn(spawnpoint.getSpawnPointLocation(spawnpointID));
+//							shopkeeper.spawn(spawnpoint.getSpawnPointLocation(spawnpoint));
 //							
 //				    		Bukkit.getConsoleSender().sendMessage(ColorOptions.message + "Spawned a shopkeeper for property with ID " + propertyID);
 //						}

@@ -158,7 +158,7 @@ public class ResourceBlockBreakEvent extends KaKEvent implements Cancellable
 			{
 				if (main.debug)
 				{
-					Bukkit.getConsoleSender().sendMessage("Requiring custom cooldown but block is not in property region for block type " + this.block.getType().toString());
+					Bukkit.getConsoleSender().sendMessage("Requiring custom cooldown but block is not in property gateRegion for block type " + this.block.getType().toString());
 				}
 				this.setCancelled(true);
 				return;

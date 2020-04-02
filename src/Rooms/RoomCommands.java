@@ -26,13 +26,12 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion.CircularInheritanceException;
 
 import API_methods.WorldEdit;
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
 import Main.Main;
 import Properties.Property;
-import Regions.Region;
 import SpawnPoints.SpawnPoint;
 import Streets.Street;
 import Titles.Title;
@@ -46,10 +45,8 @@ public class RoomCommands implements CommandExecutor
 	Town town = new Town();
 	Street street = new Street();
 	Property property = new Property();
-	WorldGuard worldguard = new WorldGuard();
 	Room room = new Room();
 	WorldEdit worldedit = new WorldEdit();
-	Region Region = new Region();
 	SpawnPoint spawnpoint = new SpawnPoint();
 	Title title = new Title();
 	offlineUser user = new offlineUser();
@@ -112,7 +109,7 @@ public class RoomCommands implements CommandExecutor
 					ErrorHandlers.userNotFoundAction(null, player, true);
 					return false;
 				}
-                RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+                RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
 				if (args.length > 0)
 				{
 					if (player.hasPermission("k&k.rooms"))
@@ -153,13 +150,13 @@ public class RoomCommands implements CommandExecutor
 					                    						new BlockVector(selection.getNativeMinimumPoint()),
 					                    						new BlockVector(selection.getNativeMaximumPoint())
 					                    						);
-				                    					if (Region.checkUniqueRegion(manager, region, "room"))
+				                    					if (Worldguard.checkUniqueRegion(manager, region, "room"))
 					                    				{
 						                    				//Trigger the method that handles the creation of the house
 							                    			this.createRoom(player, propertyID, roomNumber, price, manager, selection);
 					                    				} else
 					                    				{
-					                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different room region!");
+					                    					player.sendMessage(ColorOptions.error + "You tried to overlap a different room gateRegion!");
 					                    				}
 				                    				} else
 				                    				{
@@ -255,18 +252,18 @@ public class RoomCommands implements CommandExecutor
 											{
 												if (room.getRoomIDList(null).contains(roomID))
 												{
-													//The region will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
+													//The gateRegion will be created with the worldGuard API, this is nessecairy to check if there are any intersecting regions
 													ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 															"room",
 															new BlockVector(selection.getNativeMinimumPoint()),
 															new BlockVector(selection.getNativeMaximumPoint())
 															);
-													if (Region.checkSameRegionID(manager, region, "room", roomID))
+													if (Worldguard.checkSameRegionID(manager, region, "room", roomID))
 													{
 														this.addRoomRegion(player, roomID, manager, selection);
 													} else
 													{	
-														player.sendMessage(ColorOptions.error + "You tried to overlap a different room region!");
+														player.sendMessage(ColorOptions.error + "You tried to overlap a different room gateRegion!");
 													}
 												} else
 												{
@@ -335,13 +332,13 @@ public class RoomCommands implements CommandExecutor
 									Location location = player.getLocation();
 									if (manager.getApplicableRegions(location) != null)
 									{
-										if (Region.getRegion(location, "room", manager) != null)
+										if (Worldguard.getRegion(location, "room", manager) != null)
 										{
-											ProtectedRegion region = Region.getRegion(location, "room", manager);
-											Integer roomID = Region.getRegionID(region);
+											ProtectedRegion region = Worldguard.getRegion(location, "room", manager);
+											Integer roomID = Worldguard.getStructureIDbyRegion(region);
 											if (room.getSpawnPointID(roomID) == 0)
 											{
-												spawnpoint.saveSpawnPoint("room_" + roomID, "0", 0, "0", "", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+												spawnpoint.saveSpawnPoint("room_" + roomID, "0", 0, "0", location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
 												room.saveSpawnPointID(roomID, spawnpoint.getSpawnPointID("room_" + roomID));
 												player.sendMessage(ColorOptions.messageachievement + "Succesfully set the spawnpoint for room with ID" + roomID);
 											} else
@@ -350,7 +347,7 @@ public class RoomCommands implements CommandExecutor
 											}
 										} else
 										{
-											player.sendMessage(ColorOptions.error + "You are not standing in a room-region");
+											player.sendMessage(ColorOptions.error + "You are not standing in a room-gateRegion");
 										}
 									} else
 									{
@@ -711,7 +708,7 @@ public class RoomCommands implements CommandExecutor
 		//Get the roomID of the new room
 		Integer roomID = room.getRoomID(propertyID, roomNumber);
 		
-		//The region will be created with the worldGuard API
+		//The gateRegion will be created with the worldGuard API
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
 				"room_" + roomID,
 				new BlockVector(worldEditSelection.getNativeMinimumPoint()),
@@ -720,7 +717,7 @@ public class RoomCommands implements CommandExecutor
 		
 		regionManager.addRegion(region);
 		
-		//Set all flags for the region
+		//Set all flags for the gateRegion
 		region.setFlag(DefaultFlag.ENTRY, State.DENY);
 		region.setFlag(DefaultFlag.DENY_MESSAGE, "");
 		region.setFlag(DefaultFlag.FEED_AMOUNT, Integer.valueOf(20));
@@ -732,7 +729,7 @@ public class RoomCommands implements CommandExecutor
 		RegionGroupFlag entryFlag = DefaultFlag.ENTRY.getRegionGroupFlag();
 		try 
 		{
-			entryFlag.parseInput(worldguard.getWorldGuard(), null, "non_members");
+			entryFlag.parseInput(Worldguard.getWorldGuard(), null, "non_members");
 		} catch (InvalidFlagFormat e) 
 		{
 			// Auto-generated catch block
@@ -787,7 +784,7 @@ public class RoomCommands implements CommandExecutor
 		Integer partID = null;
 		ArrayList<Integer> partList = room.getRoomPartList(roomID);
 		
-		//Check for every partID if there is an existing region, if not, that id is the new partID
+		//Check for every partID if there is an existing gateRegion, if not, that id is the new partID
 		for (Integer id : partList)
 		{
 			if (!manager.getRegions().containsKey("room_" + roomID + "," + id))
@@ -797,7 +794,7 @@ public class RoomCommands implements CommandExecutor
 			}
 		}
 		
-		//Create the actual WorldGuard region
+		//Create the actual WorldGuard gateRegion
 		ProtectedCuboidRegion region = new ProtectedCuboidRegion(
                 "room_" + roomID + "," + partID,
                 new BlockVector(selection.getNativeMinimumPoint()),
@@ -805,7 +802,7 @@ public class RoomCommands implements CommandExecutor
 				);
 		manager.addRegion(region);
 		
-		//Try to set the house region as parent of the sub-region
+		//Try to set the house gateRegion as parent of the sub-gateRegion
 		try 
 		{
 			region.setParent(manager.getRegion("room_" + roomID));

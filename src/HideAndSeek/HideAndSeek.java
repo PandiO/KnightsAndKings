@@ -8,8 +8,6 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -142,6 +140,11 @@ public class HideAndSeek extends MiniGame
 		return this.Reward;
 	}
 	
+	public boolean getHideTime()
+	{
+		return this.hideTime;
+	}
+	
 	public int getParticipantRewardStep()
 	{
 		return this.participantRewardStep;
@@ -213,7 +216,7 @@ public class HideAndSeek extends MiniGame
 		{
 			this.Seekers.add(participant);
 			this.setSeekerOutfit(participant);
-			if (this.getHiderAmount() == 1 || this.getHiderAmount() == 0)
+			if (this.getHiderAmount() == 0)
 			{
 				finishParticipants();
 				new BukkitRunnable()
@@ -453,7 +456,7 @@ public class HideAndSeek extends MiniGame
 				seeker.getUser().getPlayer().hidePlayer(hider.getUser().getPlayer());
 			}
 		}
-		Users.Users.updateScoreBoard(this.getUserParticipants());
+		Users.Users.updateScoreBoard(this.getUserParticipants(this.getParticipants()));
 		
 		
 		
@@ -590,7 +593,7 @@ public class HideAndSeek extends MiniGame
 			participant.returnBeforeJoinLocation();
 		}
 		this.Participants.clear();
-		Users.Users.updateScoreBoard(this.getUserParticipants());
+		Users.Users.updateScoreBoard(this.getUserParticipants(Participants));
 	}
 	
 	public Participant drawWinner()
@@ -766,11 +769,14 @@ public class HideAndSeek extends MiniGame
 	
 	public void announceOnline(List<String> message)
 	{
-		for(Player player : Bukkit.getOnlinePlayers())
+		for(User user : Main.users)
 		{
-			for (String msg : message)
+			if (DataManager.Creations.FindCreation(user) == null)
 			{
-				player.sendMessage(msg);
+				for (String msg : message)
+				{
+					user.getPlayer().sendMessage(msg);
+				}
 			}
 		}
 	}

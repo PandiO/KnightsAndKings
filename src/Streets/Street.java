@@ -10,7 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 
 import API_methods.WorldEdit;
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Main.Main;
 import Towns.Town;
 
@@ -19,7 +19,6 @@ public class Street
 	//Get instances of required classes
 	Main main = Main.getPlugin(Main.class);
 	Town town = new Town();
-	WorldGuard worldguard = new WorldGuard();
 	WorldEdit worldedit = new WorldEdit();
 	
 	//Save a new street to the database
@@ -181,13 +180,13 @@ public class Street
 		return list;
 	}
 	
-	//Check if there is a city-region on the specific location
+	//Check if there is a city-gateRegion on the specific location
 	public boolean checkCity(Location location)
 	{
 		boolean city = false;
 		
-		//Check if a region has been found in the category 'city'
-		if (worldguard.getRegion(worldguard.getAvailableRegions(location), "town") != null)
+		//Check if a gateRegion has been found in the category 'city'
+		if (Worldguard.getRegion(location, "town", Worldguard.getRegionManager(location.getWorld())) != null)
 		{
 			city = true;
 		}
@@ -195,11 +194,11 @@ public class Street
 		return city;
 	}
 	
-	//Get the city name of a city-region when there is one at a specific location
+	//Get the city name of a city-gateRegion when there is one at a specific location
 	public String getTownName(Location location)
 	{
 		String name = null;
-		Integer townID = this.worldguard.getStructureIDbyRegion("town", location, this.worldguard.getRegionManager(location.getWorld()));
+		Integer townID = Worldguard.getStructureIDbyRegion("town", location, Worldguard.getRegionManager(location.getWorld()));
 
 		if (townID != null)
 		{
@@ -209,12 +208,12 @@ public class Street
 		return name;
 	}
 	
-	//Get the city name of a city-region when there is one at a specific location
+	//Get the city name of a city-gateRegion when there is one at a specific location
 	public Integer getTownIDbyLocation(Location location)
 	{
 		Integer townID = null;
 		
-		townID = this.worldguard.getStructureIDbyRegion("town", location, this.worldguard.getRegionManager(location.getWorld()));
+		townID = Worldguard.getStructureIDbyRegion("town", location, Worldguard.getRegionManager(location.getWorld()));
 
 		
 		return townID;

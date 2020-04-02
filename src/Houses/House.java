@@ -14,6 +14,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Main.Main;
 import Streets.Street;
@@ -451,7 +452,7 @@ public class House
 		}
 	}
 	
-	//Save a sub-region of a house
+	//Save a sub-gateRegion of a house
 	public void saveHousePart(Integer houseID)
 	{
 		try 
@@ -556,7 +557,7 @@ public class House
 	{
 		try
 		{
-			//prepare the query to delete a part-region
+			//prepare the query to delete a part-gateRegion
 			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM HouseRegion WHERE SubID=? AND HouseID=?;");	
 			stmt.setInt(1, PartID);
 			stmt.setInt(2, houseID);
@@ -609,7 +610,7 @@ public class House
 		Integer townID = street.getTownID(streetID);
 		this.RemoveHouseOwner(houseID);
 		user.addCoins((price/2));
-		RegionManager manager = worldguard.getRegionManager(user.getPlayer().getWorld());
+		RegionManager manager = Worldguard.getRegionManager(user.getPlayer().getWorld());
 		this.removeRegionOwner(user.getPlayer(), houseID, manager);
 		String houseName = this.getHouseName(houseID);
 		user.getPlayer().sendMessage(ColorOptions.messageachievement + "-You succesfully sold " + houseName + " on the " + street.getStreetName(streetID) + " with streetnumber " + streetNumber + " in town " + town.getTownName(townID));
@@ -691,7 +692,7 @@ public class House
 	
 	public void purgeHouseOwner(Integer houseID)
 	{
-		RegionManager manager = this.worldguard.getRegionManager(Bukkit.getWorld("world"));
+		RegionManager manager = Worldguard.getRegionManager(Bukkit.getWorld("world"));
 		ProtectedRegion region = manager.getRegion("house_" + houseID);
 		if (region != null)
 		{
@@ -706,7 +707,7 @@ public class House
 //					this.removeHousePart(houseID, partID);
 //				} catch (Exception ex)
 //				{
-//					Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error when removing child-region of house " + houseID);
+//					Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error when removing child-gateRegion of house " + houseID);
 //					ex.printStackTrace();
 //				}
 //			}

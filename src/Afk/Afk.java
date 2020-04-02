@@ -42,7 +42,7 @@ public class Afk
 		if (spawnpointID != null)
 		{
 //			teleporting = true;
-//			spawnpoint.teleport(player, spawnpoint.getSpawnPointLocation(spawnpointID));
+//			spawnpoint.teleport(player, spawnpoint.getSpawnPointLocation(spawnpoint));
 		}
 		this.Player.sendMessage(ColorOptions.message + ColorOptions.messageArrow + "You are now AFK");
 		this.team = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getPlayerTeam(this.Player);

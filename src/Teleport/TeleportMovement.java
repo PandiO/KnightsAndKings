@@ -1,11 +1,6 @@
 package Teleport;
 
-import java.util.UUID;
-
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 
 import Main.Main;
 
@@ -19,22 +14,22 @@ public class TeleportMovement implements Listener
 	}
 
 
-	@EventHandler
-	public void onMovement(PlayerMoveEvent e)
-	{
-		Player player = e.getPlayer();
-		UUID uuid = player.getUniqueId();
-		if (TeleportDelay.Delay.containsKey(uuid))
-		{
-			if (!TeleportDelay.hasImmune(uuid))
-			{
-				if (e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockY() != e.getTo().getBlockY() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
-				{
-					TeleportDelay.cancelTeleport(uuid, true);
-				}
-			}
-		}
-	}
+//	@EventHandler
+//	public void onMovement(PlayerMoveEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		UUID uuid = player.getUniqueId();
+//		if (TeleportDelay.Delay.containsKey(uuid))
+//		{
+//			if (!TeleportDelay.hasImmune(uuid))
+//			{
+//				if (e.getFrom().getBlockX() != e.getTo().getBlockX() || e.getFrom().getBlockY() != e.getTo().getBlockY() || e.getFrom().getBlockZ() != e.getTo().getBlockZ())
+//				{
+//					TeleportDelay.cancelTeleport(uuid, true);
+//				}
+//			}
+//		}
+//	}
 	
 //	@EventHandler
 //	public void onDamage(EntityDamageEvent e)

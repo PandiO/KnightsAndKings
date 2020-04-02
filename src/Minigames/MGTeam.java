@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
@@ -14,10 +13,10 @@ import Handlers.ColorOptions;
 import Main.Main;
 import Scoreboards.ActionBar;
 import Sieges.MainObjective;
+import Sieges.Scenario;
 import Sieges.SideObjective;
 import Sieges.Siege;
 import Sieges.SiegeMember;
-import Sieges.Scenario;
 import Sieges.Sieges;
 import Users.User;
 

@@ -25,66 +25,66 @@ public class StrengthEvent implements Listener
 		this.main = main;
 	}
 	
-	@EventHandler
-	public void StrengthHit(EntityDamageByEntityEvent e)
-	{
-		if (!main.enableSkills)
-		{
-			return;
-		}
-		if (e.getDamager() instanceof Player && e.getEntity() instanceof Player)
-		{
-			Player player = (Player) e.getDamager();
-			UUID uuid = player.getUniqueId();
-			User user = null;
-			
-			try
-			{
-				user = Users.getUser(uuid);
-			} catch (UserNotFoundException ex)
-			{
-				ErrorHandlers.userNotFoundAction(null, player, true);
-				return;
-			} catch (Exception ex)
-			{
-				ex.printStackTrace();
-				ErrorHandlers.userNotFoundAction(null, player, true);
-				return;
-			}
-			if (user.inSafeZone())
-			{
-				return;
-			}
-			Random chance = new Random();
-			Integer amount = skill.getSkillValue("Strength", user.getStrengthID());
-			if (!user.getFriendList().contains(e.getEntity().getUniqueId()))
-			{
-				if (user.getStrengthID() == 0)
-				{
-					
-				} else
-				{
-					if (user.getStrengthID() != 7)
-					{
-						if (chance.nextInt() <= amount)
-						{
-							player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20*5, 1));
-						} else
-						{
-							
-						}
-					} else
-					{
-						if (chance.nextInt() <= amount)
-						{
-							player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20*4, 2));
-						} else
-						{
-							
-						}
-					}
-				}
-			}
-		}
-	}
+//	@EventHandler
+//	public void StrengthHit(EntityDamageByEntityEvent e)
+//	{
+//		if (!main.enableSkills)
+//		{
+//			return;
+//		}
+//		if (e.getDamager() instanceof Player && e.getEntity() instanceof Player)
+//		{
+//			Player player = (Player) e.getDamager();
+//			UUID uuid = player.getUniqueId();
+//			User user = null;
+//			
+//			try
+//			{
+//				user = Users.getUser(uuid);
+//			} catch (UserNotFoundException ex)
+//			{
+//				ErrorHandlers.userNotFoundAction(null, player, true);
+//				return;
+//			} catch (Exception ex)
+//			{
+//				ex.printStackTrace();
+//				ErrorHandlers.userNotFoundAction(null, player, true);
+//				return;
+//			}
+//			if (user.inSafeZone())
+//			{
+//				return;
+//			}
+//			Random chance = new Random();
+//			Integer amount = skill.getSkillValue("Strength", user.getStrengthID());
+//			if (!user.getFriendList().contains(e.getEntity().getUniqueId()))
+//			{
+//				if (user.getStrengthID() == 0)
+//				{
+//					
+//				} else
+//				{
+//					if (user.getStrengthID() != 7)
+//					{
+//						if (chance.nextInt() <= amount)
+//						{
+//							player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20*5, 1));
+//						} else
+//						{
+//							
+//						}
+//					} else
+//					{
+//						if (chance.nextInt() <= amount)
+//						{
+//							player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20*4, 2));
+//						} else
+//						{
+//							
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
 }

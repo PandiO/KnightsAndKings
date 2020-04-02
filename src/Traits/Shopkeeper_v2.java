@@ -17,7 +17,7 @@ import org.bukkit.event.EventHandler;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ClickShopItemEvent;
 import Handlers.ColorOptions;
@@ -36,7 +36,6 @@ import net.citizensnpcs.api.trait.Trait;
 
 public class Shopkeeper_v2 extends Trait
 {
-	WorldGuard worldguard = new WorldGuard();
 	Menu menu = new Menu();
 	PropertyCategory category = new PropertyCategory();
 	Property property = new Property();
@@ -71,17 +70,17 @@ public class Shopkeeper_v2 extends Trait
 	{
 		if (this.regionManager == null)
 		{
-			this.regionManager = this.worldguard.getRegionManager(npc.getEntity().getWorld());
+			this.regionManager = Worldguard.getRegionManager(npc.getEntity().getWorld());
 		}
 		if (this.PropertyRegion == null)
 		{
-			this.PropertyRegion = this.worldguard.getRegion(this.worldguard.getAvailableRegions(npc.getEntity().getLocation()), "Property");
+			this.PropertyRegion = Worldguard.getRegion(npc.getEntity().getLocation(), "Property", this.regionManager);
 		}
 		if (PropertyID == -1)
 		{
 			try
 			{
-				this.worldguard.getStructureIDbyRegion(this.PropertyRegion);
+				Worldguard.getStructureIDbyRegion(this.PropertyRegion);
 				this.welcomeMSG = this.prefix + ColorOptions.message + "Welcome to my " + category.getCategoryName(property.getCategoryID(this.PropertyID)) + ", the " + property.getPropertyName(this.PropertyID); 
 			} catch (Exception ex)
 			{
@@ -109,7 +108,7 @@ public class Shopkeeper_v2 extends Trait
 				Integer targetPropertyID = null;
 //				try
 //				{
-//					targetPropertyID = this.worldguard.getStructureIDbyRegion("property", location, this.worldguard.getRegionManager(Enpc.getWorld()));
+//					targetPropertyID = Worldguard.getStructureIDbyRegion("property", location, Worldguard.getRegionManager(Enpc.getWorld()));
 //				} catch (Exception ex)
 //				{
 //					ex.printStackTrace();
@@ -164,8 +163,8 @@ public class Shopkeeper_v2 extends Trait
 //					npc.faceLocation(target.getLocation());
 //
 //					
-//					RegionManager manager = worldguard.getRegionManager(Enpc.getWorld());
-//					if (worldguard.getStructureIDbyRegion("property", target.getLocation(), manager) == this.PropertyID)
+//					RegionManager manager = Worldguard.getRegionManager(Enpc.getWorld());
+//					if (Worldguard.getStructureIDbyRegion("property", target.getLocation(), manager) == this.PropertyID)
 //					{
 //						if (!greetingList.contains(uuid))
 //						{
@@ -366,8 +365,8 @@ public class Shopkeeper_v2 extends Trait
 				if (npc.isSpawned())
 				{
 					Entity Enpc = npc.getEntity();
-					RegionManager manager = worldguard.getRegionManager(Enpc.getWorld());
-					Integer propertyID = worldguard.getStructureIDbyRegion("property", Enpc.getLocation(), manager);
+					RegionManager manager = Worldguard.getRegionManager(Enpc.getWorld());
+					Integer propertyID = Worldguard.getStructureIDbyRegion("property", Enpc.getLocation(), manager);
 					menu.openShopkeeperMenu(user, propertyID);
 					player.playSound(player.getLocation(), SoundHandler.ORB_PICKUP, 2.0F, 1.0F);
 				}

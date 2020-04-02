@@ -36,7 +36,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import API_methods.WorldEdit;
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Genders.Gender;
 import Handlers.ClickShopItemEvent;
@@ -59,7 +59,6 @@ import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
 
 public class ItemFrameAdd implements Listener
 {
-	WorldGuard worldguard = new WorldGuard();
 	Property property = new Property();
 	WorldEdit worldedit = new WorldEdit();
 	PropertyProduct propertyproduct = new PropertyProduct();
@@ -103,11 +102,11 @@ public class ItemFrameAdd implements Listener
 		{
 			ItemFrame itemframe = (ItemFrame) e.getRightClicked();
 			Location frameloc = itemframe.getLocation();
-			RegionManager regionmanager = worldguard.getWorldGuard().getRegionManager(frameloc.getWorld());
+			RegionManager regionmanager = Worldguard.getWorldGuard().getRegionManager(frameloc.getWorld());
 			ApplicableRegionSet regionset = regionmanager.getApplicableRegions(frameloc);
-			if (worldguard.getStructureIDbyRegion("property", frameloc, regionmanager) != null && worldguard.getStructureIDbyRegion("property", player.getLocation(), regionmanager) != null)
+			if (Worldguard.getStructureIDbyRegion("property", frameloc, regionmanager) != null && Worldguard.getStructureIDbyRegion("property", player.getLocation(), regionmanager) != null)
 			{
-				Integer propertyID = worldguard.getStructureIDbyRegion("property", frameloc, regionmanager);
+				Integer propertyID = Worldguard.getStructureIDbyRegion("property", frameloc, regionmanager);
 				if (main.ownermodus.containsKey(uuid) && main.ownermodus.get(uuid) == true)
 				{
 					
@@ -232,43 +231,43 @@ public class ItemFrameAdd implements Listener
 		UUID uuid = e.getPlayer().getUniqueId();
 	}
 	
-	@EventHandler
-	public void DamageFrame(EntityDamageByEntityEvent e)
-	{
-		if (e.getDamager() instanceof Player && e.getEntity() instanceof ItemFrame)
-		{
-			Player player = (Player) e.getDamager();
-			UUID uuid = player.getUniqueId();
-			Entity itemframe = e.getEntity();
-			Location frameloc = itemframe.getLocation();
-			RegionManager regionmanager = worldguard.getWorldGuard().getRegionManager(frameloc.getWorld());
-			ApplicableRegionSet regionset = regionmanager.getApplicableRegions(frameloc);
-			for (final ProtectedRegion r : regionset)
-		    {
-				if (r.getId().contains("property"))
-				{
-					if (main.ownermodus.containsKey(uuid) && main.ownermodus.get(uuid) == true)
-					{
-						
-					} else
-					{
-						e.setCancelled(true);
-					}
-				}
-		    }
-		} else if (e.getDamager() instanceof Player && e.getEntity() instanceof ArmorStand)
-		{
-			Player player = (Player) e.getDamager();
-			UUID uuid = player.getUniqueId();
-			if (main.ownermodus.containsKey(uuid) && main.ownermodus.get(uuid) == true)
-			{
-				
-			} else
-			{
-				e.setCancelled(true);
-			}
-		}
-	}
+//	@EventHandler
+//	public void DamageFrame(EntityDamageByEntityEvent e)
+//	{
+//		if (e.getDamager() instanceof Player && e.getEntity() instanceof ItemFrame)
+//		{
+//			Player player = (Player) e.getDamager();
+//			UUID uuid = player.getUniqueId();
+//			Entity itemframe = e.getEntity();
+//			Location frameloc = itemframe.getLocation();
+//			RegionManager regionmanager = Worldguard.getWorldGuard().getRegionManager(frameloc.getWorld());
+//			ApplicableRegionSet regionset = regionmanager.getApplicableRegions(frameloc);
+//			for (final ProtectedRegion r : regionset)
+//		    {
+//				if (r.getId().contains("property"))
+//				{
+//					if (main.ownermodus.containsKey(uuid) && main.ownermodus.get(uuid) == true)
+//					{
+//						
+//					} else
+//					{
+//						e.setCancelled(true);
+//					}
+//				}
+//		    }
+//		} else if (e.getDamager() instanceof Player && e.getEntity() instanceof ArmorStand)
+//		{
+//			Player player = (Player) e.getDamager();
+//			UUID uuid = player.getUniqueId();
+//			if (main.ownermodus.containsKey(uuid) && main.ownermodus.get(uuid) == true)
+//			{
+//				
+//			} else
+//			{
+//				e.setCancelled(true);
+//			}
+//		}
+//	}
 	
 	@EventHandler
 	public void InfoClick(InventoryClickEvent e)
@@ -293,7 +292,7 @@ public class ItemFrameAdd implements Listener
 		}
 		Inventory menu = e.getInventory();
 		String menuname = ChatColor.stripColor(menu.getName());
-		Integer propertyID = worldguard.getStructureIDbyRegion("property", player.getLocation(), worldguard.getRegionManager(player.getWorld()));
+		Integer propertyID = Worldguard.getStructureIDbyRegion("property", player.getLocation(), Worldguard.getRegionManager(player.getWorld()));
 		for (Integer productID : product.getIDList(true, null, false))
 		{
 			String s = ChatColor.stripColor(product.getDisplayName(productID, false));

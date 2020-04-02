@@ -14,7 +14,7 @@ import com.sk89q.worldguard.protection.flags.StateFlag.State;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
@@ -29,7 +29,6 @@ public class ResourceCommands implements CommandExecutor
 	ResourceProperty resourceProperty = new ResourceProperty();
 	ResourceCategory resourceCategory = new ResourceCategory();
 	YmlFile file = new YmlFile();
-	WorldGuard worldguard = new WorldGuard();
 	Street street = new Street();
 	Town town = new Town();
 	public Main main;
@@ -167,7 +166,7 @@ public class ResourceCommands implements CommandExecutor
 										if (resourceProperty.getResourcePropertyIDList(false, null).contains(propertyID))
 										{
 											resourceProperty.removeResourceProperty(propertyID);
-											RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+											RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
 							                ProtectedRegion region = manager.getRegion("property_" + propertyID);
 							                if (region != null)
 							                {
@@ -237,7 +236,7 @@ public class ResourceCommands implements CommandExecutor
 	{
 		String categoryName = resourceCategory.getCategoryName(categoryID);
 		resourceProperty.saveResourceProperty(propertyID, categoryID);
-        RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+        RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
         ProtectedRegion region = manager.getRegion("property_" + propertyID);
         if (region != null)
         {
@@ -273,7 +272,7 @@ public class ResourceCommands implements CommandExecutor
 	public void changeFlags(Player player, Integer propertyID, Integer categoryID)
 	{
 		String categoryName = resourceCategory.getCategoryName(categoryID);
-        RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
+        RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(player.getWorld());
         ProtectedRegion region = manager.getRegion("property_" + propertyID);
         if (region != null)
         {
@@ -307,7 +306,7 @@ public class ResourceCommands implements CommandExecutor
     		player.sendMessage(ColorOptions.messageachievement + "Reset build flags for resource-property with ID " + propertyID);
         } else
         {
-        	player.sendMessage(ColorOptions.error + "Couldn't find region for resource-property with ID " + propertyID);
+        	player.sendMessage(ColorOptions.error + "Couldn't find gateRegion for resource-property with ID " + propertyID);
         }
 	}
 }

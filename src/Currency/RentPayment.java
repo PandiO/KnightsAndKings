@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.RentPaymentEvent;
 import Handlers.SoundHandler;
@@ -64,7 +65,7 @@ public class RentPayment implements Listener
 					room.removeOwnerID(roomID);
 					user.removeRoomAmount(false, 1);
 					user.removeRentTime();
-					RegionManager manager = worldguard.getRegionManager(player.getWorld());
+					RegionManager manager = Worldguard.getRegionManager(player.getWorld());
 					room.removeRegionOwner(player.getUniqueId(), roomID, manager);
 					
 					if (room.getSpawnPointID(roomID) != 0 && user.getSpawnpointID() == room.getSpawnPointID(roomID))

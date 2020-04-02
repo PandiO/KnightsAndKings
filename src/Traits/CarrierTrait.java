@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Main.Main;
 import Products.Product;
 import Properties.Property;
@@ -29,7 +29,6 @@ public class CarrierTrait extends Trait
 	Property property = new Property();
 	SpawnPoint spawnpoint = new SpawnPoint();
 	Town town = new Town();
-	WorldGuard worldguard = new WorldGuard();
 	Main main = Main.getPlugin(Main.class);
 	Product product = new Product();
 	Integer propertyID = null;
@@ -138,7 +137,7 @@ public class CarrierTrait extends Trait
 	public void fetchTown(Entity entityNPC)
 	{
 		Location loc = entityNPC.getLocation();
-		Integer townID = worldguard.getStructureIDbyRegion("town", entityNPC.getLocation(), worldguard.getRegionManager(entityNPC.getLocation().getWorld()));
+		Integer townID = Worldguard.getStructureIDbyRegion("town", entityNPC.getLocation(), Worldguard.getRegionManager(entityNPC.getLocation().getWorld()));
 		if (townID != null && this.townID != null && this.townID != townID)
 		{
 			this.townID = townID;

@@ -6,6 +6,18 @@ depend: [WorldGuard, WorldEdit, WGBlockRestricter, Citizens]
 commands:
   initiate:
   test:
+  town2:
+     description: Allows creating and removing towns
+     permission: k&k.town
+  district:
+     description: Allows creating and removing districts
+     permission: k&k.district
+  structure:
+     description: Allows creating and removing structures
+     permission: k&k.structure
+  creation:
+     description: Allows listing and entering stashed creation sessions
+     permission: k&k.creation
   arena:
     description: Grants acces to the developers-commands
     permission: k&k.arena

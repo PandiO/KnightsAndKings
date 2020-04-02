@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Main.Main;
 import Products.Product;
@@ -31,7 +31,6 @@ public class ResourceProperty extends Property
 	YmlFile file = new YmlFile();
 	Town town = new Town();
 	PropertyCategory cats = new PropertyCategory();
-	WorldGuard worldguard = new WorldGuard();
 	
 	public void saveResourceProperty(Integer propertyID, Integer resourceCategoryID)
 	{
@@ -206,14 +205,14 @@ public class ResourceProperty extends Property
 	public void checkPlayersbeforeChange(String fileName, Integer blockID, Integer seconds)
 	{
 		Location loc = (Location) file.getBlockValues(fileName, blockID).get("Location");
-		RegionManager manager = worldguard.getRegionManager(loc.getWorld());
-		Integer propertyID = worldguard.getStructureIDbyRegion("property", loc, manager);
+		RegionManager manager = Worldguard.getRegionManager(loc.getWorld());
+		Integer propertyID = Worldguard.getStructureIDbyRegion("property", loc, manager);
 		if (this.getResourcePropertyIDList(false, null).contains(propertyID))
 		{
 			for (Player player : Bukkit.getOnlinePlayers())
 			{
 				Location location = player.getLocation();
-				if (worldguard.getStructureIDbyRegion("property", location, manager) == propertyID)
+				if (Worldguard.getStructureIDbyRegion("property", location, manager) == propertyID)
 				{
 					player.sendMessage(ColorOptions.error + "Warning: Blocks from this resource-property will reset in " + seconds + " seconds!");
 				}

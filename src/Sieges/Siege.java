@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -39,14 +40,14 @@ public class Siege extends MiniGame
 	protected MGTeam WinningTeam;
 	
 	/**
-	 * This region indicates if the match is skilled and for what title's it is joinable
+	 * This gateRegion indicates if the match is skilled and for what title's it is joinable
 	 */
 	protected int titleIDMin = 0;
 	protected int titleIDMax = 18;
 	protected boolean skilledMatch = false;
 	
 	/**
-	 * This region states the technical variables of the actual minigame
+	 * This gateRegion states the technical variables of the actual minigame
 	 */
 	protected boolean isActive = false;
 	protected List<Participant> randomVotes = new ArrayList<Participant>();
@@ -135,19 +136,38 @@ public class Siege extends MiniGame
 		return this.suggestedScenarioList;
 	}
 	
-	public int getTeam(Participant participant)
+	public MGTeam getTeam(Participant participant)
 	{
-		int teamNumber = 1;
+		MGTeam team = null;
 		
 		if (this.Team1.GetMembers().contains(participant))
 		{
-			teamNumber = 1;
+			team = this.Team1;
 		} else if (this.Team2.GetMembers().contains(participant))
 		{
-			teamNumber = 2;
+			team = this.Team2;
 		}
 		
-		return teamNumber;
+		return team;
+	}
+	
+	public SiegeMember getSiegeMember(User user)
+	{
+		SiegeMember member = null;
+		
+		List<SiegeMember> members = this.Team1.GetMembersAsSiegeMembers();
+		members.addAll(this.Team2.GetMembersAsSiegeMembers());
+		
+		for (SiegeMember m : members)
+		{
+			if (m.getUser() == user)
+			{
+				member = m;
+				break;
+			}
+		}
+		
+		return member;
 	}
 	
 	public void setRandomVotes(Participant participant)
@@ -208,7 +228,7 @@ public class Siege extends MiniGame
 					return;
 				}
 				
-				Integer scenarioID = IDList.get(main.getRandom(0, IDList.size()-1));
+				Integer scenarioID = IDList.size() > 2 ? IDList.get(Main.getRandom(0, IDList.size()-1)) : IDList.get(0);
 				Scenario scenario = Scenarios.instantiateScenario(scenarioID, false);
 				
 				if (!this.suggestedScenarioList.contains(scenario))
@@ -536,7 +556,7 @@ public class Siege extends MiniGame
 				
 				updateMenus(false);
 				
-				Users.Users.updateScoreBoard(getUserParticipants());
+				Users.Users.updateScoreBoard(getUserParticipants(instance.getParticipants()));
 				
 				if (progressSeconds == (progressExpire-2))
 				{
@@ -722,14 +742,14 @@ public class Siege extends MiniGame
 	public void stopSiege()
 	{
 		this.startProgress(false);
-		main.logMessage("Stopping siege");
+
 		this.scenario.setActive(false, this);
 		for (Participant participant : this.getParticipants())
 		{
 			participant.returnBeforeJoinLocation();
 			participant.GetTeam().RemoveMember(participant);
 		}
-		Users.Users.updateScoreBoard(this.getUserParticipants());
+		Users.Users.updateScoreBoard(this.getUserParticipants(this.getParticipants()));
 		this.resetSiege();
 		
 		new BukkitRunnable()
@@ -771,34 +791,34 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public void skipStage(User user)
+	public void skipStage(CommandSender sender)
 	{
 		if (this.cooldown)
 		{
 			this.startCooldown(false);
 			this.startMatchmaking(true);
-			if (user != null)
+			if (sender != null)
 			{
-				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Skipped the cooldown of Siege " + (Sieges.Sieges.indexOf(this)+1) + "!");
+				sender.sendMessage(ColorOptions.messageachievement + "Skipped the cooldown of Siege " + (Sieges.Sieges.indexOf(this)+1) + "!");
 				if (Bukkit.getOnlinePlayers().size() < 2)
 				{
-					user.getPlayer().sendMessage(ColorOptions.message + "Siege might not proceed because of a lack of players!");
+					sender.sendMessage(ColorOptions.message + "Siege might not proceed because of a lack of players!");
 				}
 			}
 		} else if (this.matchmaking)
 		{
 			this.matchmakingSeconds = 31;
-			if (user != null)
+			if (sender != null)
 			{
-				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Skipped the matchmaking of Siege " + (Sieges.Sieges.indexOf(this)+1) + "!");
+				sender.sendMessage(ColorOptions.messageachievement + "Skipped the matchmaking of Siege " + (Sieges.Sieges.indexOf(this)+1) + "!");
 				if (Bukkit.getOnlinePlayers().size() < 2)
 				{
-					user.getPlayer().sendMessage(ColorOptions.message + "Siege might not proceed because of a lack of players!");
+					sender.sendMessage(ColorOptions.message + "Siege might not proceed because of a lack of players!");
 				}
 			}
 		} else
 		{
-			user.getPlayer().sendMessage(ColorOptions.error + "Siege is already in matchmaking or progress!");
+			sender.sendMessage(ColorOptions.error + "Siege is already in matchmaking or progress!");
 		}
 	}
 	
@@ -821,8 +841,11 @@ public class Siege extends MiniGame
 		} else
 		{
 			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
-			HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(this.progressSeconds+1); 
-			board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
+			for (int i = 1; i < 3; i++)
+			{
+				HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(this.progressSeconds+i); 
+				board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
+			}
 //			Score timeScoreOld = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
 //			timeScoreOld.setScore(0);
 		}

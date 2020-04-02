@@ -23,7 +23,7 @@ import com.mewin.WGRegionEvents.events.RegionLeaveEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ClickShopItemEvent;
 import Handlers.ColorOptions;
@@ -54,7 +54,6 @@ import net.citizensnpcs.api.trait.Trait;
 public class Shopkeeper extends Trait
 {
 	SpawnPoint spawnpoint = new SpawnPoint();
-	WorldGuard worldguard = new WorldGuard();
 	Menu menu = new Menu();
 	PropertyCategory category = new PropertyCategory();
 	Property property = new Property();
@@ -195,7 +194,7 @@ public class Shopkeeper extends Trait
 		{
 			try
 			{
-				this.regionManager = this.worldguard.getRegionManager(npc.getEntity().getWorld());
+				this.regionManager = Worldguard.getRegionManager(npc.getEntity().getWorld());
 			} catch (Exception ex)
 			{
 				ex.printStackTrace();
@@ -207,7 +206,7 @@ public class Shopkeeper extends Trait
 		{
 			try
 			{
-				this.PropertyRegion = this.worldguard.getRegion(this.worldguard.getAvailableRegions(npc.getEntity().getLocation()), "Property");
+				this.PropertyRegion = Worldguard.getRegion(npc.getEntity().getLocation(), "Property", this.regionManager);
 			} catch (Exception ex)
 			{
 				ex.printStackTrace();
@@ -219,7 +218,7 @@ public class Shopkeeper extends Trait
 		{
 			try
 			{
-				this.PropertyID = this.worldguard.getStructureIDbyRegion(this.PropertyRegion);
+				this.PropertyID = Worldguard.getStructureIDbyRegion(this.PropertyRegion);
 				this.welcomeMSG = this.prefix + ColorOptions.message + "Welcome to my " + category.getCategoryName(property.getCategoryID(this.PropertyID)) + ", the " + property.getPropertyName(this.PropertyID); 
 			} catch (Exception ex)
 			{
@@ -510,15 +509,15 @@ public class Shopkeeper extends Trait
 	@EventHandler
 	public void onPropertyEnter(RegionEnterEvent e)
 	{
-		if (!this.worldguard.isPropertyRegion(e.getRegion()))
+		if (!Worldguard.isPropertyRegion(e.getRegion()))
 		{
 			return;
 		}
-		if (this.worldguard.getStructureIDbyRegion(e.getRegion()) != this.PropertyID)
+		if (Worldguard.getStructureIDbyRegion(e.getRegion()) != this.PropertyID)
 		{
 			return;
 		}
-		if (this.worldguard.isChildRegion(e.getRegion()))
+		if (Worldguard.isChildRegion(e.getRegion()))
 		{
 			return;
 		}
@@ -552,15 +551,15 @@ public class Shopkeeper extends Trait
 	@EventHandler
 	public void onPropertyLeave(RegionLeaveEvent e)
 	{
-		if (!this.worldguard.isPropertyRegion(e.getRegion()))
+		if (!Worldguard.isPropertyRegion(e.getRegion()))
 		{
 			return;
 		}
-		if (this.worldguard.getStructureIDbyRegion(e.getRegion()) != this.PropertyID)
+		if (Worldguard.getStructureIDbyRegion(e.getRegion()) != this.PropertyID)
 		{
 			return;
 		}
-		if (this.worldguard.isChildRegion(e.getRegion()))
+		if (Worldguard.isChildRegion(e.getRegion()))
 		{
 			return;
 		}
@@ -615,8 +614,8 @@ public class Shopkeeper extends Trait
 				if (npc.isSpawned())
 				{
 					Entity Enpc = npc.getEntity();
-					RegionManager manager = worldguard.getRegionManager(Enpc.getWorld());
-					Integer propertyID = worldguard.getStructureIDbyRegion("property", Enpc.getLocation(), manager);
+					RegionManager manager = Worldguard.getRegionManager(Enpc.getWorld());
+					Integer propertyID = Worldguard.getStructureIDbyRegion("property", Enpc.getLocation(), manager);
 					menu.openShopkeeperMenu(user, propertyID);
 					player.playSound(player.getLocation(), SoundHandler.ORB_PICKUP, 2.0F, 1.0F);
 				}

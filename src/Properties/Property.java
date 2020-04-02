@@ -29,7 +29,7 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import API_methods.WorldGuard;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.StorageEvent;
 import Main.Main;
@@ -52,7 +52,6 @@ public class Property
 	Town town = new Town();
 	offlineUser user = new offlineUser();
 	PropertyCategory cats = new PropertyCategory();
-	WorldGuard worldguard = new WorldGuard();
 	
 	//Save a property to the database
 	public void saveProperty(String name, Integer streetID, Integer streetnumber, Integer income, Integer price, Integer categoryID, Integer contribution)
@@ -602,7 +601,7 @@ public class Property
 		return list;
 	}
 	
-	//Save a sub-region of a property
+	//Save a sub-gateRegion of a property
 	public void savePropertyPart(Integer propertyID)
 	{
 		try 
@@ -660,7 +659,7 @@ public class Property
 	{
 		try
 		{
-			//prepare the query to delete a part-region
+			//prepare the query to delete a part-gateRegion
 			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM PropertyRegion WHERE SubID=? AND PropertyID=?;");	
 			stmt.setInt(1, PartID);
 			stmt.setInt(2, propertyID);
@@ -760,7 +759,7 @@ public class Property
 		Integer price = this.getPropertyPrice(propertyID);
 		this.RemovePropertyOwner(propertyID);
 		user.addCoins((price/2));
-		RegionManager manager = worldguard.getRegionManager(user.getPlayer().getWorld());
+		RegionManager manager = Worldguard.getRegionManager(user.getPlayer().getWorld());
 		this.removeRegionOwner(user.getPlayer(), propertyID, manager);
 		
 		String propertyName = this.getPropertyName(propertyID);
@@ -995,7 +994,7 @@ public class Property
 	
 	public void purgePropertyOwner(Integer propertyID)
 	{
-		RegionManager manager = this.worldguard.getRegionManager(Bukkit.getWorld("world"));
+		RegionManager manager = Worldguard.getRegionManager(Bukkit.getWorld("world"));
 		ProtectedRegion region = manager.getRegion("property_" + propertyID);
 		if (region != null)
 		{
@@ -1011,7 +1010,7 @@ public class Property
 //					this.removePropertyPart(propertyID, partID);
 //				} catch (Exception ex)
 //				{
-//					Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error when removing child-region of property " + propertyID);
+//					Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error when removing child-gateRegion of property " + propertyID);
 //					ex.printStackTrace();
 //				}
 //			}
@@ -1138,12 +1137,12 @@ public class Property
 							loc = spawnpoint.getSpawnPointLocation(spawnpointID);
 						} catch (Exception ex)
 						{
-							Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "No location could be found for shopkeeper " + npc.getId() + " from property " + propertyID + " with spawnpointID " + spawnpointID);
+							Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "No location could be found for shopkeeper " + npc.getId() + " from property " + propertyID + " with spawnpoint " + spawnpointID);
 							ex.printStackTrace();
 						}
 					} catch (Exception ex)
 					{
-						Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "No spawnpointID could be found for shopkeeper " + npc.getId() + " from property " + propertyID);
+						Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "No spawnpoint could be found for shopkeeper " + npc.getId() + " from property " + propertyID);
 						ex.printStackTrace();
 					}
 					if (loc != null)
@@ -1182,9 +1181,9 @@ public class Property
 	{
 		List<Chest> chest = new ArrayList<Chest>();
 		World world = Bukkit.getWorld("world");
-        RegionManager manager = worldguard.getWorldGuard().getGlobalRegionManager().get(world);
+        RegionManager manager = Worldguard.getWorldGuard().getGlobalRegionManager().get(world);
         ProtectedRegion region = manager.getRegion("property" + "_" + structureID);
-        List<ProtectedRegion> regions = worldguard.getTotalRegions(region, manager);
+        List<ProtectedRegion> regions = Worldguard.getTotalRegions(region, manager);
         if (region != null && !regions.isEmpty())
         {
         	for (ProtectedRegion regionit : regions)
