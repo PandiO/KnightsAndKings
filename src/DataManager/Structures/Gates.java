@@ -438,6 +438,7 @@ public interface Gates
 			
 			if (results.next())
 			{
+				Main.logMessage("Instantiating gate " + gateID);
 				gate = new Gate(results.getInt("ID"), 
 						results.getString("Name"), 
 						results.getInt("StreetID"), 

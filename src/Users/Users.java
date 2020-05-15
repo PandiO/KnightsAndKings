@@ -19,6 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import DataManager.Users2;
 import Donator.Donator;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
@@ -299,7 +300,7 @@ public final class Users implements Listener
 		try 
 		{	
 			//Prepare the search query
-			PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE Player SET "
+			PreparedStatement stmt = Main.getConnection().prepareStatement("UPDATE Player SET "
 					+ "PlayTimeToday=0, "
 					+ "BlocksBrokenToday=0, "
 					+ "BlocksBrokenOreToday=0, "
@@ -316,11 +317,27 @@ public final class Users implements Listener
 		}
 	}
 	
+	public static User findUser(UUID uuid)
+	{
+		User user = null;
+		
+		for (User u : Users2.users)
+		{
+			if (u.getUUID().equals(uuid))
+			{
+				user = u;
+				break;
+			}
+		}
+		
+		return user;
+	}
+	
 	public static User getUser(UUID uuid)
 	{
 		User us = null;
 		
-		for (User user : main.users)
+		for (User user : Users2.users)
 		{
 			if (user.getUUID().equals(uuid))
 			{
@@ -333,6 +350,14 @@ public final class Users implements Listener
 			if (CitizensAPI.getNPCRegistry().getByUniqueId(uuid) != null)
 			{
 				throw new UserIsNpcException();
+			} else
+			{
+				try {
+					throw new Exception("test");
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		
@@ -529,7 +554,7 @@ public final class Users implements Listener
 	{
 		User avenger = null;
 		
-		for (User u : Main.users)
+		for (User u : Users2.users)
 		{
 			if (u.getAvengerTarget() == user)
 			{

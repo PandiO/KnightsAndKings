@@ -8,6 +8,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.SoundHandler;
 import Main.Main;
@@ -102,7 +103,7 @@ public class DuelInvite
 		DuelCommands.inviteList.remove(this);
 		for (User user : getPlayers())
 		{
-			if (main.users.contains(user))
+			if (Users2.users.contains(user))
 			{
 				if (user.getPlayer().getOpenInventory().getTopInventory() != null)
 				{

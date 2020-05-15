@@ -28,217 +28,217 @@ public class Scenarios
 	static Main main = Main.getPlugin(Main.class);
 	static SpawnPoint spawnpoint = new SpawnPoint();
 	
-	public static void createScenario(ScenarioCreation sc)
-	{
-		int siegeID = -1;
-		List<String> spawnpointNames = new ArrayList<String>();
-		
-		//Creating the actual Scenario in the Database
-		try 
-		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO Sieges(Name, TownID, PlayersMin, PlayersMax, Team1, Team2, ExpRewardWin, CoinRewardWin, ExpRewardSideObjective, CoinRewardSideObjective, ExpRewardCapture, CoinRewardCapture) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-			stmt.setString(1, sc.name);
-			stmt.setInt(2, sc.townID);
-			stmt.setInt(3, sc.playersMin);
-			stmt.setInt(4, sc.playersMax);
-			stmt.setInt(5, sc.getSpawnpointTeam1().size());
-			stmt.setInt(6, sc.getSpawnpointTeam2().size());
-			stmt.setInt(7, sc.expRewardWin);
-			stmt.setInt(8, sc.coinRewardWin);
-			stmt.setInt(9, sc.expRewardSideObjective);
-			stmt.setInt(10, sc.coinRewardSideObjective);
-			stmt.setInt(11, sc.expRewardCapture);
-			stmt.setInt(12, sc.coinRewardCapture);
-			
-			stmt.executeUpdate();
-			String succesMessage = ChatColor.GREEN + "New Siege scenario has succesfully been saved to the database!";
-			Bukkit.getConsoleSender().sendMessage(succesMessage);
-			sc.sendMessage(Arrays.asList(succesMessage));
-		} catch (SQLException e) 
-		{
-			sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while saving the Siege scenario to the Database! Please try again or notify a developer"));
-			e.printStackTrace();
-			return;
-		}
-		
-		//Retrieving the ScenarioID from the Database which has just been created
-		try 
-		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM Sieges WHERE Name = ? AND TownID = ?;");
-			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-			stmt.setString(1, sc.name);
-			stmt.setInt(2, sc.townID);
-			
-			ResultSet results = stmt.executeQuery();
-			if (results.next())
-			{
-				siegeID = results.getInt("ID");
-			}
-			String succesMessage = ChatColor.GREEN + "New Siege scenario's ID has been retrieved from the Database: " + siegeID;
-			Bukkit.getConsoleSender().sendMessage(succesMessage);
-			sc.sendMessage(Arrays.asList(succesMessage));
-		} catch (SQLException e) 
-		{
-			sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while retrieving Siege ID from the Database! Please try again or notify a developer"));
-			e.printStackTrace();
-			return;
-		}
-		
-		if (siegeID != -1)
-		{
-			List<Location> spawnpointTeam1 = sc.getSpawnpointTeam1();
-			List<Location> spawnpointTeam2 = sc.getSpawnpointTeam2();
-			Location mainObjective = sc.mainObjective;
-			
-			spawnpointNames.addAll(Arrays.asList(
-					"siege." + siegeID + ".MO"
-					));
-			Integer soCount = 0;
-			
-			try
-			{
-				Integer team1Count = 0;
-				for (Location locs : spawnpointTeam1)
-				{
-					spawnpoint.saveSpawnPoint("siege." + siegeID + ".1," + team1Count, "0", 0, "0", locs.getWorld(), locs.getX(), locs.getY(), locs.getZ(), locs.getYaw(), locs.getPitch());
-					Integer spawnpointID = spawnpoint.getSpawnPointID("siege." + siegeID + ".1," + team1Count);
-					
-					try 
-					{
-						PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO ScenarioSpawnpoints(ScenarioID, SpawnPointID, TeamNumber) VALUES(?, ?, ?);");
-						//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-						stmt.setInt(1, siegeID);
-						stmt.setInt(2, spawnpointID);
-						stmt.setInt(3, 1);
-						
-						stmt.executeUpdate();
-						String succesMessage = ChatColor.GREEN + "Spawnpoint for siegescenario " + siegeID + " with ID " + spawnpointID + " for team 1 has succesfully been saved to the database!";
-						Bukkit.getConsoleSender().sendMessage(succesMessage);
-						sc.sendMessage(Arrays.asList(succesMessage));
-					} catch (SQLException e) 
-					{
-						sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while saving the Siege scenario spawnpoint with ID " + spawnpointID + " to the Database! Please try again or notify a developer"));
-						e.printStackTrace();
-						break;
-					}
-					team1Count++;
-				}
-			} catch (Exception ex)
-			{
-				ex.printStackTrace();
-				return;
-			}
-			Integer team2Count = 0;
-			for (Location locs :spawnpointTeam2)
-			{
-				spawnpoint.saveSpawnPoint("siege." + siegeID + ".2," + team2Count, "0", 0, "0", locs.getWorld(), locs.getX(), locs.getY(), locs.getZ(), locs.getYaw(), locs.getPitch());
-				Integer spawnpointID = spawnpoint.getSpawnPointID("siege." + siegeID + ".2," + team2Count);
-				
-				try 
-				{
-					PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO ScenarioSpawnpoints(ScenarioID, SpawnPointID, TeamNumber) VALUES(?, ?, ?);");
-					//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-					stmt.setInt(1, siegeID);
-					stmt.setInt(2, spawnpointID);
-					stmt.setInt(3, 2);
-					
-					stmt.executeUpdate();
-					String succesMessage = ChatColor.GREEN + "Spawnpoint for siegescenario " + siegeID + " with ID " + spawnpointID + " for team 2 has succesfully been saved to the database!";
-					Bukkit.getConsoleSender().sendMessage(succesMessage);
-					sc.sendMessage(Arrays.asList(succesMessage));
-				} catch (SQLException e) 
-				{
-					sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while saving the Siege scenario spawnpoint with ID " + spawnpointID + " to the Database! Please try again or notify a developer"));
-					e.printStackTrace();
-					return;
-				}
-				
-				team2Count++;
-			}
-			spawnpoint.saveSpawnPoint("siege." + siegeID + ".MO", "0", 0, "0", mainObjective.getWorld(), mainObjective.getX(), mainObjective.getY(), mainObjective.getZ(), mainObjective.getYaw(), mainObjective.getPitch());
-			
-			for (TempSideObjective so : sc.getSideObjectives())
-			{
-				Location loc = so.location;
-				Bukkit.getConsoleSender().sendMessage("Adding side objective to name list and saving spawnpoint to DB");
-				spawnpointNames.add("siege." + siegeID + ".SO." + soCount);
-				spawnpoint.saveSpawnPoint("siege." + siegeID + ".SO." + soCount, "0", 0, "0", loc.getWorld(), loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
-				soCount++;
-			}
-			
-			String succesMessage = ChatColor.GREEN + "The spawnpoints of the new Siege Scenario with ID " + siegeID + " are saved to the Database!";
-			Bukkit.getConsoleSender().sendMessage(succesMessage);
-			sc.sendMessage(Arrays.asList(succesMessage));
-		}
-		
-		new BukkitRunnable()
-		{
-			public void run()
-			{
-				boolean noErrors = true;
-				Integer siegeID = null;
-				
-				for (String spawnpointName : spawnpointNames)
-				{
-					Integer ID = spawnpoint.getSpawnPointID(spawnpointName);
-					siegeID = Integer.valueOf(spawnpointName.split("\\.")[1]);
-					
-					if (ID != null)
-					{
-						String columnName = "Team1";
-						
-						if (spawnpointName.contains(".2"))
-						{
-							columnName = "Team2";
-						} else if (spawnpointName.contains(".MO"))
-						{
-							columnName = "MainObjective";
-						} else if (spawnpointName.contains(".SO"))
-						{
-							Bukkit.getConsoleSender().sendMessage("SideObjective name found and trying to save to siegeobjectives!");
-							try
-							{
-								PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO SiegeObjectives(SiegeID, SpawnpointID) VALUES(?, ?);");
-								//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-								stmt.setInt(1, siegeID);
-								stmt.setInt(2, ID);
-								
-								stmt.executeUpdate();
-							} catch (Exception ex)
-							{
-								sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while adding Side objective with spawnpoint " + ID + " for Siege " + siegeID));
-								ex.printStackTrace();
-								noErrors = false;
-							}
-							continue;
-						}
-						try
-						{
-							PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE Sieges SET " + columnName + " = ? WHERE ID = ?");
-							//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
-							stmt.setInt(1, ID);
-							stmt.setInt(2, siegeID);
-							
-							stmt.executeUpdate();
-						} catch (Exception ex)
-						{
-							sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while adding " + columnName + " with spawnpoint " + ID + " for Siege " + siegeID));
-							ex.printStackTrace();
-							noErrors = false;
-						}
-					}
-				}
-				
-				if (noErrors)
-				{
-					String succesMessage = ColorOptions.messageachievement + "Succesfully added all spawnpoints to new Siege " + siegeID;
-					Bukkit.getConsoleSender().sendMessage(succesMessage);
-					sc.sendMessage(Arrays.asList(succesMessage));
-				}
-			}
-		}.runTaskLaterAsynchronously(main, 2*20);
-	}
+//	public static void createScenario(ScenarioCreation sc)
+//	{
+//		int siegeID = -1;
+//		List<String> spawnpointNames = new ArrayList<String>();
+//		
+//		//Creating the actual Scenario in the Database
+//		try 
+//		{
+//			PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO Sieges(Name, TownID, PlayersMin, PlayersMax, Team1, Team2, ExpRewardWin, CoinRewardWin, ExpRewardSideObjective, CoinRewardSideObjective, ExpRewardCapture, CoinRewardCapture) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+//			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+//			stmt.setString(1, sc.name);
+//			stmt.setInt(2, sc.townID);
+//			stmt.setInt(3, sc.playersMin);
+//			stmt.setInt(4, sc.playersMax);
+//			stmt.setInt(5, sc.getSpawnpointTeam1().size());
+//			stmt.setInt(6, sc.getSpawnpointTeam2().size());
+//			stmt.setInt(7, sc.expRewardWin);
+//			stmt.setInt(8, sc.coinRewardWin);
+//			stmt.setInt(9, sc.expRewardSideObjective);
+//			stmt.setInt(10, sc.coinRewardSideObjective);
+//			stmt.setInt(11, sc.expRewardCapture);
+//			stmt.setInt(12, sc.coinRewardCapture);
+//			
+//			stmt.executeUpdate();
+//			String succesMessage = ChatColor.GREEN + "New Siege scenario has succesfully been saved to the database!";
+//			Bukkit.getConsoleSender().sendMessage(succesMessage);
+//			sc.sendMessage(Arrays.asList(succesMessage));
+//		} catch (SQLException e) 
+//		{
+//			sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while saving the Siege scenario to the Database! Please try again or notify a developer"));
+//			e.printStackTrace();
+//			return;
+//		}
+//		
+//		//Retrieving the ScenarioID from the Database which has just been created
+//		try 
+//		{
+//			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM Sieges WHERE Name = ? AND TownID = ?;");
+//			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+//			stmt.setString(1, sc.name);
+//			stmt.setInt(2, sc.townID);
+//			
+//			ResultSet results = stmt.executeQuery();
+//			if (results.next())
+//			{
+//				siegeID = results.getInt("ID");
+//			}
+//			String succesMessage = ChatColor.GREEN + "New Siege scenario's ID has been retrieved from the Database: " + siegeID;
+//			Bukkit.getConsoleSender().sendMessage(succesMessage);
+//			sc.sendMessage(Arrays.asList(succesMessage));
+//		} catch (SQLException e) 
+//		{
+//			sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while retrieving Siege ID from the Database! Please try again or notify a developer"));
+//			e.printStackTrace();
+//			return;
+//		}
+//		
+//		if (siegeID != -1)
+//		{
+//			List<TempSpawnpoint> spawnpointTeam1 = sc.getSpawnpointTeam1();
+//			List<TempSpawnpoint> spawnpointTeam2 = sc.getSpawnpointTeam2();
+//			Location mainObjective = sc.mainObjective;
+//			
+//			spawnpointNames.addAll(Arrays.asList(
+//					"siege." + siegeID + ".MO"
+//					));
+//			Integer soCount = 0;
+//			
+//			try
+//			{
+//				Integer team1Count = 0;
+//				for (Location locs : spawnpointTeam1)
+//				{
+//					spawnpoint.saveSpawnPoint("siege." + siegeID + ".1," + team1Count, "0", 0, "0", locs.getWorld(), locs.getX(), locs.getY(), locs.getZ(), locs.getYaw(), locs.getPitch());
+//					Integer spawnpointID = spawnpoint.getSpawnPointID("siege." + siegeID + ".1," + team1Count);
+//					
+//					try 
+//					{
+//						PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO ScenarioSpawnpoints(ScenarioID, SpawnPointID, TeamNumber) VALUES(?, ?, ?);");
+//						//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+//						stmt.setInt(1, siegeID);
+//						stmt.setInt(2, spawnpointID);
+//						stmt.setInt(3, 1);
+//						
+//						stmt.executeUpdate();
+//						String succesMessage = ChatColor.GREEN + "Spawnpoint for siegescenario " + siegeID + " with ID " + spawnpointID + " for team 1 has succesfully been saved to the database!";
+//						Bukkit.getConsoleSender().sendMessage(succesMessage);
+//						sc.sendMessage(Arrays.asList(succesMessage));
+//					} catch (SQLException e) 
+//					{
+//						sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while saving the Siege scenario spawnpoint with ID " + spawnpointID + " to the Database! Please try again or notify a developer"));
+//						e.printStackTrace();
+//						break;
+//					}
+//					team1Count++;
+//				}
+//			} catch (Exception ex)
+//			{
+//				ex.printStackTrace();
+//				return;
+//			}
+//			Integer team2Count = 0;
+//			for (Location locs :spawnpointTeam2)
+//			{
+//				spawnpoint.saveSpawnPoint("siege." + siegeID + ".2," + team2Count, "0", 0, "0", locs.getWorld(), locs.getX(), locs.getY(), locs.getZ(), locs.getYaw(), locs.getPitch());
+//				Integer spawnpointID = spawnpoint.getSpawnPointID("siege." + siegeID + ".2," + team2Count);
+//				
+//				try 
+//				{
+//					PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO ScenarioSpawnpoints(ScenarioID, SpawnPointID, TeamNumber) VALUES(?, ?, ?);");
+//					//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+//					stmt.setInt(1, siegeID);
+//					stmt.setInt(2, spawnpointID);
+//					stmt.setInt(3, 2);
+//					
+//					stmt.executeUpdate();
+//					String succesMessage = ChatColor.GREEN + "Spawnpoint for siegescenario " + siegeID + " with ID " + spawnpointID + " for team 2 has succesfully been saved to the database!";
+//					Bukkit.getConsoleSender().sendMessage(succesMessage);
+//					sc.sendMessage(Arrays.asList(succesMessage));
+//				} catch (SQLException e) 
+//				{
+//					sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while saving the Siege scenario spawnpoint with ID " + spawnpointID + " to the Database! Please try again or notify a developer"));
+//					e.printStackTrace();
+//					return;
+//				}
+//				
+//				team2Count++;
+//			}
+//			spawnpoint.saveSpawnPoint("siege." + siegeID + ".MO", "0", 0, "0", mainObjective.getWorld(), mainObjective.getX(), mainObjective.getY(), mainObjective.getZ(), mainObjective.getYaw(), mainObjective.getPitch());
+//			
+//			for (TempSideObjective so : sc.getSideObjectives())
+//			{
+//				Location loc = so.location;
+//				Bukkit.getConsoleSender().sendMessage("Adding side objective to name list and saving spawnpoint to DB");
+//				spawnpointNames.add("siege." + siegeID + ".SO." + soCount);
+//				spawnpoint.saveSpawnPoint("siege." + siegeID + ".SO." + soCount, "0", 0, "0", loc.getWorld(), loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
+//				soCount++;
+//			}
+//			
+//			String succesMessage = ChatColor.GREEN + "The spawnpoints of the new Siege Scenario with ID " + siegeID + " are saved to the Database!";
+//			Bukkit.getConsoleSender().sendMessage(succesMessage);
+//			sc.sendMessage(Arrays.asList(succesMessage));
+//		}
+//		
+//		new BukkitRunnable()
+//		{
+//			public void run()
+//			{
+//				boolean noErrors = true;
+//				Integer siegeID = null;
+//				
+//				for (String spawnpointName : spawnpointNames)
+//				{
+//					Integer ID = spawnpoint.getSpawnPointID(spawnpointName);
+//					siegeID = Integer.valueOf(spawnpointName.split("\\.")[1]);
+//					
+//					if (ID != null)
+//					{
+//						String columnName = "Team1";
+//						
+//						if (spawnpointName.contains(".2"))
+//						{
+//							columnName = "Team2";
+//						} else if (spawnpointName.contains(".MO"))
+//						{
+//							columnName = "MainObjective";
+//						} else if (spawnpointName.contains(".SO"))
+//						{
+//							Bukkit.getConsoleSender().sendMessage("SideObjective name found and trying to save to siegeobjectives!");
+//							try
+//							{
+//								PreparedStatement stmt = main.getConnection().prepareStatement("INSERT INTO SiegeObjectives(SiegeID, SpawnpointID) VALUES(?, ?);");
+//								//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+//								stmt.setInt(1, siegeID);
+//								stmt.setInt(2, ID);
+//								
+//								stmt.executeUpdate();
+//							} catch (Exception ex)
+//							{
+//								sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while adding Side objective with spawnpoint " + ID + " for Siege " + siegeID));
+//								ex.printStackTrace();
+//								noErrors = false;
+//							}
+//							continue;
+//						}
+//						try
+//						{
+//							PreparedStatement stmt = main.getConnection().prepareStatement("UPDATE Sieges SET " + columnName + " = ? WHERE ID = ?");
+//							//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
+//							stmt.setInt(1, ID);
+//							stmt.setInt(2, siegeID);
+//							
+//							stmt.executeUpdate();
+//						} catch (Exception ex)
+//						{
+//							sc.sendMessage(Arrays.asList(ColorOptions.error + "Error while adding " + columnName + " with spawnpoint " + ID + " for Siege " + siegeID));
+//							ex.printStackTrace();
+//							noErrors = false;
+//						}
+//					}
+//				}
+//				
+//				if (noErrors)
+//				{
+//					String succesMessage = ColorOptions.messageachievement + "Succesfully added all spawnpoints to new Siege " + siegeID;
+//					Bukkit.getConsoleSender().sendMessage(succesMessage);
+//					sc.sendMessage(Arrays.asList(succesMessage));
+//				}
+//			}
+//		}.runTaskLaterAsynchronously(main, 2*20);
+//	}
 	
 	public static void CreateScenario(ScenarioCreation creation)
 	{
@@ -258,9 +258,7 @@ public class Scenarios
 			stmt.setFloat(5, mo.getYaw());
 			stmt.setFloat(6, mo.getPitch());
 			stmt.registerOutParameter(7, Types.INTEGER);
-			
-			Main.logMessage(stmt.toString());
-			
+						
 			ResultSet results = stmt.executeQuery();
 						
 			if (results.next())
@@ -297,9 +295,7 @@ public class Scenarios
 			stmt.setInt(9, creation.coinRewardCapture);
 			stmt.setInt(10, mainObjectiveID);
 			stmt.setInt(11, 1);
-			
-			Main.logMessage(stmt.toString());
-			
+						
 			ResultSet results = stmt.executeQuery();
 			
 			if (results.next())
@@ -322,27 +318,29 @@ public class Scenarios
 			return;
 		}
 		
-		for (Location loc : creation.getSpawnpointTeam1())
+		for (TempSpawnpoint ts : creation.getSpawnpointTeam1())
 		{
+			Location loc = ts.location;
 			try
 			{
-				CallableStatement stmt = Main.getConnection().prepareCall("CALL addSpawnpointSiegeScenario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+				CallableStatement stmt = Main.getConnection().prepareCall("CALL addSpawnpointSiegeScenario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 				stmt.setInt(1, scenarioID);
-				stmt.setString(2, loc.getWorld().getName());
-				stmt.setDouble(3, loc.getX());
-				stmt.setDouble(4, loc.getY());
-				stmt.setDouble(5, loc.getZ());
-				stmt.setFloat(6, loc.getYaw());
-				stmt.setFloat(7, loc.getPitch());
-				stmt.setBoolean(8, false);
-				stmt.setInt(9, 1);
+				stmt.setString(2, ts.name);
+				stmt.setString(3, loc.getWorld().getName());
+				stmt.setDouble(4, loc.getX());
+				stmt.setDouble(5, loc.getY());
+				stmt.setDouble(6, loc.getZ());
+				stmt.setFloat(7, loc.getYaw());
+				stmt.setFloat(8, loc.getPitch());
+				stmt.setBoolean(9, false);
 				stmt.setInt(10, 1);
+				stmt.setInt(11, 1);
 				
 				ResultSet results = stmt.executeQuery();
 				
 				if (results.next())
 				{
-					String message = ColorOptions.messageachievement + "Succesfully saved a Spawnpoint for Team 1 to the Database (ID " + results.getInt("spawnpointID") + "). " + creation.getSpawnpointTeam1().indexOf(loc) + "/" + creation.getSpawnpointTeam1().size();
+					String message = ColorOptions.messageachievement + "Succesfully saved a Spawnpoint for Team 1 to the Database (ID " + results.getInt("spawnpointID") + "). " + creation.getSpawnpointTeam1().indexOf(ts) + "/" + creation.getSpawnpointTeam1().size();
 					Main.logMessage(message);
 					player.sendMessage(message);
 				} else
@@ -359,27 +357,29 @@ public class Scenarios
 			}
 		}
 		
-		for (Location loc : creation.getSpawnpointTeam2())
+		for (TempSpawnpoint ts : creation.getSpawnpointTeam2())
 		{
+			Location loc = ts.location;
 			try
 			{
-				CallableStatement stmt = Main.getConnection().prepareCall("CALL addSpawnpointSiegeScenario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+				CallableStatement stmt = Main.getConnection().prepareCall("CALL addSpawnpointSiegeScenario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 				stmt.setInt(1, scenarioID);
-				stmt.setString(2, loc.getWorld().getName());
-				stmt.setDouble(3, loc.getX());
-				stmt.setDouble(4, loc.getY());
-				stmt.setDouble(5, loc.getZ());
-				stmt.setFloat(6, loc.getYaw());
-				stmt.setFloat(7, loc.getPitch());
-				stmt.setBoolean(8, false);
-				stmt.setInt(9, 2);
-				stmt.setInt(10, 1);
+				stmt.setString(2, ts.name);
+				stmt.setString(3, loc.getWorld().getName());
+				stmt.setDouble(4, loc.getX());
+				stmt.setDouble(5, loc.getY());
+				stmt.setDouble(6, loc.getZ());
+				stmt.setFloat(7, loc.getYaw());
+				stmt.setFloat(8, loc.getPitch());
+				stmt.setBoolean(9, false);
+				stmt.setInt(10, 2);
+				stmt.setInt(11, 1);
 				
 				ResultSet results = stmt.executeQuery();
 				
 				if (results.next())
 				{
-					String message = ColorOptions.messageachievement + "Succesfully saved a Spawnpoint for Team 2 to the Database (ID " + results.getInt("spawnpointID") + "). " + creation.getSpawnpointTeam1().indexOf(loc) + "/" + creation.getSpawnpointTeam1().size();
+					String message = ColorOptions.messageachievement + "Succesfully saved a Spawnpoint for Team 2 to the Database (ID " + results.getInt("spawnpointID") + "). " + creation.getSpawnpointTeam1().indexOf(ts) + "/" + creation.getSpawnpointTeam1().size();
 					Main.logMessage(message);
 					player.sendMessage(message);
 				} else
@@ -401,17 +401,18 @@ public class Scenarios
 			Location loc = so.location;
 			try
 			{
-				CallableStatement stmt = Main.getConnection().prepareCall("CALL addSpawnpointSiegeScenario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+				CallableStatement stmt = Main.getConnection().prepareCall("CALL addSpawnpointSiegeScenario(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 				stmt.setInt(1, scenarioID);
-				stmt.setString(2, loc.getWorld().getName());
-				stmt.setDouble(3, loc.getX());
-				stmt.setDouble(4, loc.getY());
-				stmt.setDouble(5, loc.getZ());
-				stmt.setFloat(6, loc.getYaw());
-				stmt.setFloat(7, loc.getPitch());
-				stmt.setBoolean(8, true);
-				stmt.setInt(9, -1);
-				stmt.registerOutParameter(10, Types.INTEGER);
+				stmt.setString(2, so.name);
+				stmt.setString(3, loc.getWorld().getName());
+				stmt.setDouble(4, loc.getX());
+				stmt.setDouble(5, loc.getY());
+				stmt.setDouble(6, loc.getZ());
+				stmt.setFloat(7, loc.getYaw());
+				stmt.setFloat(8, loc.getPitch());
+				stmt.setBoolean(9, true);
+				stmt.setInt(10, -1);
+				stmt.registerOutParameter(11, Types.INTEGER);
 				
 				ResultSet results = stmt.executeQuery();
 				
@@ -522,7 +523,7 @@ public class Scenarios
 	{
 		for (Scenario scenario : Sieges.Scenarios)
 		{
-			scenario.remove();
+			scenario.destroy();
 		}
 	}
 	
@@ -657,7 +658,7 @@ public class Scenarios
 		
 		try
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SiegeScenario WHERE ID = ?");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT * FROM SiegeScenario WHERE ID = ?");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, scenarioID);
 			
@@ -695,7 +696,6 @@ public class Scenarios
 			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT * FROM SiegeScenario WHERE Name = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setString(1, name);
-			stmt.setInt(2, townID);
 			
 			ResultSet results = stmt.executeQuery();
 			if (results.next())
@@ -740,7 +740,7 @@ public class Scenarios
 		
 		for (Scenario scenarios : Sieges.Scenarios)
 		{
-			if (scenarios.getName().equalsIgnoreCase(name) && scenarios.getTownID() == townID)
+			if (scenarios.getName().equalsIgnoreCase(name) && scenarios.getTown().getID() == townID)
 			{
 				scenario = scenarios;
 			}

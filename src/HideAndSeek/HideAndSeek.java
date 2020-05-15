@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.Menus;
 import Main.Main;
@@ -33,9 +34,11 @@ public class HideAndSeek extends MiniGame
 	Town town = new Town();
 	Product product = new Product();
 	SpawnPoint spawnpoint = new SpawnPoint();
+	Scoreboards.Scoreboard scoreboard = new Scoreboards.Scoreboard();
 	Main main = Main.getPlugin(Main.class);
 	
-	protected List<Participant> Seekers = new ArrayList<Participant>();
+	protected HSTeam Seekers;
+	protected HSTeam Hiders;
 	protected List<Participant> lastWinners = new ArrayList<Participant>();
 	protected int OriginalReward = 5000;
 	protected int Reward = 5000;
@@ -49,6 +52,9 @@ public class HideAndSeek extends MiniGame
 	public HideAndSeek()
 	{
 		super("HideAndSeek", "/hs join");
+		
+		this.Seekers = new HSTeam(2, "Seekers", ChatColor.RED, (short)0, this.scoreboard.getScoreBoard(), null);
+		this.Hiders = new HSTeam(2, "Hiders", ChatColor.BLUE, (short)0, this.scoreboard.getScoreBoard(), null);
 		
 		this.cooldownExpire = 900;
 		this.cooldownSeconds = 900;
@@ -115,24 +121,29 @@ public class HideAndSeek extends MiniGame
 		return this.Participants;
 	}
 	
-	public List<Participant> getSeekers()
+	public HSTeam getSeekers()
 	{
 		return this.Seekers;
 	}
 	
-	public List<Participant> getHiders()
+	public HSTeam getHiders()
 	{
-		List<Participant> hiders = new ArrayList<Participant>();
+		return this.Hiders;
+	}
+	
+	public HSTeam getTeam(Participant participant)
+	{
+		HSTeam team = null;
 		
-		for (Participant participant : this.Participants)
+		if (this.Hiders.GetMembers().contains(participant))
 		{
-			if (!this.Seekers.contains(participant))
-			{
-				hiders.add(participant);
-			}
+			team = this.Hiders;
+		} else
+		{
+			team = this.Seekers;
 		}
 		
-		return hiders;
+		return team;
 	}
 	
 	public int getReward()
@@ -184,21 +195,6 @@ public class HideAndSeek extends MiniGame
 	{
 		return this.entryTitle;
 	}
-		
-	public Integer getHiderAmount()
-	{
-		Integer amount = 0;
-		
-		for (Participant participant : this.Participants)
-		{
-			if (!this.Seekers.contains(participant))
-			{
-				amount++;
-			}
-		}
-		
-		return amount;
-	}
 	
 	public List<Participant> getLastWinners()
 	{
@@ -212,11 +208,15 @@ public class HideAndSeek extends MiniGame
 	
 	public void setSeeker(Participant participant)
 	{
-		if (!this.Seekers.contains(participant))
+		if (!this.Seekers.GetMembers().contains(participant))
 		{
-			this.Seekers.add(participant);
+			if (this.getHiders().GetMembers().contains(participant))
+			{
+				this.getHiders().RemoveMember(participant);
+			}
+			this.Seekers.AddMember(participant);
 			this.setSeekerOutfit(participant);
-			if (this.getHiderAmount() == 0)
+			if (this.Hiders.GetMembers().isEmpty())
 			{
 				finishParticipants();
 				new BukkitRunnable()
@@ -232,12 +232,12 @@ public class HideAndSeek extends MiniGame
 	
 	public void removeSeeker(Participant participant)
 	{
-		if (this.Seekers.contains(participant))
+		if (this.Seekers.GetMembers().contains(participant))
 		{
-			this.Seekers.remove(participant);
+			this.Seekers.RemoveMember(participant);
 			participant.getUser().getPlayer().getInventory().clear();
 			
-			if (this.Seekers.size() == 0)
+			if (this.Seekers.GetMembers().isEmpty())
 			{
 				finishParticipants();
 				new BukkitRunnable()
@@ -259,7 +259,7 @@ public class HideAndSeek extends MiniGame
 		{
 			if (this.cooldown == false && this.matchmaking == false && this.progress == false)
 			{
-				main.HideAndSeek.startMatchmaking();
+				Main.HideAndSeek.startMatchmaking();
 			}
 		}
 	}
@@ -281,12 +281,12 @@ public class HideAndSeek extends MiniGame
 	
 	public void removeParticipant(User user)
 	{
-		if (!this.Participants.contains(user))
+		if (!this.getParticipating(user))
 		{
 			return;
 		}
 		
-		this.Participants.remove(user);
+		this.Participants.remove(this.getParticipant(user));
 		if (this.Participants.size() == 1)
 		{
 			this.progressSeconds = 1;
@@ -360,7 +360,7 @@ public class HideAndSeek extends MiniGame
 				}
 				if (matchmakingSeconds == 30)
 				{
-					announceParticipants(false, Arrays.asList(
+					announceParticipants(instance.getParticipants(), Arrays.asList(
 							ColorOptions.KAKFormat + ColorOptions.error + ChatColor.BOLD + "You will be teleported to the Hide and Seek hub in " + 15 + " seconds!"
 							));
 				}
@@ -413,10 +413,10 @@ public class HideAndSeek extends MiniGame
 		if (this.Participants.size() < 2)
 		{
 			this.forceStop(null);
-			this.announceParticipants(false, Arrays.asList(ColorOptions.error + "Couldn't start Hide and Seek! We need more than 1 player"));
+			this.announceParticipants(this.getParticipants(), Arrays.asList(ColorOptions.error + "Couldn't start Hide and Seek! We need more than 1 player"));
 			return;
 		}
-		if (this.Seekers.isEmpty())
+		if (this.Seekers.GetMembers().isEmpty())
 		{
 			this.chooseSeeker();
 		}
@@ -427,6 +427,7 @@ public class HideAndSeek extends MiniGame
 				progressSeconds--;
 				
 				updateMenus(false);
+				Users.Users.updateScoreBoard(getUserParticipants(instance.getParticipants()));
 				
 				if (progressSeconds == 0)
 				{
@@ -447,11 +448,11 @@ public class HideAndSeek extends MiniGame
 		{
 			this.sendToHub(participant);
 		}
-		this.announceParticipants(true, Arrays.asList(ColorOptions.KAKFormat + ColorOptions.message + "You have 20 seconds to hide!"));
-		this.announceSeekers(Arrays.asList(ColorOptions.message + "The hiders have 20 seconds to hide!"));
-		for (Participant seeker : this.Seekers)
+		this.announceParticipants(this.getHiders().GetMembers(), Arrays.asList(ColorOptions.KAKFormat + ColorOptions.message + "You have 20 seconds to hide!"));
+		this.announceParticipants(this.getSeekers().GetMembers(), Arrays.asList(ColorOptions.message + "The hiders have 20 seconds to hide!"));
+		for (Participant seeker : this.Seekers.GetMembers())
 		{
-			for (Participant hider : this.getHiders())
+			for (Participant hider : this.getHiders().GetMembers())
 			{
 				seeker.getUser().getPlayer().hidePlayer(hider.getUser().getPlayer());
 			}
@@ -467,7 +468,7 @@ public class HideAndSeek extends MiniGame
 				ActionBar countDownMSG = new ActionBar(ColorOptions.error + "Visible in " + hideSeconds);
 				ActionBar hiderMSG = new ActionBar(ColorOptions.error + "Seekers are now able to catch you!");
 				ActionBar seekerMSG = new ActionBar(ColorOptions.error + "Hiders are now visible!");
-				for (Participant hider : getHiders())
+				for (Participant hider : getHiders().GetMembers())
 				{
 					countDownMSG.sendToPlayer(hider.getUser().getPlayer());
 				}
@@ -475,15 +476,15 @@ public class HideAndSeek extends MiniGame
 				if (hideSeconds <= 0)
 				{
 					hideTime = false;
-					for (Participant seeker : Seekers)
+					for (Participant seeker : Seekers.GetMembers())
 					{
-						for (Participant hider : getHiders())
+						for (Participant hider : getHiders().GetMembers())
 						{
 							seeker.getUser().getPlayer().showPlayer(hider.getUser().getPlayer());
 						}
 						seekerMSG.sendToPlayer(seeker.getUser().getPlayer());
 					}
-					for (Participant hider : getHiders())
+					for (Participant hider : getHiders().GetMembers())
 					{
 						hiderMSG.sendToPlayer(hider.getUser().getPlayer());
 					}
@@ -531,37 +532,30 @@ public class HideAndSeek extends MiniGame
 	public void finishParticipants()
 	{
 		this.lastWinners.clear();
-		Integer participantSize = this.Participants.size();
-		Integer seekerSize = this.Seekers.size();
+		List<String> announcement = new ArrayList<String>();
 		
-		if (this.getHiderAmount() == 1)
+		if (this.getHiders().GetMembers().size() == 1)
 		{
-			Participant winner = this.drawWinner();
+			Participant winner = this.getHiders().GetMembers().get(0);
 			winner.getUser().addCoins(this.Reward);
-			this.announceParticipants(false, Arrays.asList(
-					ColorOptions.KAKFormat + ColorOptions.messageachievement + "Game is over! One player made it to the end",
+			this.announceParticipants(this.getParticipants(), Arrays.asList(
+					ColorOptions.KAKFormat + ColorOptions.messageachievement + "Game is over! One or more hiders made it to the end",
 					ColorOptions.KAKFormat + ColorOptions.messageachievement + winner.getUser().getUsername() + " won and received " + ColorOptions.formatCurrency(this.Reward) + " Coins!"
 					));
-		} else
+			for (Participant participant : this.getHiders().GetMembers())
+			{
+				participant.getUser().getPlayer().playSound(participant.getUser().getPlayer().getLocation(), Sound.FIREWORK_BLAST2, 0.2F, 1.0F);
+			}
+		} else if (this.getHiders().GetMembers().size() > 1)
 		{
-			List<String> announcement = new ArrayList<String>();
 			List<Participant> winners = new ArrayList<Participant>();
 			
-			if (this.getHiderAmount() == 0)
+			announcement.add(ColorOptions.KAKFormat + ColorOptions.messageachievement + "Game is over! " + winners.size() + " players made it to the end");
+
+			for (Participant participant : this.getHiders().GetMembers())
 			{
-				winners = this.Participants;
-				announcement.add(ColorOptions.KAKFormat + ColorOptions.messageachievement + "Game is over! No players made it to the end");
-			} else
-			{
-				for (Participant participant : this.Participants)
-				{
-					participant.getUser().getPlayer().playSound(participant.getUser().getPlayer().getLocation(), Sound.FIREWORK_BLAST2, 0.2F, 1.0F);
-					if (!this.Seekers.contains(participant))
-					{
-						winners.add(participant);
-					}
-				}
-				announcement.add(ColorOptions.KAKFormat + ColorOptions.messageachievement + "Game is over! " + winners.size() + " players made it to the end");
+				winners.add(participant);
+				participant.getUser().getPlayer().playSound(participant.getUser().getPlayer().getLocation(), Sound.FIREWORK_BLAST2, 0.2F, 1.0F);
 			}
 			
 			Integer partReward = this.Reward/winners.size();
@@ -572,18 +566,23 @@ public class HideAndSeek extends MiniGame
 				winner.getUser().addCoins(partReward);
 				winnerNames.add(winner.getUser().getUsername());
 			}
-			if (this.getHiderAmount() > 0)
-			{
-				announcement.addAll(Arrays.asList(
-						ColorOptions.KAKFormat + ColorOptions.messageachievement + "The winners received " + ColorOptions.formatCurrency(partReward) + " coins",
-						ColorOptions.KAKFormat + ColorOptions.messageachievement + "Winners: " + winnerNames.toString()
-						));
-			} else
-			{
-				announcement.add(ColorOptions.KAKFormat + ColorOptions.messageachievement + "All participants received " + ColorOptions.formatCurrency(partReward) + " coins");
-			}
-			this.announceParticipants(false, announcement);
+			
+			announcement.addAll(Arrays.asList(
+					ColorOptions.KAKFormat + ColorOptions.messageachievement + "The winners received " + ColorOptions.formatCurrency(partReward) + " coins",
+					ColorOptions.KAKFormat + ColorOptions.messageachievement + "Winners: " + winnerNames.toString()
+					));
+			this.announceParticipants(this.getParticipants(), announcement);
 			this.lastWinners.addAll(winners);
+		} else
+		{
+			Integer partReward = this.Reward/this.getParticipants().size();
+			announcement.add(ColorOptions.KAKFormat + ColorOptions.messageachievement + "Game is over! No players made it to the end");
+			announcement.add(ColorOptions.KAKFormat + ColorOptions.messageachievement + "All participants received " + ColorOptions.formatCurrency(partReward) + " coins");
+			
+			for (Participant p : this.getParticipants())
+			{
+				p.getUser().addCoins(partReward);
+			}
 		}
 		this.finished = true;
 		List<Participant> Participants = this.Participants;
@@ -594,21 +593,6 @@ public class HideAndSeek extends MiniGame
 		}
 		this.Participants.clear();
 		Users.Users.updateScoreBoard(this.getUserParticipants(Participants));
-	}
-	
-	public Participant drawWinner()
-	{
-		Participant winner = null;
-		
-		for (Participant participant : this.Participants)
-		{
-			if (!this.Seekers.contains(participant))
-			{
-				winner = participant;
-			}
-		}
-		
-		return winner;
 	}
 	
 	//Handle all the technical details of ending the game
@@ -642,14 +626,22 @@ public class HideAndSeek extends MiniGame
 	
 	public void chooseSeeker()
 	{
-		Participant seeker = this.Participants.get(main.getRandom(0, this.Participants.size()-1));
-		this.Seekers.add(seeker);
+		Participant seeker = this.Participants.get(Main.getRandom(0, this.Participants.size()-1));
+		this.Seekers.AddMember(seeker);
 		seeker.getUser().getPlayer().sendMessage(ColorOptions.message + "You will begin as Seeker");
-		this.announceParticipants(true, Arrays.asList(
+		this.announceParticipants(this.getHiders().GetMembers(), Arrays.asList(
 				ColorOptions.KAKFormat + ColorOptions.message + "Player " + seeker.getUser().getUsername() + " will begin as seeker",
 				ColorOptions.KAKFormat + ColorOptions.message + "When the game starts, you have 20 seconds of invisibility to hide from the seeker!"
 				));
 		this.setSeekerOutfit(seeker);
+		
+		for (Participant p : this.getParticipants())
+		{
+			if (p != seeker)
+			{
+				this.Hiders.AddMember(p);
+			}
+		}
 	}
 	
 	public void skipStage(User user)
@@ -684,7 +676,7 @@ public class HideAndSeek extends MiniGame
 	
 	public void updateMenus(boolean reOpen)
 	{
-		for (User user : main.users)
+		for (User user : Users2.users)
 		{
 			if (user.inOwnerModus() || user.inStaffModus())
 			{
@@ -711,16 +703,16 @@ public class HideAndSeek extends MiniGame
 						
 						if (this.cooldown)
 						{
-							calcTime = main.getCalculatedTime(this.cooldownSeconds);
+							calcTime = Main.getCalculatedTime(this.cooldownSeconds);
 						}
 						if (this.matchmaking)
 						{
-							calcTime = main.getCalculatedTime(this.matchmakingSeconds);
+							calcTime = Main.getCalculatedTime(this.matchmakingSeconds);
 							status = "Matchmaking";
 						}
 						if (this.progress)
 						{
-							calcTime = main.getCalculatedTime(this.progressSeconds);
+							calcTime = Main.getCalculatedTime(this.progressSeconds);
 							status = "In progress";
 						}
 						display = ColorOptions.message + "Current stage: " + ColorOptions.messagesubjects + status;
@@ -737,7 +729,8 @@ public class HideAndSeek extends MiniGame
 	public void resetValues()
 	{
 		this.Participants.clear();
-		this.Seekers.clear();
+		this.Hiders.Reset();
+		this.Seekers.Reset();
 		
 		this.progressSeconds = this.progressExpire;
 		this.progressTask = null;
@@ -769,7 +762,7 @@ public class HideAndSeek extends MiniGame
 	
 	public void announceOnline(List<String> message)
 	{
-		for(User user : Main.users)
+		for(User user : Users2.users)
 		{
 			if (DataManager.Creations.FindCreation(user) == null)
 			{
@@ -777,40 +770,6 @@ public class HideAndSeek extends MiniGame
 				{
 					user.getPlayer().sendMessage(msg);
 				}
-			}
-		}
-	}
-	
-	public void announceParticipants(boolean onlyHiders, List<String> message)
-	{
-		List<Player> receivers = new ArrayList<Player>();
-		
-		for (Participant participant : this.getParticipants())
-		{
-			User user = participant.getUser();
-			if (onlyHiders && this.Seekers.contains(user))
-			{
-				continue;
-			}
-			receivers.add(user.getPlayer());
-		}
-		
-		for (Player player : receivers)
-		{
-			for (String msg : message)
-			{
-				player.sendMessage(msg);
-			}
-		}
-	}
-	
-	public void announceSeekers(List<String> message)
-	{
-		for (Participant seeker : this.Seekers)
-		{
-			for (String msg : message)
-			{
-				seeker.getUser().getPlayer().sendMessage(msg);
 			}
 		}
 	}
@@ -827,19 +786,19 @@ public class HideAndSeek extends MiniGame
 			player.sendMessage(ColorOptions.error + "Please wait untill the matchmaking of Hide and Seek starts");
 			if (this.cooldown)
 			{
-				HashMap<String, Integer> time = main.getCalculatedTime(this.cooldownSeconds);
+				HashMap<String, Integer> time = Main.getCalculatedTime(this.cooldownSeconds);
 				player.sendMessage(ColorOptions.error + "Hide and Seek matchmaking start in " + (time.get("minute") > 0 ? time.get("minute") + " minute(s) and " : "") + time.get("second") + " second(s)");
 			}
 			return;
 		}
 		if (this.getParticipating(user))
 		{
-			HashMap<String, Integer> time = main.getCalculatedTime(this.matchmakingSeconds);
+			HashMap<String, Integer> time = Main.getCalculatedTime(this.matchmakingSeconds);
 			player.sendMessage(ColorOptions.error + "You are already participating in the upcoming Hide and Seek!");
 			player.sendMessage(ColorOptions.error + "Hide and Seek starts in " + (time.get("minute") > 0 ? time.get("minute") + " minute(s) and " : "") + time.get("second") + " second(s)");
 			return;
 		}
-		HashMap<String, Integer> time = main.getCalculatedTime(this.matchmakingSeconds);
+		HashMap<String, Integer> time = Main.getCalculatedTime(this.matchmakingSeconds);
 		
 		Participant participant = new Participant(user);
 		this.addParticipant(participant);
@@ -854,19 +813,18 @@ public class HideAndSeek extends MiniGame
 		}
 	}
 	
-	public void leave(User user)
+	public void leave(Participant participant)
 	{
 		if (this.cooldown)
 		{
 			return;
 		}
-		if (this.getParticipant(user) == null)
+		if (!this.Participants.contains(participant))
 		{
 			return;
 		}
-		Participant participant = this.getParticipant(user);
 		
-		if (this.Seekers.contains(participant))
+		if (this.Seekers.GetMembers().contains(participant))
 		{
 			this.removeSeeker(participant);
 		} else
@@ -877,7 +835,7 @@ public class HideAndSeek extends MiniGame
 				this.Reward -= this.participantRewardStep;
 			}
 		}
-		user.getPlayer().sendMessage(ColorOptions.message + "You left Hide and Seek");
+		participant.getUser().getPlayer().sendMessage(ColorOptions.message + "You left Hide and Seek");
 		participant.getUser().getPlayer().teleport(participant.getBeforeJoinLocation());
 		participant.returnStoredInventory();
 	}
@@ -994,6 +952,6 @@ public class HideAndSeek extends MiniGame
 		userParticipant.getPlayer().sendMessage(ColorOptions.KAKFormat + ColorOptions.error + "You got caught by " + seeker.getUsername());
 		userParticipant.getPlayer().sendMessage(ColorOptions.KAKFormat + ColorOptions.message + "You are a seeker now.");
 		seeker.getPlayer().sendMessage(ColorOptions.KAKFormat + ColorOptions.messageachievement + "You caught " + userParticipant.getUsername() + ". Good job!");
-		this.announceParticipants(false, Arrays.asList(ColorOptions.KAKFormat + ColorOptions.message + userParticipant.getUsername() + " was caught. Remaining participants: " + this.getHiderAmount()));
+		this.announceParticipants(this.Participants, Arrays.asList(ColorOptions.KAKFormat + ColorOptions.message + userParticipant.getUsername() + " was caught. Remaining participants: " + this.getHiders().GetMembers().size()));
 	}
 }

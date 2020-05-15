@@ -21,7 +21,7 @@ public class DonatorChat implements Listener
 //		User user = null;
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);

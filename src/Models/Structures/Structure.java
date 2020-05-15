@@ -1,5 +1,6 @@
 package Models.Structures;
 
+import DataManager.Districts;
 import DataManager.Streets;
 import DataManager.Towns;
 import Models.Street;
@@ -19,6 +20,26 @@ public class Structure
 	protected int districtID;
 	protected District district;
 	protected SpawnpointStructure spawnpoint;
+	
+	public Structure(int id, 
+			String name, 
+			int streetID, 
+			int streetNumber, 
+			int townID, 
+			int districtID, 
+			SpawnpointStructure spawnpoint)
+	{
+		this.id = id;
+		this.name = name;
+		this.streetID = streetID;
+		this.street = Streets.FindStreet(streetID);
+		this.townID = townID;
+		this.town = Towns.FindTown(townID);
+		this.districtID = districtID;
+		this.spawnpoint = spawnpoint;
+		
+		DataManager.Districts.InstantiateDistrict(districtID, false).addStructureList(this);
+	}
 
 	public int getId() {
 		return this.id;
@@ -97,24 +118,6 @@ public class Structure
 	}
 
 	public void setSpawnpointID(SpawnpointStructure spawnpoint) {
-		this.spawnpoint = spawnpoint;
-	}
-	
-	public Structure(int id, 
-			String name, 
-			int streetID, 
-			int streetNumber, 
-			int townID, 
-			int districtID, 
-			SpawnpointStructure spawnpoint)
-	{
-		this.id = id;
-		this.name = name;
-		this.streetID = streetID;
-		this.street = Streets.FindStreet(streetID);
-		this.townID = townID;
-		this.town = Towns.FindTown(townID);
-		this.districtID = districtID;
 		this.spawnpoint = spawnpoint;
 	}
 }

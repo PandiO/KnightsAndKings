@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import DataManager.Worldguard;
+import DataManager.Structures.Structures;
 import Handlers.ColorOptions;
 import Main.Main;
 import Models.creations.Creation;
@@ -39,8 +40,8 @@ public class ScenarioCreation extends Creation
 	protected int coinRewardSideObjective;
 	protected int expRewardCapture;
 	protected int coinRewardCapture;
-	private List<Location> spawnpointTeam1 = new ArrayList<Location>();
-	private List<Location> spawnpointTeam2 = new ArrayList<Location>();
+	private List<TempSpawnpoint> spawnpointTeam1 = new ArrayList<TempSpawnpoint>();
+	private List<TempSpawnpoint> spawnpointTeam2 = new ArrayList<TempSpawnpoint>();
 	protected Location mainObjective;
 	private List<TempSideObjective> sideObjectives = new ArrayList<TempSideObjective>();
 	
@@ -78,8 +79,12 @@ public class ScenarioCreation extends Creation
 					"",
 					ColorOptions.messagesubjects + "Setting the spawn locations of " + ColorOptions.KAKColor + "Team 1 (Defenders)",
 					ColorOptions.messageformat + "Teams can have multiple spawn locations. Players can choose where to spawn",
-					ColorOptions.messageformat + "Stand on the location of the spawnpoint and type 'save'",
+					ColorOptions.messageformat + "Stand on the location of the spawnpoint and type a name",
+					ColorOptions.messageformat + "you want the spawnpoint to be called, type 'save' if you don't want a name",
 					ColorOptions.error + "Start with the most important spawnpoint and end with the least important one",
+					"",
+					ColorOptions.error + "NOTE: Spawnpoints have a 4 blocks safezone. Make sure there are no obstructions inside",
+					ColorOptions.error + "this radius",
 					""
 					)),
 			new ArrayList<String>(Arrays.asList(
@@ -88,6 +93,9 @@ public class ScenarioCreation extends Creation
 					ColorOptions.messageformat + "Teams can have multiple spawn locations. Players can choose where to spawn",
 					ColorOptions.messageformat + "Stand on the location of the spawnpoint and type 'save'",
 					ColorOptions.error + "Start with the most important spawnpoint and end with the least important one",
+					"",
+					ColorOptions.error + "NOTE: Spawnpoints have a 4 blocks safezone. Make sure there are no obstructions inside",
+					ColorOptions.error + "this radius",
 					""
 					)),
 			new ArrayList<String>(Arrays.asList(
@@ -102,7 +110,8 @@ public class ScenarioCreation extends Creation
 					ColorOptions.messagesubjects + "Setting Side Objectives",
 					ColorOptions.messageformat + "Side objectives will grant bonusses to the attacking team when destroyed, or to the defending team if not",
 					ColorOptions.messageformat + "Right-click a gate/property to set as Side Objective",
-					ColorOptions.messageformat + "or stand on a location other than a gate/property to save",
+					ColorOptions.messageformat + "or stand on a location other than a gate/property and type",
+					ColorOptions.messageformat + "the name of the desired Side Objective to save",
 					ColorOptions.messageformat + "You can set as many as you want",
 					"",
 					ColorOptions.error + "To undo the last side objective type 'undo'",
@@ -177,19 +186,19 @@ public class ScenarioCreation extends Creation
 		this.sendMessage(startMessage);
 	}
 	
-	public List<Location> getSpawnpointTeam1() {
+	public List<TempSpawnpoint> getSpawnpointTeam1() {
 		return spawnpointTeam1;
 	}
 
-	public void setSpawnpointTeam1(List<Location> spawnpointTeam1) {
+	public void setSpawnpointTeam1(List<TempSpawnpoint> spawnpointTeam1) {
 		this.spawnpointTeam1 = spawnpointTeam1;
 	}
 
-	public List<Location> getSpawnpointTeam2() {
+	public List<TempSpawnpoint> getSpawnpointTeam2() {
 		return spawnpointTeam2;
 	}
 
-	public void setSpawnpointTeam2(List<Location> spawnpointTeam2) {
+	public void setSpawnpointTeam2(List<TempSpawnpoint> spawnpointTeam2) {
 		this.spawnpointTeam2 = spawnpointTeam2;
 	}
 
@@ -326,22 +335,26 @@ public class ScenarioCreation extends Creation
 				String undoMessage = ColorOptions.error + "Undone the last step";
 				if (this.getStage() == 3)
 				{
-					if (this.getSpawnpointTeam1().size() >= 9)
+					if (this.getSpawnpointTeam1().size() <= 0)
 					{
-						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
-						return;
+						undoMessage = ColorOptions.error + "Undone the last step";
+						stage -= 1;
+					} else
+					{
+						this.getSpawnpointTeam1().remove(this.getSpawnpointTeam1().size()-1);
+						undoMessage = ColorOptions.error + "Undone the last spawnpoint for team 1";
 					}
-					this.getSpawnpointTeam1().remove(this.getSpawnpointTeam1().size()-1);
-					undoMessage = ColorOptions.error + "Undone the last spawnpoint for team 1";
 				} else if (this.getStage() == 4)
 				{
-					if (this.getSpawnpointTeam2().size() >= 9)
+					if (this.getSpawnpointTeam2().size() <= 0)
 					{
-						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
-						return;
+						undoMessage = ColorOptions.error + "Undone the last step";
+						stage -= 1;
+					} else
+					{
+						this.getSpawnpointTeam2().remove(this.getSpawnpointTeam2().size()-1);
+						undoMessage = ColorOptions.error + "Undone the last spawnpoint for team 2";
 					}
-					this.getSpawnpointTeam2().remove(this.getSpawnpointTeam2().size()-1);
-					undoMessage = ColorOptions.error + "Undone the last spawnpoint for team 2";
 				} else
 				if (this.getStage() == 6)
 				{
@@ -386,9 +399,10 @@ public class ScenarioCreation extends Creation
 							""
 							));
 				}
+				cancel = true;
 			} else if (this.getStage() == 1 || this.getStage() == 2)
 			{
-				if (!main.isInt(message))
+				if (!Main.isInt(message))
 				{
 					this.falseCommand(Arrays.asList(
 							ColorOptions.message + "The min/max amount of players must be a number!",
@@ -420,6 +434,7 @@ public class ScenarioCreation extends Creation
 							));
 				}
 				this.nextStage(this.getStage()+1);
+				cancel = true;
 			} else if (this.getStage() == 3)
 			{
 				if (message.equalsIgnoreCase("next"))
@@ -428,26 +443,28 @@ public class ScenarioCreation extends Creation
 				} else
 				if (message.equalsIgnoreCase("save"))
 				{
-					if (this.getSpawnpointTeam1().size() >= 9)
-					{
-						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
-						return;
-					}
-					this.getSpawnpointTeam1().add(user.getPlayer().getLocation());
-					this.sendMessage(Arrays.asList(
-							ColorOptions.messageachievement + "Saved a spawnpoint of team 1 to your current location!",
-							ColorOptions.messageachievement + "type 'next' when you are done",
-							""
-							));
+					this.trySaveSpawnpoint(1, null, user.getPlayer().getLocation());
+//					if (this.getSpawnpointTeam1().size() >= 9)
+//					{
+//						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+//						return;
+//					}
+//					this.getSpawnpointTeam1().add(user.getPlayer().getLocation());
+//					this.sendMessage(Arrays.asList(
+//							ColorOptions.messageachievement + "Saved a spawnpoint of team 1 to your current location!",
+//							ColorOptions.messageachievement + "type 'next' when you are done",
+//							""
+//							));
 					//sc.nextStage(sc.Stage+1);
 				} else
 				{
-					this.falseCommand(Arrays.asList(
-							ColorOptions.message + "Type 'save' to save the spawnpoint for team 1",
-							""
-					));
+					this.trySaveSpawnpoint(1, message, user.getPlayer().getLocation());
+//					this.falseCommand(Arrays.asList(
+//							ColorOptions.message + "Type 'save' to save the spawnpoint for team 1",
+//							""
+//					));
 				}
-				
+				cancel = true;
 			} else if (this.getStage() == 4)
 			{
 				if (message.equalsIgnoreCase("next"))
@@ -456,25 +473,28 @@ public class ScenarioCreation extends Creation
 				} else
 				if (message.equalsIgnoreCase("save"))
 				{
-					if (this.getSpawnpointTeam2().size() >= 9)
-					{
-						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
-						return;
-					}
-					this.getSpawnpointTeam2().add(user.getPlayer().getLocation());
-					this.sendMessage(Arrays.asList(
-							ColorOptions.messageachievement + "Saved a spawnpoint of team 2 to your current location!",
-							ColorOptions.messageachievement + "type 'next' when you are done",
-							""
-							));
-					//sc.nextStage(sc.Stage+1);
+					this.trySaveSpawnpoint(2, null, user.getPlayer().getLocation());
+//					if (this.getSpawnpointTeam2().size() >= 9)
+//					{
+//						this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+//						return;
+//					}
+//					this.getSpawnpointTeam2().add(user.getPlayer().getLocation());
+//					this.sendMessage(Arrays.asList(
+//							ColorOptions.messageachievement + "Saved a spawnpoint of team 2 to your current location!",
+//							ColorOptions.messageachievement + "type 'next' when you are done",
+//							""
+//							));
+//					//sc.nextStage(sc.Stage+1);
 				} else
 				{
-					this.falseCommand(Arrays.asList(
-							ColorOptions.message + "Type 'save' to save the spawnpoint for team 2",
-							""
-					));
+					this.trySaveSpawnpoint(2, message, user.getPlayer().getLocation());
+//					this.falseCommand(Arrays.asList(
+//							ColorOptions.message + "Type 'save' to save the spawnpoint for team 2",
+//							""
+//					));
 				}
+				cancel = true;
 			} else if (this.getStage() == 5)
 			{
 				if (message.equalsIgnoreCase("save"))
@@ -494,27 +514,38 @@ public class ScenarioCreation extends Creation
 							""
 					));
 				}
+				cancel = true;
 			} else if (this.getStage() == 6)
 			{
 				if (message.equalsIgnoreCase("save"))
 				{
-					if (this.trySaveSideObjective(player.getLocation()))
-					{
-						player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
-					}
+					this.falseCommand(Arrays.asList(
+							"",
+							ColorOptions.message + "Please type the name of the Side Objective",
+							ColorOptions.message + "while standing on the desired location.",
+							ColorOptions.message + "When you want to add a structure as Side Objective",
+							ColorOptions.message + "please click on a block inside the Worldguard region of",
+							ColorOptions.message + "desired structure",
+							""
+							));
 				} else
 				if (message.equalsIgnoreCase("next"))
 				{
 					this.nextStage(this.getStage()+1);
 				} else
 				{
-					this.falseCommand(Arrays.asList(
-							ColorOptions.message + "Right-click a gate/property to save as Side Objective",
-							ColorOptions.message + "or stand on a desired location to save other locations",
-							ColorOptions.message + "Type 'next' if you are done setting side objectives",
-							""
-					));
+					if (this.trySaveSideObjective(message, player.getLocation()))
+					{
+						player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+					}
+//					this.falseCommand(Arrays.asList(
+//							ColorOptions.message + "Right-click a gate/property to save as Side Objective",
+//							ColorOptions.message + "or stand on a desired location to save other locations",
+//							ColorOptions.message + "Type 'next' if you are done setting side objectives",
+//							""
+//					));
 				}
+				cancel = true;
 			} else if (this.getStage() >= 7 && this.getStage() <= 12)
 			{
 				if (!main.isInt(message))
@@ -580,6 +611,7 @@ public class ScenarioCreation extends Creation
 				}
 				
 				this.nextStage(this.getStage()+1);
+				cancel = true;
 			}
 		} else 
 		if (event instanceof PlayerInteractEvent)
@@ -594,7 +626,7 @@ public class ScenarioCreation extends Creation
 			{
 				return;
 			}
-			
+			Main.logMessage("Clicking block..");
 //			SiegeObject object = scenario.editMode.get(user);
 //			if (object instanceof Objective)
 //			{
@@ -628,14 +660,14 @@ public class ScenarioCreation extends Creation
 //				new Menu().openScenarioManager(user, scenario);
 //			}
 //			return;
-			if (this.getStage() == 5 || this.getStage() == 6)
-			{
-				if (((PlayerInteractEvent) event).getClickedBlock().getType() != Material.STANDING_BANNER)
-				{
-					this.falseCommand(Arrays.asList(ColorOptions.error + "The block must be a standing banner"));
-					return;
-				}
-			}
+//			if (this.getStage() == 5 || this.getStage() == 6)
+//			{
+//				if (((PlayerInteractEvent) event).getClickedBlock().getType() != Material.STANDING_BANNER)
+//				{
+//					this.falseCommand(Arrays.asList(ColorOptions.error + "The block must be a standing banner"));
+//					return;
+//				}
+//			}
 				
 			
 			if (this.getStage() == 5)
@@ -650,7 +682,34 @@ public class ScenarioCreation extends Creation
 				this.nextStage(this.getStage()+1);
 			} else if (this.getStage() == 6)
 			{
-				this.trySaveSideObjective(((PlayerInteractEvent) event).getClickedBlock().getLocation());
+				Main.logMessage("Logging sideobjective");
+				Location location = ((PlayerInteractEvent) event).getClickedBlock().getLocation();
+				RegionManager manager = Worldguard.getRegionManager(location.getWorld());
+				Integer structureID = null;
+				Integer propertyID = Worldguard.getStructureIDbyRegion("property", location, manager);
+				Integer gateID = Worldguard.getStructureIDbyRegion("gate", location, manager);
+				
+				if (propertyID != null)
+				{
+					structureID = propertyID;
+				} else
+				if (gateID != null)
+				{
+					structureID = gateID;
+				} else
+				{
+					this.falseCommand(Arrays.asList(
+							"",
+							ColorOptions.falsecommand + "The clicked block must be inside a structure region!",
+							ColorOptions.falsecommand + "If you want to register a location outside of a structure as",
+							ColorOptions.falsecommand + "Side objective, please stand on the desired location and",
+							ColorOptions.falsecommand + "type the name of the side objective",
+							""
+							));
+					return;
+				}
+				Main.logMessage("Trying to set Side Objective as structure: " + structureID);
+				this.trySaveSideObjective(Structures.FetchStructureName(structureID), ((PlayerInteractEvent) event).getClickedBlock().getLocation());
 			}
 		}
 		
@@ -666,21 +725,100 @@ public class ScenarioCreation extends Creation
 		}
 	}
 	
-	protected boolean trySaveSideObjective(Location location)
+	protected boolean trySaveSpawnpoint(Integer team, String name, Location location)
+	{
+		if (this.getSpawnpointTeam1().size() >= 9)
+		{
+			this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Spawnpoints has been reached"));
+			return false;
+		}
+		
+		List<TempSpawnpoint> spawnpoints = new ArrayList<TempSpawnpoint>();
+		
+		if (team == 1)
+		{
+			spawnpoints = this.spawnpointTeam1;
+		} else
+		{
+			spawnpoints = this.spawnpointTeam2;
+		}
+		
+		if (!spawnpoints.isEmpty())
+		{
+			for (TempSpawnpoint ts : spawnpoints)
+			{
+				if (name != null)
+				{
+					if (ts.name.equalsIgnoreCase(name))
+					{
+						this.falseCommand(Arrays.asList(
+								"",
+								ColorOptions.error + "This name is already registered as a spawnpoint for this team: " + name,
+								""
+								));
+						return false;
+					}
+				}
+				
+				if (ts.location.equals(location))
+				{
+					this.falseCommand(Arrays.asList(
+							"",
+							ColorOptions.error + "This location is already registered as a spawnpoint for this team",
+							""
+							));
+					return false;
+				}
+			}
+		}
+		
+		if (name == null)
+		{
+			if (spawnpoints.isEmpty())
+			{
+				name = "1";
+			} else
+			{
+				name = (spawnpoints.size()+1) + "";
+			}
+		}
+		
+		if (team == 1)
+		{
+			this.getSpawnpointTeam1().add(new TempSpawnpoint(name, location));
+		} else
+		{
+			this.getSpawnpointTeam2().add(new TempSpawnpoint(name, location));
+		}
+		this.sendMessage(Arrays.asList(
+				ColorOptions.messageachievement + "Saved a spawnpoint of team " + team + " to your current location!",
+				ColorOptions.messageachievement + "Name: " + name,
+				ColorOptions.messageachievement + "type 'next' when you are done",
+				""
+				));
+		
+		return true;
+	}
+	
+	protected boolean trySaveSideObjective(String name, Location location)
 	{
 		if (this.getSideObjectives().size() >= 9)
 		{
 			this.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Side Objectives has been reached"));
 			return false;
 		}
+		this.sendMessage(Arrays.asList(ColorOptions.message + "Trying to save a new Side Objective..."));
+		
 		RegionManager regionManager = Worldguard.getRegionManager(location.getWorld());
 		Integer structureID = null;
 		Integer propertyID = Worldguard.getStructureIDbyRegion("property", location, regionManager);
 		Integer gateID = Worldguard.getStructureIDbyRegion("gate", location, regionManager);
 		
+		Main.logMessage("StructureID " + structureID + ", property " + propertyID + ", gate " + gateID);
 		if (gateID != null)
 		{
 			structureID = gateID;
+			location = DataManager.Structures.Gates.instantiateGate(gateID, false).getSpawnpointID().getLocation();
 		} else
 		if (propertyID != null)
 		{
@@ -688,9 +826,9 @@ public class ScenarioCreation extends Creation
 		}
 		for (TempSideObjective so : this.getSideObjectives())
 		{
-			if (so.structureID != -1)
+			if (so.structureID != -1 && structureID != null)
 			{
-				if (so.structureID == propertyID || so.structureID == gateID)
+				if (so.structureID == structureID)
 				{
 					this.falseCommand(Arrays.asList(
 							ColorOptions.error + "This structure is already a side objective ID " + so.structureID
@@ -704,9 +842,20 @@ public class ScenarioCreation extends Creation
 						ColorOptions.error + "This location is already a side objective"
 						));
 				return false;
+			} else
+			if (so.name.equalsIgnoreCase(name))
+			{
+				this.falseCommand(Arrays.asList(
+						ColorOptions.error + "This name is already a side objective"
+						));
+				return false;
 			}
 		}
-		this.getSideObjectives().add(new TempSideObjective(location, structureID));
+		
+		List<TempSideObjective> objectives = this.getSideObjectives();
+		objectives.add(new TempSideObjective(name, location, structureID));
+		this.setSideObjectives(objectives);
+		
 		if (structureID != null)
 		{
 			this.sendMessage(Arrays.asList(

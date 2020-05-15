@@ -63,7 +63,7 @@ public class KillDeathStat implements Listener
 //			
 //			try
 //			{
-//				userKiller = Users.getUser(ku);
+//				userKiller = users.getUser(ku);
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, killer, true);
@@ -80,7 +80,7 @@ public class KillDeathStat implements Listener
 //			}
 //			try
 //			{
-//				userDied = Users.getUser(du);
+//				userDied = users.getUser(du);
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(killer, died, false);
@@ -191,7 +191,7 @@ public class KillDeathStat implements Listener
 //			
 //			try
 //			{
-//				user = Users.getUser(died.getUniqueId());
+//				user = users.getUser(died.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, died, true);

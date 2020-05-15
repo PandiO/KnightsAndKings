@@ -13,6 +13,7 @@ import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import API_methods.WorldGuard;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import DataManager.Structures.Gates;
 import Exceptions.UserIsNpcException;
@@ -38,26 +39,18 @@ public class GateEvents implements Listener
 	@EventHandler
 	public void onGateHit(BlockDamageEvent e)
 	{
+		Main.logMessage("BlockDamage event triggered in GateEvents..");
 		Player player = e.getPlayer();
 		Block block = e.getBlock();
 		Location blockLocation = block.getLocation();
 		Integer gateID = Worldguard.getStructureIDbyRegion("gate", blockLocation, Worldguard.getRegionManager(blockLocation.getWorld()));
-		UUID uuid = player.getUniqueId();
-		User user = null;
 		
-		try
+		Main.logMessage("GateID of damaged gate: " + gateID);
+		UUID uuid = player.getUniqueId();
+		User user = Users2.InstantiateUser(uuid, false);
+		
+		if (user == null)
 		{
-			user = Users.getUser(uuid);
-		} catch (UserNotFoundException ex)
-		{
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		} catch (UserIsNpcException ex)
-		{
-			return;
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
 			ErrorHandlers.userNotFoundAction(null, player, true);
 			return;
 		}
@@ -86,7 +79,7 @@ public class GateEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(player.getUniqueId());
+//			user = users.getUser(player.getUniqueId());
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);

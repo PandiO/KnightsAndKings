@@ -30,16 +30,16 @@ public class HitFriendEvent implements Listener
 //	{
 //		if (e1.getEntity() instanceof Player)
 //		{
-//			if (Users.existUser(e1.getEntity().getName()))
+//			if (users.existUser(e1.getEntity().getName()))
 //			{
 //				Player damaged = (Player) e1.getEntity();
 //				if (e1.getDamager() instanceof Player)
 //				{
 //					Player damager = (Player) e1.getDamager();
-//					if (Users.existUser(damager.getName()))
+//					if (users.existUser(damager.getName()))
 //					{
-//						User userDamaged = Users.getUser(damaged.getUniqueId());
-//						User userDamager = Users.getUser(damager.getUniqueId());
+//						User userDamaged = users.getUser(damaged.getUniqueId());
+//						User userDamager = users.getUser(damager.getUniqueId());
 //						
 //						if (userDamaged != null && userDamager != null)
 //						{
@@ -62,9 +62,9 @@ public class HitFriendEvent implements Listener
 //		            {
 //		            	Player damagerarrow = (Player) arrow.getShooter();
 //		            	User shooter = null;
-//		            	if (Users.existUser(damagerarrow.getName()) && Users.getUser(damagerarrow.getUniqueId()) != null)
+//		            	if (users.existUser(damagerarrow.getName()) && users.getUser(damagerarrow.getUniqueId()) != null)
 //		            	{
-//		            		shooter = Users.getUser(damagerarrow.getUniqueId());
+//		            		shooter = users.getUser(damagerarrow.getUniqueId());
 //		            		
 //							RegionManager manager = Worldguard.getRegionManager(damagerarrow.getWorld());
 //			            	if (shooter.getFriendList().contains(((Player) e1.getEntity()).getUniqueId()) && Worldguard.getStructureIDbyRegion("arena", damagerarrow.getLocation(), manager) == null)

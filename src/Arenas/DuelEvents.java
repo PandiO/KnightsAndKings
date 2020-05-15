@@ -181,7 +181,7 @@ public class DuelEvents implements Listener
 //	{
 //		Product product = new Product();
 //		Player player = e.getPlayer();
-//		User user = Users.getUser(player.getUniqueId());
+//		User user = users.getUser(player.getUniqueId());
 //		UUID uuid = player.getUniqueId();
 //		if (DuelSetupClick.coinBetList.containsKey(uuid))
 //		{
@@ -194,7 +194,7 @@ public class DuelEvents implements Listener
 //					Inventory inv = DuelSetupClick.coinBetList.get(player.getUniqueId());
 //					if (ChatColor.stripColor(inv.getItem(45).getItemMeta().getDisplayName()).equalsIgnoreCase(player.getName()))
 //					{
-//						User target = Users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName())).getUniqueId());
+//						User target = users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName())).getUniqueId());
 //						if (target.getCoins() >= coins)
 //						{
 //							inv.setItem(48, product.addCoinBet(inv.getItem(48), coins));
@@ -205,7 +205,7 @@ public class DuelEvents implements Listener
 //						}
 //					} else if (ChatColor.stripColor(inv.getItem(53).getItemMeta().getDisplayName()).equalsIgnoreCase(player.getName()))
 //					{
-//						User target = Users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(48).getItemMeta().getDisplayName())).getUniqueId());
+//						User target = users.getUser(Bukkit.getPlayer(ChatColor.stripColor(inv.getItem(48).getItemMeta().getDisplayName())).getUniqueId());
 //						if (target.getCoins() >= coins)
 //						{
 //							inv.setItem(48, product.addCoinBet(inv.getItem(48), coins));

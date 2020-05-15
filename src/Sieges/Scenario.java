@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -14,16 +15,22 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 
+import com.sk89q.worldguard.protection.managers.RegionManager;
+
+import DataManager.Districts;
+import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Main.Main;
 import Minigames.Participant;
+import Minigames.SiegeTeam;
+import Models.Town;
+import Models.Structures.Gate;
+import Models.district.District;
 import SpawnPoints.SpawnPoint;
-import Towns.Town;
 import Users.User;
 
 public class Scenario 
 {
-	Town town = new Town();
 	SpawnPoint spawnpoint = new SpawnPoint();
 	Main main = Main.getPlugin(Main.class);
 	/**
@@ -31,7 +38,7 @@ public class Scenario
 	 */
 	protected int ID;
 	protected String name;
-	protected int townID;
+	protected Models.Town town;
 	protected String townName;
 	protected int entryTitle;
 	protected int playersMin;
@@ -44,15 +51,18 @@ public class Scenario
 	protected int coinRewardCapture;
 	protected Integer mainObjectiveID;
 	protected MainObjective mainObjective;
-	protected List<SideObjective> sideObjectives = new ArrayList<SideObjective>();
+	protected CopyOnWriteArrayList<SideObjective> sideObjectives = new CopyOnWriteArrayList<SideObjective>();
 	protected ChatColor team1Color = ColorOptions.KAKColor;
 	protected ChatColor team2Color = ColorOptions.error;
 	protected int Spawn1Amount;
 	protected int Spawn2Amount;
 	protected List<SiegeSpawnpoint> team1Spawnpoints = new ArrayList<SiegeSpawnpoint>();
 	protected List<SiegeSpawnpoint> team2Spawnpoints = new ArrayList<SiegeSpawnpoint>();
+	protected List<District> districts = new ArrayList<District>();
 	protected HashMap<User, SiegeObject> editMode = new HashMap<User, SiegeObject>();
 	protected List<User> testingList = new ArrayList<User>();
+	//Gates inside the area of the scenario but not registered as objective
+	protected HashMap<Gate, Boolean> nonPlayingGates = new HashMap<Gate, Boolean>();
 	
 	/**
 	 * Siege minigame related variables
@@ -85,6 +95,9 @@ public class Scenario
 		this.coinRewardSideObjective = coinRewardSideObjective;
 		this.expRewardCapture = expRewardCapture;
 		this.coinRewardCapture = coinRewardCapture;
+		
+		Main.logMessage("Rewards: " + expRewardWin);
+		
 		try
 		{
 			this.mainObjective = new MainObjective(this.ID, this.mainObjectiveID);
@@ -115,8 +128,16 @@ public class Scenario
 		}
 		this.active = false;
 		
+		this.districts = this.fetchDistricts();
+		
+		Location moLoc = this.mainObjective.getLocation();
+		this.town = DataManager.Towns.FindTown(Worldguard.getStructureIDbyRegion("town", moLoc, Worldguard.getRegionManager(moLoc.getWorld())));
+		this.entryTitle = this.fetchEntryTitle();
 		
 		Sieges.Scenarios.add(this);
+		
+		Main.logMessage("Rewards: " + expRewardWin);
+
 	}
 	
 	public int getID()
@@ -129,9 +150,9 @@ public class Scenario
 		return this.name;
 	}
 	
-	public int getTownID()
+	public Town getTown()
 	{
-		return this.townID;
+		return this.town;
 	}
 	
 	public String getTownName()
@@ -184,6 +205,20 @@ public class Scenario
 		return spawnpoints;
 	}
 	
+	public List<District> getDistricts()
+	{
+		return this.districts;
+	}
+	
+	public List<String> getDistrictString()
+	{
+		List<String> list = new ArrayList<String>();
+		
+		
+		
+		return list;
+	}
+	
 	public ChatColor getTeam1Color()
 	{
 		return this.team1Color;
@@ -219,6 +254,22 @@ public class Scenario
 		return this.sideObjectives;
 	}
 	
+	public SideObjective getSideObjective(String name)
+	{
+		SideObjective objective = null;
+		
+		for (SideObjective o : this.getSideObjectives())
+		{
+			if (o.getName().equalsIgnoreCase(name))
+			{
+				objective = o;
+				break;
+			}
+		}
+		
+		return objective;
+	}
+	
 	public MainObjective getMainObjective()
 	{
 		return this.mainObjective;
@@ -244,14 +295,15 @@ public class Scenario
 		return this.siege;
 	}
 	
-	protected List<SideObjective> fetchSideObjectives()
+	protected CopyOnWriteArrayList<SideObjective> fetchSideObjectives()
 	{
-		List<SideObjective> sideObjectives = new ArrayList<SideObjective>();
+		CopyOnWriteArrayList<SideObjective> sideObjectives = new CopyOnWriteArrayList<SideObjective>();
 		
 		try
 		{
 			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT Spawnpoint.ID, "
 					+ "ScenarioID, "
+					+ "Name, "
 					+ "Spawnpoint.World, "
 					+ "Spawnpoint.X, "
 					+ "Spawnpoint.Y, "
@@ -266,7 +318,7 @@ public class Scenario
 			ResultSet results = stmt.executeQuery();
 			while (results.next())
 			{
-				sideObjectives.add(new SideObjective(results.getInt("Spawnpoint.ID"), results.getInt("ScenarioID"), 
+				sideObjectives.add(new SideObjective(results.getString("Name"), results.getInt("Spawnpoint.ID"), results.getInt("ScenarioID"), 
 						new Location(Bukkit.getWorld(results.getString("World")), results.getDouble("X"), results.getDouble("Y"), results.getDouble("Z"), results.getFloat("Yaw"), results.getFloat("Pitch"))));
 			}
 		} catch (Exception ex)
@@ -283,15 +335,16 @@ public class Scenario
 		
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SpawnpointSiegeScenario WHERE ScenarioID = ? AND TeamNumber = ?;");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT * FROM SpawnpointSiegeScenario WHERE Objective = false AND ScenarioID = ? AND TeamNumber = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, this.ID);
 			stmt.setInt(2, 1);
 			
 			ResultSet results = stmt.executeQuery();
-			if (results.next())
+			while (results.next())
 			{
-				spawnpoints.add(new SiegeSpawnpoint(this.ID, results.getInt("SpawnpointID"), 1));
+				SiegeSpawnpoint spawnpoint = new SiegeSpawnpoint(results.getString("Name"), this.ID, results.getInt("SpawnpointID"), 1);
+				spawnpoints.add(spawnpoint);
 			}
 		} catch (SQLException e) 
 		{
@@ -308,15 +361,16 @@ public class Scenario
 		
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("SELECT * FROM SpawnpointSiegeScenario WHERE ScenarioID = ? AND TeamNumber = ?;");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT * FROM SpawnpointSiegeScenario WHERE Objective = false AND ScenarioID = ? AND TeamNumber = ?;");
 			//Username will be saved in all lower case in order to prevent discommunication when searching for the a username with capital letters
 			stmt.setInt(1, this.ID);
 			stmt.setInt(2, TeamNumber);
 			
 			ResultSet results = stmt.executeQuery();
-			if (results.next())
+			while (results.next())
 			{
-				spawnpoints.add(new SiegeSpawnpoint(this.ID, results.getInt("SpawnpointID"), TeamNumber));
+				SiegeSpawnpoint spawnpoint = new SiegeSpawnpoint(results.getString("Name"), this.ID, results.getInt("SpawnpointID"), TeamNumber);
+				spawnpoints.add(spawnpoint);
 			}
 		} catch (SQLException e) 
 		{
@@ -324,6 +378,96 @@ public class Scenario
 		}
 		
 		return spawnpoints;
+	}
+	
+	protected List<District> fetchDistricts()
+	{
+		List<District> districts = new ArrayList<District>();
+		
+		RegionManager manager = Worldguard.getRegionManager(this.mainObjective.getLocation().getWorld());
+		
+		Integer districtID = Worldguard.getStructureIDbyRegion("district", this.mainObjective.getLocation(), manager);
+		District district = null;
+		
+		if (districtID != null)
+		{
+			districts.add(Districts.InstantiateDistrict(districtID, false));
+		}
+		
+		for (SideObjective so : this.sideObjectives)
+		{
+			manager = Worldguard.getRegionManager(so.getLocation().getWorld());
+
+			districtID = Worldguard.getStructureIDbyRegion("district", so.getLocation(), manager);
+			
+			if (districtID != null)
+			{
+				district = Districts.InstantiateDistrict(districtID, false);
+
+				if (!districts.contains(district))
+				{
+					districts.add(district);
+				}
+			}
+		}
+		
+		for (SiegeSpawnpoint sp : this.getTeam1Spawnpoints())
+		{
+			manager = Worldguard.getRegionManager(sp.getLocation().getWorld());
+
+			districtID = Worldguard.getStructureIDbyRegion("district", sp.getLocation(), manager);
+			
+			if (districtID != null)
+			{
+				district = Districts.InstantiateDistrict(districtID, false);
+
+				if (!districts.contains(district))
+				{
+					districts.add(district);
+				}
+			}
+		}
+		
+		for (SiegeSpawnpoint sp : this.getTeam2Spawnpoints())
+		{
+			manager = Worldguard.getRegionManager(sp.getLocation().getWorld());
+
+			districtID = Worldguard.getStructureIDbyRegion("district", sp.getLocation(), manager);
+			
+			if (districtID != null)
+			{
+				district = Districts.InstantiateDistrict(districtID, false);
+
+				if (!districts.contains(district))
+				{
+					districts.add(district);
+				}
+			}
+		}
+		
+		return districts;
+	}
+	
+	protected Integer fetchEntryTitle()
+	{
+		Integer title = null;
+		
+		for (District district : this.districts)
+		{
+			if (title == null)
+			{
+				title = district.getTown().getRequiredTitleID();
+			} else
+			{
+				Integer possible = district.getTown().getRequiredTitleID();
+				if (possible < title)
+				{
+					title = possible;
+				}
+			}
+		}
+		
+		return title;
 	}
 	
 	public SiegeSpawnpoint getSiegeSpawnpoint(Integer team, Integer spawnCountID)
@@ -370,6 +514,20 @@ public class Scenario
 		return this.votes;
 	}
 	
+	public void setTeams(SiegeTeam team1, SiegeTeam team2)
+	{
+		team1.setSpawnpoints(this.team1Spawnpoints);
+		team2.setSpawnpoints(this.team2Spawnpoints);
+		
+		List<Objective> objectives = new ArrayList<Objective>();
+		for (SideObjective obj : this.getSideObjectives())
+		{
+			objectives.add((Objective) obj);
+		}
+		team1.setHeldObjectives(objectives);
+		team1.addHeldObjectives((Objective) this.getMainObjective());
+	}
+	
 	public void setVotes(Participant participant)
 	{
 		if (!this.votes.contains(participant))
@@ -405,11 +563,57 @@ public class Scenario
 	{
 		this.siege = siege;
 		this.active = active;
+		Main.logMessage("Setting MO active..");
 		mainObjective.setActive(active);
 		for (SideObjective objective : this.getSideObjectives())
 		{
+			Main.logMessage("Setting SO " + this.getSideObjectives().indexOf(objective) + " active..");
 			objective.setActive(active);
 		}
+		this.team1Spawnpoints.forEach(q -> q.setActive(active));
+		this.team2Spawnpoints.forEach(q -> q.setActive(active));
+		
+		if (active)
+		{
+			for (District district : this.getDistricts())
+			{
+				for (Gate gate : district.getGateList())
+				{
+					if (!this.isObjectiveGate(gate))
+					{
+						this.nonPlayingGates.put(gate, gate.getClosed());
+						gate.setClosed(false);
+					}
+				}
+			}	
+		} else
+		{
+			for (Gate gate : this.nonPlayingGates.keySet())
+			{
+				gate.setClosed(this.nonPlayingGates.get(gate));
+			}
+			
+			this.nonPlayingGates.clear();
+		}
+	}
+	
+	public boolean isObjectiveGate(Gate gate)
+	{
+		boolean isObjective = false;
+		
+		for (SideObjective so : this.getSideObjectives())
+		{
+			if (so.getGate() != null)
+			{
+				if (so.getGate().getId() == gate.getId())
+				{
+					isObjective = true;
+					break;
+				}
+			}
+		}
+		
+		return isObjective;
 	}
 	
 	public void addTestingList(User user)
@@ -451,7 +655,14 @@ public class Scenario
 			
 			Integer sideObjectivePart = (int)part/this.sideObjectives.size();
 			SideObjective so = (SideObjective) objective;
-			so.getGate().destroyGate(false);
+			
+			if (so.getGate() != null)
+			{
+				so.getGate().destroyGate(false);
+			}
+			SiegeTeam team = this.siege.getHeldTeam(objective);
+			team.removeHeldObjectives(objective);
+			this.siege.GetOppositeTeam(team).addHeldObjectives(objective);
 			
 			this.mainObjective.setCurrentCapturePoints(this.mainObjective.getCurrentCapturePoints()-sideObjectivePart);
 		}
@@ -698,7 +909,7 @@ public class Scenario
 		}
 		try
 		{
-			this.spawnpoint.removeSpawnPoint(this.spawnpoint.getSpawnPointID("Siege." + this.ID + ".MO"));
+			this.spawnpoint.removeSpawnPoint(this.mainObjective.getSpawnpointID());
 			Main.logMessage(removeMainObjective);
 			sender.sendMessage(removeMainObjective);
 		} catch (Exception ex)
@@ -726,7 +937,7 @@ public class Scenario
 		
 		try
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM SpawnPoint WHERE Name LIKE ?;");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("DELETE FROM SpawnPoint WHERE Name LIKE ?;");
 			stmt.setString(1, "%siege." + this.ID + "%");
 			
 			stmt.executeUpdate();
@@ -746,7 +957,7 @@ public class Scenario
 		{
 			sender.sendMessage(ColorOptions.error + "Completed the removal of siege " + this.ID + " with warnings! Please notify a developer");
 		}
-		this.remove();
+		this.destroy();
 	}
 	
 	public void save()
@@ -758,15 +969,19 @@ public class Scenario
 		Scenarios.saveScenario(this);
 	}
 	
-	protected void remove()
+	protected void destroy()
 	{
+		Main.logMessage("Rewards: " + expRewardWin);
+
 		for (SideObjective objective : this.getSideObjectives())
 		{
 			objective.getBannerBlock().setType(Material.AIR);
-			objective.saveSideObjective();
+//			objective.saveSideObjective();
 		}
 		this.mainObjective.getBannerBlock().setType(Material.AIR);
 		Scenarios.saveScenario(this);
+		Main.logMessage("Rewards: " + expRewardWin);
+
 		Sieges.Scenarios.remove(this);
 		Scenarios.destroyScenario(this);
 	}

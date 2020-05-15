@@ -124,56 +124,6 @@ public class MGTeam
 		this.winMessage = winMessage;
 	}
 	
-	public void CreateSideBarBoard(Siege siege)
-	{
-		Scenario scenario = siege.getScenario();
-		Integer boardLength = 5;	
-		boardLength += scenario.getSideObjectives().size();
-		
-		org.bukkit.scoreboard.Objective sideBoard = null;
-		sideBoard = this.Scoreboard.getObjective("siege_" + Sieges.Sieges.indexOf(siege));
-		
-		if (sideBoard == null)
-		{
-			sideBoard = this.Scoreboard.registerNewObjective("siege_" + Sieges.Sieges.indexOf(siege), "dummy");
-			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
-		}
-		
-		sideBoard.setDisplayName(ColorOptions.KAKColor + "Siege");
-		
-		Score teamScore = sideBoard.getScore(ColorOptions.message + "Team: " + this.GetName());
-		teamScore.setScore(boardLength);
-		
-		boardLength--;
-		
-		Score spaceScore = sideBoard.getScore(" ");
-		spaceScore.setScore(boardLength);
-		
-		boardLength--;
-		
-		MainObjective MO = scenario.getMainObjective();
-		Score MOScore = sideBoard.getScore(ColorOptions.message + "Main Objective: " + MO.getCapturePercentage() + "% Captured");
-		MOScore.setScore(boardLength);
-		
-		boardLength--;
-		
-		for (SideObjective SO : scenario.getSideObjectives())
-		{
-			Score SOScore = sideBoard.getScore(ColorOptions.message + "Side Objective " + SO.getSubID() + ": " + SO.getCapturePercentage() + "% Captured");
-			SOScore.setScore(boardLength);
-			boardLength--;
-		}
-		
-		Score spaceScore2 = sideBoard.getScore("  ");
-		spaceScore2.setScore(boardLength);
-		
-		boardLength--;
-		
-		HashMap<String, Integer> calcTime = Main.getCalculatedTime(siege.progressSeconds); 
-		Score timeScore = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
-		timeScore.setScore(boardLength);
-	}
-	
 	public void SetMembers(List<Participant> participants)
 	{
 		this.Members = participants;
@@ -205,5 +155,10 @@ public class MGTeam
 	public void AnnounceMembersActionBar(ActionBar message)
 	{
 		this.Members.forEach(m -> message.sendToPlayer(m.getUser().getPlayer()));
+	}
+	
+	public void AnnounceMembers(List<String> message)
+	{
+		this.GetMemberUsers().forEach(m -> m.sendMessage(message));
 	}
 }

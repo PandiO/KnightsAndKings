@@ -9,17 +9,19 @@ import org.bukkit.Location;
  * @author pandi
  *
  */
-public class TempSideObjective 
+public class TempSideObjective extends TempSpawnpoint
 {
 	public int structureID;
-	public Location location;
 	/**
 	 * 
 	 */
-	public TempSideObjective(Location location, Integer structureID) 
+	public TempSideObjective(String name, Location location, Integer structureID) 
 	{
-		this.location = location;
-		this.structureID = structureID;
+		super (name, location);
+		if (structureID != null)
+		{
+			this.structureID = structureID;
+		}
 	}
 
 }

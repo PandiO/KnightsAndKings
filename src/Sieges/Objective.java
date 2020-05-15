@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Banner;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.block.banner.PatternType;
 import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
@@ -20,7 +21,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import Handlers.ColorOptions;
+import Main.Main;
 import Minigames.Participant;
+import Minigames.SiegeTeam;
 import Users.User;
 import net.minecraft.server.v1_8_R3.EnumParticle;
 import net.minecraft.server.v1_8_R3.PacketPlayOutWorldParticles;
@@ -39,7 +42,7 @@ public class Objective extends SiegeObject
 	protected double captureRadius = 2.5;
 	protected ArmorStand percentageEntity;
 	protected boolean isCaptured;
-	protected Participant capturer;
+	protected SiegeMember capturer;
 	
 	protected List<List<Pattern>> patternList = new ArrayList<List<Pattern>>();
 	
@@ -50,11 +53,7 @@ public class Objective extends SiegeObject
 		this.currentCapturePoints = this.originalCapturePoints;
 		this.instance = this;
 		this.bannerBlock = this.spawnpoint.getLocation().getBlock();
-		this.bannerBlock.setType(Material.STANDING_BANNER);
-		this.banner = (Banner) this.bannerBlock.getState();
 		this.setBannerStages(originalColor, DyeColor.RED);
-		this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
-		banner.update(true);
 	}
 	
 	public int getOriginalCapturePoints()
@@ -98,6 +97,11 @@ public class Objective extends SiegeObject
 			Player player = user.getPlayer();
 			if (this.getLocation().distance(player.getLocation()) <= this.captureRadius)
 			{
+				if (player.isDead())
+				{
+					continue;
+				}
+				
 				int teamNumber = 2;
 				Siege siege = Sieges.findSiege(user);
 				
@@ -334,21 +338,37 @@ public class Objective extends SiegeObject
 			this.isCaptured = captured;
 			
 			this.capturer = this.calculateCapturer();
+			this.capturer.addCapturedObjective(this);
 			
 			this.stopCaptureTask();
 			this.stopCircleTask();
 			Scenario scenario = Scenarios.findScenario(this.scenarioID);
 			scenario.setObjectiveCaptured(this);
-			for (User user : this.getPlayers())
+			
+			String objectiveName = "an Objective";
+			
+			if (this instanceof SideObjective)
 			{
-				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully captured an Objective!");
+				objectiveName = ((SideObjective) this).getName();
+			} else if (this instanceof MainObjective)
+			{
+				objectiveName = "the Main Objective";
 			}
+			
+			SiegeTeam capturerTeam = this.capturer.GetTeam();
+			capturerTeam.AnnounceMembers(Arrays.asList(ColorOptions.messageachievement + ColorOptions.messageArrow + this.capturer.getUser().getUsername() + " succesfully captured " + objectiveName));
+			
+			scenario.getSiege().GetOppositeTeam(capturerTeam).AnnounceMembers(Arrays.asList(ColorOptions.error + ColorOptions.messageArrow + "Lost objective " + objectiveName));
+//			for (User user : this.getPlayers())
+//			{
+//				user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully captured an Objective!");
+//			}
 		}
 	}
 	
-	public Participant calculateCapturer()
+	public SiegeMember calculateCapturer()
 	{
-		Participant participant = null;
+		SiegeMember member = null;
 		
 		User closestUser = null;
 		double closestDistance = -1;
@@ -373,10 +393,22 @@ public class Objective extends SiegeObject
 		if (closestUser != null)
 		{
 			Scenario scenario = Scenarios.findScenario(this.getScenarioID());
-			participant = scenario.getSiege().getParticipant(closestUser);
+			member = scenario.getSiege().getSiegeMember(closestUser);
 		}
 		
-		return participant;
+		return member;
+	}
+	
+	public boolean isBeingCaptured()
+	{
+		boolean isCapturing = false;
+		
+		if (this.calculateCapturePoints() > 0)
+		{
+			isCapturing = true;
+		}
+		
+		return isCapturing;
 	}
 	
 	public void setActive(boolean active)
@@ -391,6 +423,34 @@ public class Objective extends SiegeObject
 		
 		if (this.isActive && changedValue)
 		{
+			try
+			{
+//				bannerBlock.setTypeId(176);
+				Main.logMessage("Type of bannerBlock: " + bannerBlock.getType().toString());
+				bannerBlock.setType(Material.STANDING_BANNER);
+				Main.logMessage("Type of bannerBlock: " + bannerBlock.getType().toString());
+			} catch (Exception ex)
+			{
+				ex.printStackTrace();
+			}
+			
+			Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
+
+			BlockState state = this.bannerBlock.getState();
+			if (!(state instanceof Banner))
+			{
+				Main.logMessage("Type of bannerBlock when state is not banner: " + this.bannerBlock.getType().toString());
+
+				this.bannerBlock.setType(Material.STANDING_BANNER);
+				Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
+
+			}
+			Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
+
+			this.banner = (Banner) this.bannerBlock.getLocation().add(0, 1, 0).getBlock().getState();
+			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+			banner.update(true);
+			
 			this.startCaptureTask();
 			this.startCircleTask();
 			this.setPercentageEntity();
@@ -403,7 +463,7 @@ public class Objective extends SiegeObject
 			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
 			banner.update(true);
 		} else if (!this.isActive && changedValue)
-		{
+		{			
 			this.stopCaptureTask();
 			this.stopCircleTask();
 			this.removePercentageEntity();
@@ -416,6 +476,7 @@ public class Objective extends SiegeObject
 			}
 			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
 			banner.update(true);
+			this.bannerBlock.setType(Material.AIR);
 		}
 	}
 	
@@ -460,9 +521,14 @@ public class Objective extends SiegeObject
 		List<User> receivers = new ArrayList<User>();
 		
 		receivers.addAll(this.getPlayers());
-				
-		double originalX = this.bannerBlock.getLocation().getX();
-		double originalZ = this.bannerBlock.getLocation().getZ();
+		
+		Location location = this.banner.getLocation();
+		double x = this.banner.getLocation().getX();
+		double z = this.banner.getLocation().getZ();
+		
+		location = location.add(x > 0 ? -0.5 : 0.5, 0.0, z > 0 ? 0.5 : -0.5);
+		double originalX = location.getX();
+		double originalZ = location.getZ();
 		
 		this.circleTask = new BukkitRunnable()
 		{

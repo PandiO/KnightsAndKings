@@ -2,7 +2,6 @@ package Listeners;
 
 import java.util.Random;
 import java.util.UUID;
-import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,6 +17,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -31,9 +31,13 @@ import Handlers.DoubleDamage;
 import Handlers.ErrorHandlers;
 import Handlers.SoundHandler;
 import Main.Main;
+import Menu.Menu;
 import Minigames.Participant;
+import Minigames.SiegeTeam;
 import Scoreboards.ActionBar;
 import Sieges.Siege;
+import Sieges.SiegeMember;
+import Sieges.SiegeSpawnpoint;
 import Skills.Skill;
 import Users.User;
 import Users.Users;
@@ -121,26 +125,6 @@ public class EntityListener implements Listener
 				return;
 			}
 			
-			if (!CitizensAPI.getNPCRegistry().isNPC(damaged))
-			{
-				Main.logMessage("Damaged is no NPC");
-				Siege damagedSiege = Sieges.Sieges.findSiege(userDamaged);
-				Siege damagerSiege = Sieges.Sieges.findSiege(userDamager);
-				if (userDamaged.inSafeZone() || userDamager.inSafeZone() || userDamaged.getFriendList().contains(damager.getUniqueId()))
-				{
-					Main.logMessage("Damaged is in safezone or damager is friend of damaged");
-					if ((damagedSiege == null && damagerSiege == null) 
-							&& (!Main.getHideAndSeekParticipating(userDamager) && !Main.getHideAndSeekParticipating(userDamaged)))
-					{
-						Main.logMessage("Safezone cancelling damage");
-
-						e.setCancelled(true);
-						damager.playSound(damager.getLocation(), SoundHandler.NOTE_BASS, 1.0F, 1.0F);
-						return;
-					}
-				}
-			}
-			
 			/**
 			 * Hide and Seek
 			 */
@@ -149,8 +133,8 @@ public class EntityListener implements Listener
 				Participant pDamager = Main.HideAndSeek.getParticipant(userDamager);
 				Participant pDamaged = Main.HideAndSeek.getParticipant(userDamaged);
 				
-				if (Main.HideAndSeek.getSeekers().contains(pDamager) 
-						&& !Main.HideAndSeek.getSeekers().contains(pDamaged)
+				if (Main.HideAndSeek.getSeekers().GetMembers().contains(pDamager) 
+						&& !Main.HideAndSeek.getSeekers().GetMembers().contains(pDamaged)
 						&& !Main.HideAndSeek.getHideTime())
 				{
 					Main.logMessage("found the two participants..");
@@ -304,6 +288,66 @@ public class EntityListener implements Listener
 				}
 			}
 			
+			Main.logMessage("Checking if damaged is not an npc. If not, handling safezone and siege stuff");
+			if (!CitizensAPI.getNPCRegistry().isNPC(damaged))
+			{
+				Main.logMessage("Damaged is no NPC");
+				Siege damagedSiege = Sieges.Sieges.findSiege(userDamaged);
+				Siege damagerSiege = Sieges.Sieges.findSiege(userDamager);
+				if (userDamaged.inSafeZone() || userDamager.inSafeZone() || userDamaged.getFriendList().contains(damager.getUniqueId()))
+				{
+					Main.logMessage("Damaged is in safezone or damager is friend of damaged");
+					if ((damagedSiege == null && damagerSiege == null) 
+							&& (!Main.getHideAndSeekParticipating(userDamager) && !Main.getHideAndSeekParticipating(userDamaged)))
+					{
+						Main.logMessage("Safezone cancelling damage");
+
+						e.setCancelled(true);
+						damager.playSound(damager.getLocation(), SoundHandler.NOTE_BASS, 1.0F, 1.0F);
+						return;
+					}
+				}
+				
+				if (damagedSiege != null && damagerSiege != null)
+				{
+					SiegeMember damagedMember = damagedSiege.getSiegeMember(userDamaged);
+//					if ((damaged.getHealth() - e.getDamage()) < 1)
+//					{
+//						Menu menu = new Menu();
+//						e.setCancelled(true);
+//						Participant participant = damagedSiege.getParticipant(userDamaged);
+//						SiegeTeam team = damagedSiege.getTeam(participant);
+//						SiegeSpawnpoint spawnpoint = team.getSpawnpoints().get(0);
+//						
+//						Integer exp = userDamager.getMultipliedInt(userDamager.getExpPart(5));
+//						if (userDamager != null)
+//						{
+//							userDamager.addKills(false, 1, 1);
+//							userDamager.addExperience(exp, true);
+//						}
+//						if (userDamaged != null)
+//						{
+//							userDamaged.addDeaths(1);
+//						}
+//						damager.sendMessage(ColorOptions.messageachievement + "You received " + ColorOptions.messagesubjects + exp + ColorOptions.messageachievement + " experience for killing " + ColorOptions.messagesubjects + userDamaged.getUsername());
+//						damaged.sendMessage(ColorOptions.message + "You were killed by " + userDamager.getUsername());
+//						
+//						//menu.openSiegeSpawnpointMenu(userDamaged, damagedSiege);
+//						damaged.teleport(spawnpoint.getLocation());
+//						
+//						Bukkit.getServer().getPluginManager().callEvent(new PlayerRespawnEvent(damaged, spawnpoint.getLocation(), false));
+//						
+//						return;
+//					}
+					
+					if (damagedMember.isSafe())
+					{
+						damager.sendMessage(ColorOptions.error + "You can't hurt players inside their spawn area!");
+						e.setCancelled(true);
+					}
+				}
+			}
+			
 			ActionBar bar = new ActionBar(ColorOptions.error + "You are now in combat! Do not log off");
 			if (userDamager != null)
 			{
@@ -327,6 +371,7 @@ public class EntityListener implements Listener
 					Main.incombat.put(userDamaged, System.currentTimeMillis() + (Main.combat*1000));
 				}
 			}
+			
 			Main.logMessage("Handled damage event");
 		} else
 		if (e.getEntity() instanceof ItemFrame || e.getEntity() instanceof ArmorStand)

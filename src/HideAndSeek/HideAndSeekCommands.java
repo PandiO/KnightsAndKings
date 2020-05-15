@@ -78,13 +78,13 @@ public class HideAndSeekCommands implements CommandExecutor
 						return false;
 					}
 					
-					if (main.HideAndSeek == null)
+					if (Main.HideAndSeek == null)
 					{
 						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 						return false;
 					}
 					
-					main.HideAndSeek.enter(user);
+					Main.HideAndSeek.enter(user);
 				} else
 				{
 					sender.sendMessage(ColorOptions.falsecommand + "You need to be a player to perform this command!");
@@ -107,13 +107,18 @@ public class HideAndSeekCommands implements CommandExecutor
 						return false;
 					}
 					
-					if (main.HideAndSeek == null)
+					if (Main.HideAndSeek == null)
 					{
 						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 						return false;
 					}
 					
-					main.HideAndSeek.leave(user);
+					if (!Main.HideAndSeek.getParticipating(user))
+					{
+						sender.sendMessage(ColorOptions.error + "You are not participating in any Hide and Seek");
+					}
+					
+					Main.HideAndSeek.leave(Main.HideAndSeek.getParticipant(user));
 				} else
 				{
 					sender.sendMessage(ColorOptions.falsecommand + "You need to be a player to perform this command!");
@@ -137,7 +142,7 @@ public class HideAndSeekCommands implements CommandExecutor
 						return false;
 					}
 					
-					if (main.HideAndSeek == null)
+					if (Main.HideAndSeek == null)
 					{
 						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 						return false;
@@ -145,7 +150,7 @@ public class HideAndSeekCommands implements CommandExecutor
 					
 					if (user.getDonatorID() >= 1)
 					{
-						main.HideAndSeek.skipStage(user);
+						Main.HideAndSeek.skipStage(user);
 					} else
 					{
 						player.sendMessage(ColorOptions.falsecommand + "Only players with donator title " + this.donator.getDonatorName(1) + " or higher can skip stages");
@@ -154,17 +159,17 @@ public class HideAndSeekCommands implements CommandExecutor
 					}
 				} else
 				{
-					if (main.HideAndSeek == null)
+					if (Main.HideAndSeek == null)
 					{
 						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 						return false;
 					}
-					main.HideAndSeek.skipStage(null);
+					Main.HideAndSeek.skipStage(null);
 					sender.sendMessage(ColorOptions.messageachievement + "Skipped the cooldown of Hide and Seek");
 				}
 			} else if (args[0].equalsIgnoreCase("info"))
 			{
-				if (main.HideAndSeek == null)
+				if (Main.HideAndSeek == null)
 				{
 					sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 					return false;
@@ -176,39 +181,39 @@ public class HideAndSeekCommands implements CommandExecutor
 						"",
 						ColorOptions.statsformat + "Information about the current game of Hide And Seek"
 						));
-				if (main.HideAndSeek.getCooldown())
+				if (Main.HideAndSeek.getCooldown())
 				{
-					HashMap<String, Integer> time = main.getCalculatedTime(main.HideAndSeek.getCooldownSeconds());
+					HashMap<String, Integer> time = Main.getCalculatedTime(Main.HideAndSeek.getCooldownSeconds());
 					information.addAll(Arrays.asList(
 							ColorOptions.stats + "Status: " + ColorOptions.statsresults + "Cooldown",
 							ColorOptions.message + "Time untill next match: " + (time.get("minute") > 0 ? time.get("minute") + " minute(s) and " : " ") + time.get("second") + " second(s)",
 							ColorOptions.message + "Join with /hs join"
 							));
 				}
-				if (main.HideAndSeek.getMatchmaking())
+				if (Main.HideAndSeek.getMatchmaking())
 				{
-					HashMap<String, Integer> time = main.getCalculatedTime(main.HideAndSeek.getMatchmakingSeconds());
+					HashMap<String, Integer> time = Main.getCalculatedTime(Main.HideAndSeek.getMatchmakingSeconds());
 					information.addAll(Arrays.asList(
 							ColorOptions.stats + "Status: " + ColorOptions.statsresults + "Matchmaking open",
-							ColorOptions.stats + "Participants: " + ColorOptions.statsresults + main.HideAndSeek.getParticipants().size(),
-							ColorOptions.stats + "Price: " + ColorOptions.statsresults + ColorOptions.formatCurrency(main.HideAndSeek.getReward()),
-							ColorOptions.stats + "Location: " + ColorOptions.statsresults + main.HideAndSeek.getTownName(),
-							ColorOptions.stats + "Required title: " + ColorOptions.statsresults + this.title.getTitleName(main.HideAndSeek.getEntryTitle(), 0) + "/" + this.title.getTitleName(main.HideAndSeek.getEntryTitle(), 1),
+							ColorOptions.stats + "Participants: " + ColorOptions.statsresults + Main.HideAndSeek.getParticipants().size(),
+							ColorOptions.stats + "Price: " + ColorOptions.statsresults + ColorOptions.formatCurrency(Main.HideAndSeek.getReward()),
+							ColorOptions.stats + "Location: " + ColorOptions.statsresults + Main.HideAndSeek.getTownName(),
+							ColorOptions.stats + "Required title: " + ColorOptions.statsresults + this.title.getTitleName(Main.HideAndSeek.getEntryTitle(), 0) + "/" + this.title.getTitleName(Main.HideAndSeek.getEntryTitle(), 1),
 							ColorOptions.stats + "Time to start: " + ColorOptions.statsresults + (time.get("minute") > 0 ? time.get("minute") + " minute(s) and " : " ") + time.get("second") + " second(s)",
 							ColorOptions.message + "Join with /hs join"
 							));
 				}
-				if (main.HideAndSeek.getProgress())
+				if (Main.HideAndSeek.getProgress())
 				{
-					HashMap<String, Integer> time = main.getCalculatedTime(main.HideAndSeek.getProgressSeconds());
+					HashMap<String, Integer> time = Main.getCalculatedTime(Main.HideAndSeek.getProgressSeconds());
 					information.addAll(Arrays.asList(
 							ColorOptions.stats + "Status: " + ColorOptions.statsresults + "In progress",
-							ColorOptions.stats + "Participants: " + ColorOptions.statsresults + main.HideAndSeek.getParticipants().size(),
-							ColorOptions.stats + "Seekers: " + ColorOptions.statsresults + main.HideAndSeek.getSeekers().size(),
-							ColorOptions.stats + "Hiders: " + ColorOptions.statsresults + main.HideAndSeek.getHiderAmount(),
-							ColorOptions.stats + "Price: " + ColorOptions.statsresults + ColorOptions.formatCurrency(main.HideAndSeek.getReward()),
-							ColorOptions.stats + "Location: " + ColorOptions.statsresults + main.HideAndSeek.getTownName(),
-							ColorOptions.stats + "Required title: " + ColorOptions.statsresults + this.title.getTitleName(main.HideAndSeek.getEntryTitle(), 0) + "/" + this.title.getTitleName(main.HideAndSeek.getEntryTitle(), 1),
+							ColorOptions.stats + "Participants: " + ColorOptions.statsresults + Main.HideAndSeek.getParticipants().size(),
+							ColorOptions.stats + "Seekers: " + ColorOptions.statsresults + Main.HideAndSeek.getSeekers().GetMembers().size(),
+							ColorOptions.stats + "Hiders: " + ColorOptions.statsresults + Main.HideAndSeek.getHiders().GetMembers().size(),
+							ColorOptions.stats + "Price: " + ColorOptions.statsresults + ColorOptions.formatCurrency(Main.HideAndSeek.getReward()),
+							ColorOptions.stats + "Location: " + ColorOptions.statsresults + Main.HideAndSeek.getTownName(),
+							ColorOptions.stats + "Required title: " + ColorOptions.statsresults + this.title.getTitleName(Main.HideAndSeek.getEntryTitle(), 0) + "/" + this.title.getTitleName(Main.HideAndSeek.getEntryTitle(), 1),
 							ColorOptions.stats + "Time to end: " + ColorOptions.statsresults + (time.get("minute") > 0 ? time.get("minute") + " minute(s) and " : " ") + time.get("second") + " second(s)"
 							));
 				}
@@ -222,7 +227,7 @@ public class HideAndSeekCommands implements CommandExecutor
 			{
 				if (sender.hasPermission("k&k.hideandseek"))
 				{
-					if (main.HideAndSeek == null)
+					if (Main.HideAndSeek == null)
 					{
 						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 						return false;
@@ -243,7 +248,7 @@ public class HideAndSeekCommands implements CommandExecutor
 							return false;
 						}
 					}
-					main.HideAndSeek.forceStop(user);
+					Main.HideAndSeek.forceStop(user);
 				} else
 				{
 					sender.sendMessage(ColorOptions.falsecommand + "You don't have permission for this command!");
@@ -252,24 +257,24 @@ public class HideAndSeekCommands implements CommandExecutor
 			{
 				if (sender.hasPermission("k&k.hideandseek"))
 				{
-					if (main.HideAndSeek == null)
+					if (Main.HideAndSeek == null)
 					{
 						sender.sendMessage(ColorOptions.error + "Hide and Seek is not available right now. Please try again later");
 						return false;
 					}
-					if (main.HideAndSeek.getAutoStart())
+					if (Main.HideAndSeek.getAutoStart())
 					{
-						main.HideAndSeek.setAutostart(false);
+						Main.HideAndSeek.setAutostart(false);
 					} else
 					{
-						main.HideAndSeek.setAutostart(true);
-						if (main.HideAndSeek.getCooldown() == false && main.HideAndSeek.getMatchmaking() == false && main.HideAndSeek.getProgress() == false)
+						Main.HideAndSeek.setAutostart(true);
+						if (Main.HideAndSeek.getCooldown() == false && Main.HideAndSeek.getMatchmaking() == false && Main.HideAndSeek.getProgress() == false)
 						{
-							main.HideAndSeek.startMatchmaking();
+							Main.HideAndSeek.startMatchmaking();
 						}
 					}
 					
-					sender.sendMessage(ColorOptions.messageachievement + "Autostart of Hide and Seek toggled! Current status:" + (main.HideAndSeek.getAutoStart() ? ChatColor.GREEN + "On" : ChatColor.RED + "Off"));
+					sender.sendMessage(ColorOptions.messageachievement + "Autostart of Hide and Seek toggled! Current status:" + (Main.HideAndSeek.getAutoStart() ? ChatColor.GREEN + "On" : ChatColor.RED + "Off"));
 				} else
 				{
 					sender.sendMessage(ColorOptions.falsecommand + "You don't have permission for this command!");

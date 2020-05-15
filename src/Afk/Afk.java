@@ -13,6 +13,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
 
+import DataManager.Users2;
 import Handlers.ColorOptions;
 import Main.Main;
 import SpawnPoints.SpawnPoint;
@@ -48,8 +49,9 @@ public class Afk
 		this.team = Bukkit.getServer().getScoreboardManager().getMainScoreboard().getPlayerTeam(this.Player);
 		this.location = this.Player.getLocation();
 		this.task = playEffectTask();
-		Users.updateScoreBoard(null);
+		Users2.UpdateScoreBoard(null);
 		AfkEvents.possibleAfk.remove(this.user);
+		this.user.checkMiniGames();
 	}
 	
 	public void playParticles()
@@ -117,7 +119,7 @@ public class Afk
 //		player.teleport(lastLocation);
 		this.Player.sendMessage(ColorOptions.message + ColorOptions.messageArrow + "You are no longer AFK");
 		removeAfk();
-		Users.updateScoreBoard(null);
+		Users2.UpdateScoreBoard(null);
 		clearLeftovers();
 	}
 	

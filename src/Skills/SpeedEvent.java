@@ -31,7 +31,7 @@ public class SpeedEvent implements Listener
 //	@EventHandler
 //	public void SpeedWalk(PlayerJoinEvent e)
 //	{
-//		//Managed by the JoinEvents class in the Users package
+//		//Managed by the JoinEvents class in the users package
 //	}
 	
 //	@EventHandler
@@ -43,7 +43,7 @@ public class SpeedEvent implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -126,7 +126,7 @@ public class SpeedEvent implements Listener
 //			
 //			try
 //			{
-//				user = Users.getUser(uuid);
+//				user = users.getUser(uuid);
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, player, true);

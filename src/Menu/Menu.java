@@ -21,7 +21,9 @@ import org.bukkit.SkullType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -44,7 +46,9 @@ import Houses.House;
 import Main.Main;
 import Minigames.MGTeam;
 import Minigames.Participant;
+import Minigames.SiegeTeam;
 import Models.Structures.Gate;
+import Models.district.District;
 import Products.Product;
 import Products.ProductCategory;
 import Products.PropertyProduct;
@@ -56,6 +60,8 @@ import Quests.QuestDeliverPackage;
 import Quests.QuestHarvestResource;
 import Quests.QuestIntimidateRival;
 import Rooms.Room;
+import Sieges.MainObjective;
+import Sieges.Objective;
 import Sieges.Scenario;
 import Sieges.Scenarios;
 import Sieges.SideObjective;
@@ -3927,8 +3933,8 @@ public class Menu
 		{
 			status = "In progress";
 			description.addAll(Arrays.asList(
-					ColorOptions.stats + "Hiders: " + hs.getHiderAmount(),
-					ColorOptions.stats + "Seekers: " + hs.getSeekers().size()
+					ColorOptions.stats + "Hiders: " + hs.getHiders().GetMembers().size(),
+					ColorOptions.stats + "Seekers: " + hs.getSeekers().GetMembers().size()
 					));
 		}
 		
@@ -4040,10 +4046,10 @@ public class Menu
 				skull = product.setItemDescription(skull, 1, ColorOptions.message + "Player: " + ColorOptions.messagesubjects + userParticipant.getUsername(), null);
 				List<String> skullDescription = new ArrayList<String>();
 				
-				if (hs.getHiders().contains(participant))
+				if (hs.getHiders().GetMembers().contains(participant))
 				{
 					skullDescription.add(ColorOptions.messagesubjects + "Hider");
-				} else if (hs.getSeekers().contains(participant))
+				} else if (hs.getSeekers().GetMembers().contains(participant))
 				{
 					skullDescription.add(ColorOptions.error + "Seeker");
 				}
@@ -4087,10 +4093,10 @@ public class Menu
 		skull = product.setItemDescription(skull, 1, ColorOptions.message + "Player: " + ColorOptions.messagesubjects + target.getUsername(), null);
 		List<String> skullDescription = new ArrayList<String>();
 		
-		if (hs.getHiders().contains(target))
+		if (hs.getHiders().GetMembers().contains(target))
 		{
 			skullDescription.add(ColorOptions.messagesubjects + "Hider");
-		} else if (hs.getSeekers().contains(target))
+		} else if (hs.getSeekers().GetMembers().contains(target))
 		{
 			skullDescription.add(ColorOptions.error + "Seeker");
 		}
@@ -4103,7 +4109,7 @@ public class Menu
 		ItemStack switchItem = product.createItem(ColorOptions.messageachievement + "Switch role", new ItemStack(Material.LEAVES), false);
 		List<String> switchDescription = new ArrayList<String>();
 		
-		if (hs.getHiders().contains(target))
+		if (hs.getHiders().GetMembers().contains(target))
 		{
 			switchDescription.addAll(Arrays.asList(
 					ColorOptions.message + "Current role: " + ColorOptions.messagesubjects + "Hider",
@@ -4243,7 +4249,7 @@ public class Menu
 		
 		ItemStack scenarioItem = product.createItem(ColorOptions.message + "Scenario " + ColorOptions.messagesubjects + scenario.getName(), new ItemStack(Material.BANNER, 1), false, 
 				ColorOptions.stats + "ID: " + ColorOptions.statsresults + scenario.getID(),
-				ColorOptions.stats + "TownID: " + ColorOptions.statsresults + scenario.getTownID(),
+				ColorOptions.stats + "TownID: " + ColorOptions.statsresults + scenario.getTown().getID(),
 				ColorOptions.stats + "Town: " + ColorOptions.statsresults + scenario.getTownName(),
 				ColorOptions.stats + "Entrytitle: " + ColorOptions.statsresults + scenario.getEntryTitle(),
 				"",
@@ -4372,7 +4378,7 @@ public class Menu
 	
 	public void openSideObjectiveGate(User user, SideObjective objective, Scenario scenario)
 	{
-		DataManager.Structures.Gates.instantiateAll(scenario.getTownID());
+		DataManager.Structures.Gates.instantiateAll(scenario.getTown().getID());
 		Integer activeGates = DataManager.Structures.Gates.Gates.size();
 		Inventory menu = Bukkit.createInventory(null, main.getMenuSize(activeGates), Menus.SOGateMenu);
 		
@@ -4487,7 +4493,7 @@ public class Menu
 				ColorOptions.message + "The defending team defends",
 				ColorOptions.message + "a main objective and multiple",
 				ColorOptions.message + "side objectives against the attackers,",
-				ColorOptions.messageformat + "The goal Siege:",
+				ColorOptions.messageformat + "The goal:",
 				ColorOptions.messageformat + "-Attackers: Capture the objectives",
 				ColorOptions.messageformat + "-Defenders: Defend the objectives"));
 	
@@ -4641,6 +4647,17 @@ public class Menu
 	
 	public void openSiegeInformation(User user, Siege siege, int pageNumber)
 	{
+		Integer scenarioItemSlot = 0;
+		Integer scenarioStartSlot = 1;
+		Integer randomScenarioSlot = 3;
+		Integer siegeItemSlot = 4;
+		Integer objectiveItemSlot = 6;
+		Integer backItemSlot = 8;
+		Integer joinedPlayerItemSlot = 31;
+		Integer spawnpointItemSlot = 3;
+		Integer mainObjectiveSlot = 9;
+		Integer sideObjectiveStartSlot = 10;
+		
 		siege.orderLowToHigh();
 		List<Participant> participantList = new ArrayList<Participant>();
 		List<Participant> list = siege.getParticipants();
@@ -4688,16 +4705,21 @@ public class Menu
 		List<String> objectiveDescription = new ArrayList<String>(Arrays.asList(
 				ColorOptions.messageformat + "Description for objectives",
 				ColorOptions.message + "Objectives are indicated by a",
-				ColorOptions.messageachievement + "Blue Banner block",
+				ColorOptions.messageachievement + "Banner block",
 				"",
 				ColorOptions.message + "Attackers need to capture",
-				ColorOptions.message + "at least the main objective to",
-				ColorOptions.message + "win the game.",
+				ColorOptions.message + "the main objective to win.",
 				ColorOptions.message + "You can capture an objective by",
-				ColorOptions.message + "standing inside a circle around the",
-				ColorOptions.message + "banner. Defenders can alse stand",
-				ColorOptions.message + "inside the circle to turn the",
-				ColorOptions.message + "capture process around",
+				ColorOptions.message + "standing inside the capture circle of",
+				ColorOptions.message + "an objective. ",
+				ColorOptions.message + "Defenders can also defend",
+				ColorOptions.message + "objectives by standing inside",
+				ColorOptions.message + "the capture circle.",
+				"",
+				ColorOptions.message + "Upon start of the Siege",
+				ColorOptions.message + "some gates will be closed and",
+				ColorOptions.message + "can only be opened by destroying or",
+				ColorOptions.message + "capturing them.",
 				""
 				));
 		List<String> playerDescription = new ArrayList<String>();
@@ -4707,14 +4729,22 @@ public class Menu
 			Scenario scenario = siege.getScenario();
 			scenarioName = ColorOptions.messagesubjects + siege.getScenario().getName();
 			
+			String districtString = ColorOptions.message + "Districts: ";
+			
+			for (District district : scenario.getDistricts())
+			{
+				districtString = districtString + ColorOptions.message + district.getName() + "(" + district.getTown().getName() + "), ";
+			}
+			
+			scenarioItemDesc.addAll(ColorOptions.getStringLines(districtString, 4));
+			
 			scenarioItemDesc.addAll(Arrays.asList(
-					ColorOptions.message + "Town: " + scenario.getTownName(),
 					ColorOptions.message + "EntryTitle if not skilled match: " + scenario.getEntryTitle(),
 					"",
 					ColorOptions.message + "Min. players: " + scenario.getPlayersMin(),
 					ColorOptions.message + "Max. players: " + scenario.getPlayersMax(),
 					"",
-					ColorOptions.message + "Amount of votes: " + scenario.getVotes()
+					ColorOptions.message + "Amount of votes: " + scenario.getVotes().size()
 					));
 			objectiveDescription.addAll(Arrays.asList(
 					ColorOptions.message + "Total amount of objectives: " + ColorOptions.messagesubjects + (scenario.getSideObjectives().size() + 1),
@@ -4823,7 +4853,7 @@ public class Menu
 		
 		ItemStack scenarioItem = product.createItem(
 				ColorOptions.message + "Scenario: " + scenarioName, 
-				new ItemStack(Material.COMPASS), 
+				new ItemStack(siege.getProgress() ? Material.MAP : Material.COMPASS), 
 				false
 				);
 		
@@ -4834,7 +4864,7 @@ public class Menu
 
 		objectiveItem = product.addItemDescription(objectiveItem, objectiveDescription);
 		
-		menu.setItem(8, Menus.getBackButton(Menus.SiegeOverviewMenu));
+		menu.setItem(backItemSlot, Menus.getBackButton(Menus.SiegeOverviewMenu));
 		
 		playerDescription.addAll(Arrays.asList(
 				ColorOptions.message + "Joined players: " + (siege.getParticipants().isEmpty() ? ColorOptions.error : ColorOptions.messagesubjects) + siege.getParticipants().size(),
@@ -4849,30 +4879,51 @@ public class Menu
 		if (siege.getParticipating(user))
 		{
 			Participant participant = siege.getParticipant(user);
-			menu.setItem(1, scenarioItem);
-			menu.setItem(6, objectiveItem);
+			menu.setItem(scenarioItemSlot, scenarioItem);
+			menu.setItem(objectiveItemSlot, objectiveItem);
 
 			if (siege.getMatchmaking())
 			{	
 				if (!siege.getSuggestedScenarioList().isEmpty() && siege.getScenario() == null)
 				{
-					Integer slot = 9;
+					Integer slot = scenarioStartSlot;
 					for (Scenario scenarios : siege.getSuggestedScenarioList())
 					{
 						List<String> scenariosDesc = new ArrayList<String>();
 						ItemStack scenariosItem = product.createItem(ColorOptions.messagesubjects + scenarios.getName(), 
 								new ItemStack(Material.MAP), 
-								scenarios.getVotes().contains(participant), 
-								ColorOptions.message + "Town: " + ColorOptions.messagesubjects + scenarios.getTownName(),
+								scenarios.getVotes().contains(participant)
+								);
+						
+						int gateObjectives = 0;
+						for (SideObjective objective : scenarios.getSideObjectives())
+						{
+							if (objective.getGateID() != -1)
+							{
+								gateObjectives++;
+							}
+						}
+						
+						String districtString = ColorOptions.message + "Districts: ";
+						
+						for (District district : scenarios.getDistricts())
+						{
+							districtString = districtString + district.getName() + "(" + district.getTown().getName() + "), ";
+						}
+						
+						scenariosDesc.addAll(ColorOptions.getStringLines(districtString, 4));
+						
+						scenariosDesc.addAll(Arrays.asList(
 								ColorOptions.message + "Entrytitle: " + ColorOptions.messagesubjects + scenarios.getEntryTitle(),
 								"",
 								ColorOptions.message + "Min. players: " + scenarios.getPlayersMin(),
 								ColorOptions.message + "Max. players: " + scenarios.getPlayersMax(),
 								"",
 								ColorOptions.message + "Amount of objectives: " + ColorOptions.messagesubjects + scenarios.getSideObjectives().size(),
+								ColorOptions.message + "Objectives with gate: " + (gateObjectives > 0 ? ColorOptions.messagesubjects : ColorOptions.error) + gateObjectives,
 								"",
 								ColorOptions.message + "Amount of votes: " + ColorOptions.messagesubjects + scenarios.getVotes().size()
-								);
+						));
 						
 						if (scenarios.getVotes().contains(participant))
 						{
@@ -4915,7 +4966,7 @@ public class Menu
 								));
 					}
 					randomItem = product.addItemDescription(randomItem, randomDesc);
-					menu.setItem(11, randomItem);
+					menu.setItem(randomScenarioSlot, randomItem);
 				}
 			}
 			String teamName = ColorOptions.error + "None";
@@ -4935,35 +4986,108 @@ public class Menu
 			if (siege.getProgress())
 			{
 				SiegeMember sMember = (SiegeMember) participant;
-				short blockColor = 2;
-				boolean currentSpawnpoint = false;
-				Integer slot = 9;
-				Integer teamNumber = team.GetNumber();
-				List<SiegeSpawnpoint> spawnpoints = siege.getScenario().getTeamSpawnpoints(teamNumber);
-				for (SiegeSpawnpoint spawnpoint : spawnpoints)
+//				short blockColor = 2;
+//				boolean currentSpawnpoint = false;
+//				Integer slot = 9;
+//				Integer teamNumber = team.GetNumber();
+//				List<SiegeSpawnpoint> spawnpoints = siege.getScenario().getTeamSpawnpoints(teamNumber);
+//				for (SiegeSpawnpoint spawnpoint : spawnpoints)
+//				{
+//					List<String> spawnDesc = new ArrayList<String>();
+//					if (sMember.getCurrentSpawnpoint() == spawnpoint)
+//					{
+//						blockColor = 1;
+//						currentSpawnpoint = true;
+//						spawnDesc.add(ColorOptions.error + "Current spawnpoint");
+//					} else
+//					{
+//						//spawnDesc.add(ColorOptio)
+//					}
+//					ItemStack spawnItem = product.createItem(
+//							ColorOptions.messageachievement + "Spawnpoint " + spawnpoint.getSpawnCountID(), 
+//							new ItemStack(Material.STAINED_CLAY, 1, blockColor), 
+//							currentSpawnpoint);
+//					
+//					menu.setItem(slot, spawnItem);
+//				}
+				if (team != null)
 				{
-					List<String> spawnDesc = new ArrayList<String>();
-					if (sMember.getCurrentSpawnpoint() == spawnpoint)
-					{
-						blockColor = 1;
-						currentSpawnpoint = true;
-						spawnDesc.add(ColorOptions.error + "Current spawnpoint");
-					} else
-					{
-						//spawnDesc.add(ColorOptio)
-					}
-					ItemStack spawnItem = product.createItem(
-							ColorOptions.messageachievement + "Spawnpoint " + spawnpoint.getSpawnCountID(), 
-							new ItemStack(Material.STAINED_CLAY, 1, blockColor), 
-							currentSpawnpoint);
-					
-					
+					teamName = team.GetColor() + team.GetName();
+					siegeBannerColor = team.GetBannerColor();
 				}
+				
+				/**
+				 * Spawnpoint Item
+				 */
+				ItemStack spawnpointItem = product.createItem(ColorOptions.messageachievement + "Change spawnpoint", new ItemStack(Material.COMPASS), true, 
+						ColorOptions.message + "Click to change the location where",
+						ColorOptions.message + "you spawn when killed",
+						"",
+						ColorOptions.message + "Current spawnpoint: " + ColorOptions.messagesubjects + sMember.getCurrentSpawnpoint().getName(),
+						ColorOptions.messagesubjects + "Click to change");
+				
+				/**
+				 * Main objective
+				 */
+				MainObjective mainObjective = siege.getScenario().getMainObjective();
+				SiegeTeam heldTeam = siege.getHeldTeam(mainObjective);
+				List<String> moDescription = new ArrayList<String>(Arrays.asList(ColorOptions.message + "Held by: " + heldTeam.GetColor() + heldTeam.GetName(),
+						"",
+						ColorOptions.message + "Captured: " + ColorOptions.error + mainObjective.getCapturePercentage() + "%"));
+				if (mainObjective.getCaptured())
+				{
+					moDescription.addAll(Arrays.asList(
+							"",
+							ColorOptions.error + "Captured by " + mainObjective.getCapturer().getUser().getUsername()
+							));
+				}
+				ItemStack mainObjectiveItem = product.createItem(ColorOptions.message + "Main Objective", new ItemStack(Material.BANNER, 1), false);
+				BannerMeta moBannerMeta = (BannerMeta) mainObjectiveItem.getItemMeta();
+				moBannerMeta.setPatterns(mainObjective.getBanner().getPatterns());
+				moBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+				mainObjectiveItem.setItemMeta(moBannerMeta);
+				mainObjectiveItem = product.setItemDescription(mainObjectiveItem, 1, mainObjectiveItem.getItemMeta().getDisplayName(), moDescription);
+				
+				/**
+				 * Side objectives
+				 */
+				Integer slot = sideObjectiveStartSlot;
+				for (Objective objective : siege.getScenario().getSideObjectives())
+				{
+					SideObjective sideObjective = (SideObjective)objective;
+					SiegeTeam heldSOTeam = siege.getHeldTeam(objective);
+					List<String> soDescription = new ArrayList<String>(Arrays.asList(
+							ColorOptions.message + "Held by: " + heldSOTeam.GetColor() + heldSOTeam.GetName(),
+							"",
+							ColorOptions.message + "Captured: " + ColorOptions.error + objective.getCapturePercentage() + "%"));
+					
+					if (sideObjective.getCaptured())
+					{
+						soDescription.addAll(Arrays.asList(
+								"",
+								ColorOptions.error + "Captured by " + sideObjective.getCapturer().getUser().getUsername()
+								));
+					}
+					ItemStack sideObjectiveItem = product.createItem(ColorOptions.message + sideObjective.getName(), new ItemStack(Material.BANNER, 1), false);
+					
+					BannerMeta soBannerMeta = (BannerMeta) sideObjectiveItem.getItemMeta();
+					soBannerMeta.setPatterns(objective.getBanner().getPatterns());
+					soBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+					sideObjectiveItem.setItemMeta(soBannerMeta);
+					sideObjectiveItem = product.setItemDescription(sideObjectiveItem, 1, sideObjectiveItem.getItemMeta().getDisplayName(), soDescription);
+					
+					menu.setItem(slot, sideObjectiveItem);
+					
+					slot++;
+				}
+				
+				menu.setItem(mainObjectiveSlot, mainObjectiveItem);
+				menu.setItem(spawnpointItemSlot, spawnpointItem);
 			}
 			
 		} else
 		{
-			menu.setItem(12, scenarioItem);
+			menu.setItem(scenarioItemSlot, scenarioItem);
 			menu.setItem(13, objectiveItem);
 		}
 		
@@ -4976,14 +5100,14 @@ public class Menu
     			ColorOptions.message + "Joined players: "  + (siege.getParticipants().isEmpty() ? ColorOptions.error + "None" : ColorOptions.messagesubjects + "" + siege.getParticipants().size())
     			);
 		siegeItem = product.addItemDescription(siegeItem, joinDesc);
-		menu.setItem(4, siegeItem);
+		menu.setItem(siegeItemSlot, siegeItem);
 		
 		for (int i = 27; i < 36; i++)
 		{
 			menu.setItem(i, product.createItem(" ", new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15), false));
 		}
 		
-		menu.setItem(31, playerItem);
+		menu.setItem(joinedPlayerItemSlot, playerItem);
 		
 		if (siege.getParticipants().size() > 18)
 		{
@@ -5010,6 +5134,60 @@ public class Menu
 		menu = this.fillEmptyMenu(menu, false, " ", null);
 		
 		user.getPlayer().closeInventory();
+		user.getPlayer().openInventory(menu);
+	}
+	
+	public void openSiegeSpawnpointMenu(User user, Siege siege)
+	{
+		Participant participant = siege.getParticipant(user);
+		SiegeTeam team = siege.getTeam(participant);
+		Integer spawnpoints = team.getSpawnpoints().size() + team.getHeldObjectives().size();
+		Inventory menu = Bukkit.createInventory(null, main.getMenuSize(spawnpoints)-9, Menus.SiegeSpawnpointsMenu);
+		
+		if (spawnpoints == 1)
+		{
+			return;
+		}
+		
+		Integer slot = 0;
+		
+		for (SiegeSpawnpoint spawnpoint : team.getSpawnpoints())
+		{
+			ItemStack spawnItem = product.createItem(ColorOptions.message + "Spawnpoint " + spawnpoint.getName(), new ItemStack(Material.STAINED_CLAY, 1, (short)13), false, ColorOptions.messagesubjects + "Click to spawn here");
+			
+			menu.setItem(slot, spawnItem);
+			slot++;
+		}
+		
+		for (Objective objective : team.getHeldObjectives())
+		{
+			if (objective instanceof SideObjective)
+			{
+				SideObjective so = (SideObjective)objective;
+				List<String> spawnDescription = new ArrayList<String>();
+				
+				if (!so.isBeingCaptured())
+				{
+					spawnDescription.add(ColorOptions.messagesubjects + "Click to spawn here");
+				} else
+				{
+					spawnDescription.addAll(Arrays.asList(ColorOptions.error + "Can't spawn here", ColorOptions.error + "Objective is being captured!"));
+				}
+				
+				ItemStack spawnItem = product.createItem(ColorOptions.message + so.getName(), new ItemStack(Material.BANNER, 1), false);
+				BannerMeta soBannerMeta = (BannerMeta) spawnItem.getItemMeta();
+				soBannerMeta.setPatterns(objective.getBanner().getPatterns());
+				soBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+				spawnItem.setItemMeta(soBannerMeta);
+				spawnItem = product.setItemDescription(spawnItem, 1, spawnItem.getItemMeta().getDisplayName(), spawnDescription);
+				
+				menu.setItem(slot, spawnItem);
+				slot++;
+			}
+		}
+		
+		menu = this.fillEmptyMenu(menu, false, null, null);
+		
 		user.getPlayer().openInventory(menu);
 	}
 	

@@ -1,15 +1,22 @@
 package Menu;
 
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import Handlers.ColorOptions;
 import Main.Main;
+import Minigames.Participant;
+import Minigames.SiegeTeam;
 import Products.Product;
+import Sieges.Objective;
 import Sieges.Scenario;
+import Sieges.SideObjective;
 import Sieges.Siege;
+import Sieges.SiegeSpawnpoint;
+import SpawnPoints.SpawnPoint;
 import Towns.Town;
 import Users.User;
 
@@ -72,6 +79,9 @@ public class EventsClick
 				return;
 			}
 			
+			siege.joinPlayer(user);
+			user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully joined game of Siege!");
+			
 			this.menu.openSiegeInformation(user, siege, 0);
 			user.playSound("succesclick");
 		}
@@ -116,10 +126,10 @@ public class EventsClick
 		
 		if (dc.contains("siege "))
 		{
-			siege.joinPlayer(user);
-			user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully joined game of Siege!");
-			
-			this.menu.openSiegeInformation(user, siege, 0);
+//			siege.joinPlayer(user);
+//			user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully joined game of Siege!");
+//			
+//			this.menu.openSiegeInformation(user, siege, 0);
 			user.playSound("succesclick");
 		}
 		if (dc.equalsIgnoreCase("next tab"))
@@ -147,10 +157,75 @@ public class EventsClick
 			if (dc.equalsIgnoreCase(scenario.getName()))
 			{
 				siege.setScenarioVote(siege.getParticipant(user), scenario);
-				user.sendMessage(ColorOptions.message + "Voted for a scenario " + ColorOptions.messagesubjects + scenario.getName());
-				user.playSound("succesclick");
 				this.menu.openSiegeInformation(user, siege, 0);
 				break;
+			}
+		}
+	}
+	
+	public void onSiegeRespawnClick(InventoryClickEvent event, User user)
+	{
+		event.setCancelled(true);
+		
+		SpawnPoint s = new SpawnPoint();
+		Siege siege = Sieges.Sieges.findSiege(user);
+		Player player = user.getPlayer();
+		Participant participant = null;
+		SiegeTeam team = null;
+		
+		if (siege == null)
+		{
+			user.sendMessage(ColorOptions.error + "Something went wrong while fetching Siege. Please notify a staffmember and try again");
+			player.closeInventory();
+			return;
+		}
+		
+		if (!siege.getProgress())
+		{
+			user.sendMessage(ColorOptions.error + "Cannot select spawnpoint because Siege is not yet in progress!");
+			player.closeInventory();
+			return;
+		}
+		
+		participant = siege.getParticipant(user);
+		team = siege.getTeam(participant);
+		
+		ItemStack clicked = event.getCurrentItem();
+		String dc = ChatColor.stripColor(clicked.getItemMeta().getDisplayName().toLowerCase());
+		
+		if (dc.contains("spawnpoint"))
+		{
+			String spawnpointName = dc.split("spawnpoint ")[1];
+			SiegeSpawnpoint spawnpoint = team.getSpawnpoint(spawnpointName);
+			
+			if (spawnpoint != null)
+			{
+				s.TeleportNearby(3, user, spawnpoint.getLocation(), siege.getUserParticipants(siege.getParticipants()));
+				user.playSound("succesclick");
+				user.sendMessage(ColorOptions.messageachievement + "Spawned at team spawnpoint " + spawnpointName);
+				player.closeInventory();
+			} else
+			{
+				user.sendMessage(ColorOptions.error + "Error while fetching spawnpoint data. Please notify a staffmember and try again");
+				player.closeInventory();
+				return;
+			}
+		} else
+		{
+			Objective spawnpoint = team.getHeldObjective(dc);
+			
+			if (spawnpoint != null)
+			{
+				SideObjective so = (SideObjective) spawnpoint;
+				s.TeleportNearby(3, user, spawnpoint.getLocation(), siege.getUserParticipants(siege.getParticipants()));
+				user.playSound("succesclick");
+				user.sendMessage(ColorOptions.messageachievement + "Spawned at objective " + so.getName());
+				player.closeInventory();
+			} else
+			{
+				user.sendMessage(ColorOptions.error + "Error while fetching spawnpoint data. Please notify a staffmember and try again");
+				player.closeInventory();
+				return;
 			}
 		}
 	}

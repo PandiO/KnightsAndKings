@@ -45,7 +45,7 @@ public class AvengerSkill implements Listener
 //			
 //			try
 //			{
-//				userKiller = Users.getUser(killer.getUniqueId());
+//				userKiller = users.getUser(killer.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, killer, true);
@@ -56,7 +56,7 @@ public class AvengerSkill implements Listener
 //			}
 //			try
 //			{
-//				userDied = Users.getUser(died.getUniqueId());
+//				userDied = users.getUser(died.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, died, true);
@@ -109,7 +109,7 @@ public class AvengerSkill implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);

@@ -18,26 +18,23 @@ import org.bukkit.scoreboard.Scoreboard;
 
 import Handlers.ColorOptions;
 import Main.Main;
-import Minigames.MGTeam;
 import Minigames.MiniGame;
 import Minigames.Participant;
+import Minigames.SiegeTeam;
 import Scoreboards.ActionBar;
-import SpawnPoints.SpawnPoint;
 import Users.User;
 
 public class Siege extends MiniGame
 {
 	private Scoreboards.Scoreboard scoreboard = new Scoreboards.Scoreboard();
-	private SpawnPoint spawnpoint = new SpawnPoint();
-	
 	protected static String name = "Siege";	//Stores the name of the mininame
 	
 	protected Scenario scenario;
 	protected List<Scenario> suggestedScenarioList = new ArrayList<Scenario>();
 	
-	protected MGTeam Team1;
-	protected MGTeam Team2;
-	protected MGTeam WinningTeam;
+	protected SiegeTeam Team1;
+	protected SiegeTeam Team2;
+	protected SiegeTeam WinningTeam;
 	
 	/**
 	 * This gateRegion indicates if the match is skilled and for what title's it is joinable
@@ -74,16 +71,18 @@ public class Siege extends MiniGame
 	{
 		super(name, "/siege join");
 		
+		this.setMatchmakingNotifications("/siege join");
+		
 		this.instance = this;
-		this.Team1 = new MGTeam(1, "Defenders", ColorOptions.KAKColor, (short)5, this.scoreboard.getScoreBoard(), null);
-		this.Team2 = new MGTeam(2, "Attackers", ColorOptions.error, (short)3, this.scoreboard.getScoreBoard(), null);
+		this.Team1 = new SiegeTeam(this, 1, "Defenders", ColorOptions.KAKColor, (short)5, this.scoreboard.getScoreBoard(), null);
+		this.Team2 = new SiegeTeam(this, 2, "Attackers", ColorOptions.error, (short)3, this.scoreboard.getScoreBoard(), null);
 		new BukkitRunnable()
 		{
 			public void run()
 			{
 				startMatchmaking(true);
 			}
-		}.runTaskLaterAsynchronously(main, 2*20);
+		}.runTaskLater(main, 2*20);
 	}
 	
 	public Scenario getScenario()
@@ -91,14 +90,29 @@ public class Siege extends MiniGame
 		return this.scenario;
 	}
 	
-	public MGTeam GetTeam1()
+	public SiegeTeam GetTeam1()
 	{
 		return this.Team1;
 	}
 	
-	public MGTeam GetTeam2()
+	public SiegeTeam GetTeam2()
 	{
 		return this.Team2;
+	}
+	
+	public SiegeTeam GetOppositeTeam(SiegeTeam team)
+	{
+		SiegeTeam opposite = null;
+		
+		if (team != this.Team1)
+		{
+			opposite = this.Team2;
+		} else
+		{
+			opposite = this.Team1;
+		}
+		
+		return opposite;
 	}
 	
 //	public List<SiegeMember> getTeam1Participants()
@@ -136,9 +150,9 @@ public class Siege extends MiniGame
 		return this.suggestedScenarioList;
 	}
 	
-	public MGTeam getTeam(Participant participant)
+	public SiegeTeam getTeam(Participant participant)
 	{
-		MGTeam team = null;
+		SiegeTeam team = null;
 		
 		if (this.Team1.GetMembers().contains(participant))
 		{
@@ -195,7 +209,7 @@ public class Siege extends MiniGame
 	
 	public void setScenarioVote(Participant participant, Scenario scenario)
 	{
-		if (!scenario.getVotes().contains(participant))
+		if (!scenario.getVotes().contains(participant) && this.matchmakingSeconds > 30)
 		{
 			scenario.setVotes(participant);
 			List<Scenario> otherScenarios = new ArrayList<Scenario>(this.suggestedScenarioList);
@@ -203,6 +217,13 @@ public class Siege extends MiniGame
 			
 			otherScenarios.forEach(s -> s.removeVotes(participant));
 			this.removeRandomVotes(participant);
+			
+			participant.getUser().sendMessage(ColorOptions.message + "Voted for a scenario " + ColorOptions.messagesubjects + scenario.getName());
+			participant.getUser().playSound("succesclick");
+		} else
+		{
+			participant.getUser().sendMessage(ColorOptions.error + "Voting for Siege Scenario is closed!");
+			participant.getUser().playSound("failclick");
 		}
 	}
 	
@@ -278,6 +299,10 @@ public class Siege extends MiniGame
 			return;
 		}
 		this.scenario = scenario;
+		
+		this.matchmakingLocationID = this.scenario.getMainObjective().getSpawnpointID();
+		
+		Main.logMessage("Hub location: " + this.matchmakingLocationID);
 		double factor = (this.getTitleAverage()/10);
 		scenario.expRewardWin *= factor;
 		scenario.coinRewardWin *= factor;
@@ -286,6 +311,7 @@ public class Siege extends MiniGame
 		scenario.expRewardCapture *= factor;
 		scenario.coinRewardCapture *= factor;
 		this.entryTitle = scenario.getEntryTitle();
+		this.scenario.setTeams(this.Team1, this.Team2);
 	}
 	
 	public void drawScenario()
@@ -295,6 +321,7 @@ public class Siege extends MiniGame
 		if (this.suggestedScenarioList.isEmpty())
 		{
 			scenario = this.getRandomScenario();
+			return;
 		}
 		
 		for (Scenario scenarios : this.suggestedScenarioList)
@@ -306,7 +333,7 @@ public class Siege extends MiniGame
 			{
 				if (scenario.getVotes() == scenarios.getVotes())
 				{
-					if (main.getRandom(0, 100) <= 50)
+					if (Main.getRandom(0, 100) <= 50)
 					{
 						scenario = scenarios;
 					}
@@ -335,6 +362,21 @@ public class Siege extends MiniGame
 		List<Integer> IDList = Scenarios.getIDList();
 		Integer scenarioID = IDList.get(main.getRandom(0, IDList.size()-1));
 		return Scenarios.instantiateScenario(scenarioID, false);
+	}
+	
+	public SiegeTeam getHeldTeam(Objective objective)
+	{
+		SiegeTeam team = null;
+		
+		if (this.Team1.getHeldObjectives().contains(objective))
+		{
+			team = this.Team1;
+		} else
+		{
+			team = this.Team2;
+		}
+		
+		return team;
 	}
 	
 	public void joinPlayer(User user)
@@ -372,6 +414,10 @@ public class Siege extends MiniGame
 		if (this.getParticipant(user) != null)
 		{
 			Participant participant = this.getParticipant(user);
+			if (participant == null)
+			{
+				Main.logError("Participant for user " + user.getUsername() + " is null");
+			}
 			participant.returnBeforeJoinLocation();
 			participant.GetTeam().RemoveMember(participant);
 			this.removeParticipant(participant);
@@ -478,9 +524,16 @@ public class Siege extends MiniGame
 				if (matchmakingSeconds == 30)
 				{
 					announceParticipants(getParticipants(), Arrays.asList(
+							ColorOptions.KAKFormat + ColorOptions.error + ChatColor.BOLD + "Voting for Siege Scenario now closed!",
 							ColorOptions.KAKFormat + ColorOptions.error + ChatColor.BOLD + "You will be teleported to the Hide and Seek hub in " + 15 + " seconds!"
 							));
 				}
+				
+				if (matchmakingSeconds == 25)
+				{
+					drawScenario();
+				}
+				
 				if (matchmakingSeconds == 15)
 				{
 					for (Participant participant : getParticipants())
@@ -491,11 +544,7 @@ public class Siege extends MiniGame
 				}
 				if (matchmakingSeconds == 10)
 				{
-					announceOnline(Arrays.asList(
-							ColorOptions.KAKFormat + ColorOptions.error + ChatColor.BOLD + "Voting for Siege Scenario's now closed!"
-							));
 					setTeams();
-					drawScenario();
 					setOriginalSpawnpoints();
 				}
 				if (matchmakingSeconds == 0)
@@ -544,7 +593,13 @@ public class Siege extends MiniGame
 			siegeMember.spawnMember(siegeMember.currentSpawnpoint);
 		}
 		
-		scenario.setActive(true, this);
+		new BukkitRunnable()
+		{
+			public void run()
+			{
+				scenario.setActive(true, (Siege)instance);
+			}
+		}.runTask(Main.getPlugin(Main.class));
 		
 		BukkitTask task = new BukkitRunnable()
 		{
@@ -584,7 +639,7 @@ public class Siege extends MiniGame
 			this.removeCooldownTask();
 			return;
 		}
-		main.logMessage("Starting cooldown");
+		Main.logMessage("Starting cooldown");
 		BukkitTask task = this.cooldownTask = new BukkitRunnable()
 		{
 			public void run()
@@ -613,7 +668,7 @@ public class Siege extends MiniGame
 		Scenario scenario = this.getScenario();
 		scenario.setActive(false, this);
 		Integer sideObjectivesCaptured = scenario.getCapturedSideObjectives();
-		Integer sideObjectivesDefended = (scenario.getCapturedSideObjectives() - sideObjectivesCaptured);
+		Integer sideObjectivesDefended = (scenario.getSideObjectives().size() - sideObjectivesCaptured);
 		
 		if (this.getScenario().mainObjective.getCaptured())
 		{
@@ -634,7 +689,7 @@ public class Siege extends MiniGame
 			Participant capturer = objective.getCapturer();
 			if (capturer != null)
 			{
-				winningTeamMessage.add(ColorOptions.message + ColorOptions.messageArrow + "Side Objective " + objective.getSubID() + " captured by: " + ColorOptions.messagesubjects + capturer.getUser().getUsername());
+				winningTeamMessage.add(ColorOptions.message + ColorOptions.messageArrow + "Side Objective " + objective.getName() + " captured by: " + ColorOptions.messagesubjects + capturer.getUser().getUsername());
 			}
 		}
 		winningTeamMessage.add("");
@@ -649,6 +704,7 @@ public class Siege extends MiniGame
 				for (Participant participant : getParticipants())
 				{
 					Main.logMessage("Sending reward message to " + participant.getUser().getUsername());
+					Main.logMessage("Rewards: " + scenario.expRewardWin + ", " + scenario.expRewardSideObjective + ", " + scenario.expRewardCapture);
 					int totalExpReward = 0;
 					int totalCoinReward = 0;
 					
@@ -658,15 +714,16 @@ public class Siege extends MiniGame
 							""
 							));
 					
-					MGTeam team = participant.GetTeam();
+					SiegeTeam team = (SiegeTeam) participant.GetTeam();
 					
 					if (WinningTeam == team)
 					{
 						totalExpReward += scenario.expRewardWin;
-						totalExpReward += scenario.coinRewardWin;
+						totalCoinReward += scenario.coinRewardWin;
 						rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + scenario.expRewardWin + " experience " + ColorOptions.message + "and "
 								+ ColorOptions.messagesubjects + scenario.coinRewardWin + " coins "
 								+ ColorOptions.message + "for winning");
+						Main.logMessage("Total exp: " + totalExpReward + ", total coins: " + totalCoinReward);
 					}
 					
 					if (team.GetNumber() == 1)
@@ -687,6 +744,10 @@ public class Siege extends MiniGame
 						rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + subTotalExpReward + " experience " + ColorOptions.message + "and "
 								+ ColorOptions.messagesubjects + subTotalCoinReward + " coins "
 								+ ColorOptions.message + "for holding " + ColorOptions.messagesubjects + defendedObjectives + " Side Objectives");
+						
+						totalExpReward += subTotalExpReward;
+						totalCoinReward += subTotalCoinReward;
+						Main.logMessage("Total exp: " + totalExpReward + ", total coins: " + totalCoinReward);
 					} else if (team.GetNumber() == 2)
 					{
 						int capturedObjectives = 0;
@@ -704,23 +765,27 @@ public class Siege extends MiniGame
 						
 						rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + subTotalExpReward + " experience " + ColorOptions.message + "and "
 								+ ColorOptions.messagesubjects + subTotalCoinReward + " coins "
-								+ ColorOptions.message + "for capturing " + ColorOptions.messagesubjects + capturedObjectives + " Side Objectives");
+								+ ColorOptions.message + "for capturing and holding " + ColorOptions.messagesubjects + capturedObjectives + " Side Objectives");
 						
 						totalExpReward += subTotalExpReward;
 						totalCoinReward += subTotalCoinReward;
+						Main.logMessage("Total exp: " + totalExpReward + ", total coins: " + totalCoinReward);
 					}
 					
-					for (SideObjective objective : scenario.getSideObjectives())
+					SiegeMember member = getSiegeMember(participant.getUser());
+					for (Objective objective : member.getCapturedObjectives())
 					{
-						if (objective.getCaptured() && objective.getCapturer() == participant)
+						if (objective instanceof SideObjective)
 						{
+							SideObjective so = (SideObjective)objective;
 							rewardMessage.add(ColorOptions.message + ColorOptions.messageArrow + ColorOptions.messagesubjects + scenario.expRewardCapture + " experience " + ColorOptions.message + "and " 
 									+ ColorOptions.messagesubjects + scenario.coinRewardCapture + " coins " 
-									+ ColorOptions.message + "for capturing Side Objective " + ColorOptions.messagesubjects + objective.getSubID());
+									+ ColorOptions.message + "for capturing Side Objective " + ColorOptions.messagesubjects + so.getName());
 						}
 						totalExpReward += scenario.expRewardCapture;
 						totalCoinReward += scenario.coinRewardCapture;
 					}
+					Main.logMessage("Total exp: " + totalExpReward + ", total coins: " + totalCoinReward);
 					
 					rewardMessage.addAll(Arrays.asList(
 							"",
@@ -743,7 +808,10 @@ public class Siege extends MiniGame
 	{
 		this.startProgress(false);
 
-		this.scenario.setActive(false, this);
+		if (this.scenario != null)
+		{
+			this.scenario.setActive(false, this);
+		}
 		for (Participant participant : this.getParticipants())
 		{
 			participant.returnBeforeJoinLocation();
@@ -764,6 +832,7 @@ public class Siege extends MiniGame
 	public void resetSiege()
 	{
 		this.Participants.clear();
+		this.scenario.destroy();
 		this.scenario = null;
 		this.suggestedScenarioList.clear();
 		
@@ -780,6 +849,28 @@ public class Siege extends MiniGame
 		this.startCooldown(false);
 		
 		this.resetValues();
+	}
+	
+	public boolean CanJoin(User user)
+	{
+		boolean join = false;
+		
+		if (this.getMatchmaking())
+		{
+			if (this.skilledMatch)
+			{
+				Integer titleID = user.getTitleID();
+				if (titleID >= this.getSkilledMin() && titleID <= this.getSkilledMax())
+				{
+					join = true;
+				}
+			} else
+			{
+				join = true;
+			}
+		}
+		
+		return join;
 	}
 	
 	public void announceAll(ActionBar barMessage)
@@ -822,102 +913,44 @@ public class Siege extends MiniGame
 		}
 	}
 	
-	public org.bukkit.scoreboard.Objective createScoreboard(MGTeam team)
-	{
-		Scoreboard board = team.GetScoreboard();
-		Integer teamNumber = team.GetNumber();
-		String teamName = team.GetName();
-		Scenario scenario = this.getScenario();
-		Integer boardLength = 5;	
-		boardLength += scenario.getSideObjectives().size();
-		
-		org.bukkit.scoreboard.Objective sideBoard = null;
-		sideBoard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + teamNumber);
-		
-		if (sideBoard == null)
-		{
-			sideBoard = board.registerNewObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + teamNumber, "dummy");
-			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
-		} else
-		{
-			sideBoard.setDisplaySlot(DisplaySlot.SIDEBAR);
-			for (int i = 1; i < 3; i++)
-			{
-				HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(this.progressSeconds+i); 
-				board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
-			}
-//			Score timeScoreOld = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
-//			timeScoreOld.setScore(0);
-		}
-		
-		sideBoard.setDisplayName(ColorOptions.KAKColor + "Siege");
-		
-		Score teamScore = sideBoard.getScore(ColorOptions.message + "Team: " + team.GetColor() + teamName);
-		teamScore.setScore(boardLength);
-		
-		boardLength--;
-		
-		Score spaceScore = sideBoard.getScore(" ");
-		spaceScore.setScore(boardLength);
-		
-		boardLength--;
-		
-		MainObjective MO = scenario.getMainObjective();
-		Score MOScore = sideBoard.getScore(ColorOptions.message + "Main Objective: " + MO.getCapturePercentage() + "% Captured");
-		MOScore.setScore(boardLength);
-		
-		boardLength--;
-		
-		for (SideObjective SO : scenario.getSideObjectives())
-		{
-			Score SOScore = sideBoard.getScore(ColorOptions.message + "Side Objective " + SO.getSubID() + ": " + SO.getCapturePercentage() + "% Captured");
-			SOScore.setScore(boardLength);
-			boardLength--;
-		}
-		
-		Score spaceScore2 = sideBoard.getScore("  ");
-		spaceScore2.setScore(boardLength);
-		
-		boardLength--;
-		
-		HashMap<String, Integer> calcTime = Main.getCalculatedTime(this.progressSeconds); 
-		Score timeScore = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
-		timeScore.setScore(boardLength);
-				
-		return sideBoard;
-	}
-	
 	public void UpdateScoreboard(Objective objective, int oldPercentage)
 	{
-		List<MGTeam> teams = new ArrayList<MGTeam>(Arrays.asList(this.Team1, this.Team2));
-		for (MGTeam team : teams)
+		List<SiegeTeam> teams = new ArrayList<SiegeTeam>(Arrays.asList(this.Team1, this.Team2));
+		for (SiegeTeam team : teams)
 		{
-			Scoreboard board = team.GetScoreboard();
-			org.bukkit.scoreboard.Objective sideBoard = board.getObjective("siege_" + Sieges.Sieges.indexOf(this) + "_" + team.GetNumber());
-			int boardSlot = 0;
-			
-			String objectiveKind = null;
-			
-			if (objective instanceof MainObjective)
-			{
-				objectiveKind = ColorOptions.message + "Main Objective: ";
-			} else if (objective instanceof SideObjective)
-			{
-				objectiveKind = ColorOptions.message + "Side Objective " + objective.getSubID() + ": ";
-			}
-			
-			if (objectiveKind != null)
-			{
-				Score oldScore = sideBoard.getScore(objectiveKind + oldPercentage + "% Captured");
-				boardSlot = oldScore.getScore();
-				board.resetScores(objectiveKind + oldPercentage + "% Captured");
-			}
-			
-			Score newScore = sideBoard.getScore(objectiveKind + objective.getCapturePercentage() + "% Captured");
-			if (boardSlot > 0)
-			{
-				newScore.setScore(boardSlot);
-			}
+			team.UpdateSideBarBoard(this, objective, oldPercentage);
 		}
+	}
+	
+	@Override
+	public void setMatchmakingNotifications(String joinCommand)
+	{
+		this.matchmakingNotifications.clear();
+		this.matchmakingNotifications.put(290, Arrays.asList(
+				"",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + name + " begins in " + ColorOptions.messagesubjects + "5 minutes!",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + "Type " + ColorOptions.messagesubjects + joinCommand + ColorOptions.message + " to join!",
+				""
+				));
+		this.matchmakingNotifications.put(60, Arrays.asList(
+				"",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + name + " begins in " + ColorOptions.error + "1 minute!",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + "Type " + ColorOptions.messagesubjects + joinCommand + ColorOptions.message + " to join!",
+				""
+				));
+		this.matchmakingNotifications.put(30, Arrays.asList(
+				"",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + name + " begins in " + ColorOptions.error + "30 seconds!",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + "Type " + ColorOptions.messagesubjects + joinCommand + ColorOptions.message + " to join!",
+				""
+				));
+		this.matchmakingNotifications.put(15, Arrays.asList(
+				"",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + name + " begins in " + ColorOptions.error + "15 seconds!",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + "Type " + ColorOptions.messagesubjects + joinCommand + ColorOptions.message + " to join!",
+				"",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + "Voting for Siege Scenario closes in " + ColorOptions.error + "30 seconds!",
+				""
+				));
 	}
 }

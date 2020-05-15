@@ -43,7 +43,7 @@ public class HideAndSeekEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -87,7 +87,7 @@ public class HideAndSeekEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -131,7 +131,7 @@ public class HideAndSeekEvents implements Listener
 //		
 //		try
 //		{
-//			userDamaged = Users.getUser(uuid);
+//			userDamaged = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, playerDamaged, true);
@@ -167,7 +167,7 @@ public class HideAndSeekEvents implements Listener
 //			
 //			try
 //			{
-//				userDamager = Users.getUser(uuidDamager);
+//				userDamager = users.getUser(uuidDamager);
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, playerDamager, true);
@@ -193,7 +193,7 @@ public class HideAndSeekEvents implements Listener
 //			
 //			try
 //			{
-//				userDamager = Users.getUser(uuidDamager);
+//				userDamager = users.getUser(uuidDamager);
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, playerDamager, true);

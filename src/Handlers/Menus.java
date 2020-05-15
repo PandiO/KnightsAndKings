@@ -56,6 +56,7 @@ public class Menus {
 	public static String ScenarioManagerMenu = ColorOptions.messagesubjects + "Manage Scenario";
 	public static String SideObjectiveManagerMenu = ColorOptions.messagesubjects + "Manage Side Objective";
 	public static String SiegeSpawnpointsManagerMenu = ColorOptions.messagesubjects + "Manage Siege Spawnpoints";
+	public static String SiegeSpawnpointsMenu = ColorOptions.messagesubjects + "Choose a place to spawn";
 	
 	
 	public static ItemStack getFinancial(User user)

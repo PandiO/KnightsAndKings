@@ -387,7 +387,7 @@ public class SpawnPoint
 		
 		try
 		{	
-			PreparedStatement stmt = main.getConnection().prepareStatement("Select * FROM SpawnPoint WHERE ID=?;");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("Select * FROM SpawnPoint WHERE ID=?;");
 			stmt.setInt(1, spawnpointID);
 			
 			ResultSet results = stmt.executeQuery();
@@ -411,7 +411,7 @@ public class SpawnPoint
 			String townName = town.getTownName(getTownIDbySpawnPoint(spawnpointID));
 			try 
 			{
-				PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM TownSpawnPoint WHERE SpawnPointID=?;");
+				PreparedStatement stmt = Main.getConnection().prepareStatement("DELETE FROM TownSpawnPoint WHERE SpawnPointID=?;");
 				stmt.setInt(1, spawnpointID);
 				
 				stmt.executeUpdate();
@@ -429,7 +429,7 @@ public class SpawnPoint
 	{
 		try 
 		{
-			PreparedStatement stmt = main.getConnection().prepareStatement("DELETE FROM TownSpawnPoint WHERE TownID=?;");
+			PreparedStatement stmt = Main.getConnection().prepareStatement("DELETE FROM TownSpawnPoint WHERE TownID=?;");
 			stmt.setInt(1, townID);
 			
 			stmt.executeUpdate();

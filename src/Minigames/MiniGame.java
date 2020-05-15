@@ -10,17 +10,23 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.scheduler.BukkitTask;
 
+import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.Menus;
 import HideAndSeek.HideAndSeek;
 import Main.Main;
 import Menu.Menu;
 import Products.Product;
+import Sieges.MainObjective;
+import Sieges.SideObjective;
 import Sieges.Siege;
 import SpawnPoints.SpawnPoint;
 import Users.User;
@@ -411,7 +417,7 @@ public class MiniGame
 	
 	public void announceOnline(List<String> message)
 	{
-		for(User user : Main.users)
+		for(User user : Users2.users)
 		{
 			if (DataManager.Creations.FindCreation(user) == null)
 			{
@@ -476,7 +482,7 @@ public class MiniGame
 	
 	public void updateMenus(boolean reOpen)
 	{
-		for (User user : main.users)
+		for (User user : Users2.users)
 		{
 			Inventory menu = user.getOpenMenu();
 			if (menu == null)
@@ -571,16 +577,16 @@ public class MiniGame
 						
 						if (this.cooldown)
 						{
-							timeFormat = main.getCalculatedTime(this.cooldownSeconds);
+							timeFormat = Main.getCalculatedTime(this.cooldownSeconds);
 						}
 						if (this.matchmaking)
 						{
-							timeFormat = main.getCalculatedTime(this.matchmakingSeconds);
+							timeFormat = Main.getCalculatedTime(this.matchmakingSeconds);
 							stage = "Matchmaking";
 						}
 						if (this.progress)
 						{
-							timeFormat = main.getCalculatedTime(this.progressSeconds);
+							timeFormat = Main.getCalculatedTime(this.progressSeconds);
 							stage = "In progress";
 						}
 						lore.set(3, ColorOptions.message + "Current stage: " + ColorOptions.messagesubjects + stage);
@@ -597,38 +603,108 @@ public class MiniGame
 						continue;
 					} else
 					{
+						Integer timeIndex = 4;
 						List<Integer> IndexList = new ArrayList<Integer>(Arrays.asList(
 								4
 								));
 						
-						for (Integer index : IndexList)
+						for (int index = 0; index < menu.getSize(); index++)
 						{
 							ItemStack item = menu.getItem(index);
-							String display = item.getItemMeta().getDisplayName();
-							List<String> lore = item.getItemMeta().getLore();
-							if (lore == null || lore.isEmpty())
+							
+							if (item == null || item.getType() == Material.AIR)
 							{
-								this.menu.openSiegeInformation(user, siege, -1);
 								continue;
 							}
-							//lore.remove(2);
-							HashMap<String, Integer> calcTime = null; 
 							
-							if (this.cooldown)
+							String display = item.getItemMeta().getDisplayName();
+							String dc = ChatColor.stripColor(display);
+							List<String> lore = item.getItemMeta().getLore();
+							
+							if (index == timeIndex)
 							{
-								calcTime = main.getCalculatedTime(this.cooldownSeconds);
-							}
-							if (this.matchmaking)
-							{
-								calcTime = main.getCalculatedTime(this.matchmakingSeconds);
-							}
-							if (this.progress)
-							{
-								calcTime = main.getCalculatedTime(this.progressSeconds);
-							}
-							lore.set(5, ColorOptions.message + "" + calcTime.get("minute") + " minutes and " + calcTime.get("second") + " seconds");
+								if (lore == null || lore.isEmpty())
+								{
+									this.menu.openSiegeInformation(user, siege, -1);
+									continue;
+								}
+								//lore.remove(2);
+								HashMap<String, Integer> calcTime = null; 
 								
-							menu.setItem(index, product.setItemDescription(menu.getItem(index), 1, display, lore));
+								if (this.cooldown)
+								{
+									calcTime = Main.getCalculatedTime(this.cooldownSeconds);
+								}
+								if (this.matchmaking)
+								{
+									calcTime = Main.getCalculatedTime(this.matchmakingSeconds);
+								}
+								if (this.progress)
+								{
+									calcTime = Main.getCalculatedTime(this.progressSeconds);
+								}
+								lore.set(5, ColorOptions.message + "" + calcTime.get("minute") + " minutes and " + calcTime.get("second") + " seconds");
+									
+								item = product.setItemDescription(menu.getItem(index), 1, display, lore);
+							} else
+							if (dc.equalsIgnoreCase("main objective"))
+							{
+								MainObjective mainObjective = siege.getScenario().getMainObjective();
+								SiegeTeam heldTeam = siege.getHeldTeam(mainObjective);
+								List<String> moDescription = new ArrayList<String>(Arrays.asList(ColorOptions.message + "Held by: " + heldTeam.GetColor() + heldTeam.GetName(),
+										"",
+										ColorOptions.message + "Captured: " + ColorOptions.error + mainObjective.getCapturePercentage() + "%"));
+								if (mainObjective.getCaptured())
+								{
+									moDescription.addAll(Arrays.asList(
+											"",
+											ColorOptions.error + "Captured by " + mainObjective.getCapturer().getUser().getUsername()
+											));
+								}
+								item = product.createItem(ColorOptions.message + "Main Objective", new ItemStack(Material.BANNER, 1), false);
+								BannerMeta moBannerMeta = (BannerMeta) item.getItemMeta();
+								moBannerMeta.setPatterns(mainObjective.getBanner().getPatterns());
+								moBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+								item.setItemMeta(moBannerMeta);
+								item = product.setItemDescription(item, 1, item.getItemMeta().getDisplayName(), moDescription);
+							} else if (siege.getProgress())
+							{
+								SideObjective so = null;
+								for (SideObjective s : siege.getScenario().getSideObjectives())
+								{
+									if (dc.equalsIgnoreCase(s.getName()))
+									{
+										so = s;
+										break;
+									}
+								}
+								
+								if (so != null)
+								{
+									SiegeTeam heldSOTeam = siege.getHeldTeam(so);
+									List<String> soDescription = new ArrayList<String>(Arrays.asList(
+											ColorOptions.message + "Held by: " + heldSOTeam.GetColor() + heldSOTeam.GetName(),
+											"",
+											ColorOptions.message + "Captured: " + ColorOptions.error + so.getCapturePercentage() + "%"));
+									
+									if (so.getCaptured())
+									{
+										soDescription.addAll(Arrays.asList(
+												"",
+												ColorOptions.error + "Captured by " + so.getCapturer().getUser().getUsername()
+												));
+									}
+									item = product.createItem(ColorOptions.message + so.getName(), new ItemStack(Material.BANNER, 1), false);
+									
+									BannerMeta soBannerMeta = (BannerMeta) item.getItemMeta();
+									soBannerMeta.setPatterns(so.getBanner().getPatterns());
+									soBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+									item.setItemMeta(soBannerMeta);
+									item = product.setItemDescription(item, 1, item.getItemMeta().getDisplayName(), soDescription);
+								}
+							}
+							
+							menu.setItem(index, item);
 						}
 					}
 				}
@@ -640,7 +716,7 @@ public class MiniGame
 	{
 		this.matchmakingNotifications.put(290, Arrays.asList(
 				"",
-				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + name + " begins in " + ColorOptions.messagesubjects + "2 minutes!",
+				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + name + " begins in " + ColorOptions.messagesubjects + "5 minutes!",
 				ColorOptions.KAKFormat + ColorOptions.message + ChatColor.BOLD + "Type " + ColorOptions.messagesubjects + joinCommand + ColorOptions.message + " to join!",
 				""
 				));

@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldGuard;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
@@ -55,7 +56,7 @@ public class DuelCommands implements CommandExecutor
 				
 				try
 				{
-					user = Users.getUser(player.getUniqueId());
+					user = Users2.FindUser(player.getUniqueId());
 				} catch (UserNotFoundException ex)
 				{
 					ErrorHandlers.userNotFoundAction(null, player, true);
@@ -115,7 +116,7 @@ public class DuelCommands implements CommandExecutor
 								
 								try
 								{
-									userTarget = Users.getUser(target.getUniqueId());
+									userTarget = Users2.FindUser(target.getUniqueId());
 								} catch (UserNotFoundException ex)
 								{
 									ErrorHandlers.userNotFoundAction(null, player, true);
@@ -144,7 +145,7 @@ public class DuelCommands implements CommandExecutor
 						{
 							player.sendMessage(ColorOptions.error + "You need to stand inside an arena to start a duel!");
 						}
-					} else if (Users.existUser(args[0]))
+					} else if (Users2.ExistUser(Users2.FetchUUIDbyUsername(args[0])))
 					{
 						player.sendMessage(ColorOptions.error + "This player is currently not online!");
 					} else

@@ -29,7 +29,7 @@ public class PropertySellEvent implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);

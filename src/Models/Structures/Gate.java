@@ -208,6 +208,8 @@ public class Gate extends Structure
 			Bukkit.getConsoleSender().sendMessage(ColorOptions.error + "Error while removing Gate Entity");
 			ex.printStackTrace();
 		}
+		
+		DataManager.Districts.FindDistrict(this.districtID).removeStructureList(this);
 	}
 	
 	public boolean removePermanently(CommandSender sender)
@@ -299,7 +301,7 @@ public class Gate extends Structure
         {
         	location.add(-1.5, 0, 0.5);
         }
-        Main.logMessage(location.toString());
+
 		return location;
 	}
 	
@@ -371,13 +373,19 @@ public class Gate extends Structure
 	//Creates or removes an entity used to get damage for the gate
 	public void trySetInvincibleEntity()
 	{
+		Main.logMessage("Setting invincibleEntity");
+		if (this.GateEntity != null)
+		{
+			this.GateEntity.remove();
+			this.GateEntity = null;
+		}
 		if (this.GateEntity == null)
 		{
 			World world = Bukkit.getWorld("world");
 			Location location = this.getGateCenter();
 			if (location == null)
 			{
-				Bukkit.getConsoleSender().sendMessage("No location center could be found!");
+				Main.logError("No location center could be found!");
 				return;
 			}
 			final ArmorStand arm = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
@@ -387,7 +395,7 @@ public class Gate extends Structure
 			arm.setVisible(false);
 			arm.setSmall(true);
 			arm.setMarker(true);
-			Bukkit.getConsoleSender().sendMessage("Spawned GateEntity");
+
 			this.GateEntity = arm;
 		}
 	}
@@ -398,31 +406,37 @@ public class Gate extends Structure
 		Player player = user.getPlayer();
 		ItemStack item = player.getItemInHand();
 		Integer productID = null;
-		try
+		
+		if (item != null && item.getType() != Material.AIR)
 		{
-			productID = this.product.getProductIDbyDisplayName(item.getItemMeta().getDisplayName(), false);
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-			if (!user.inOwnerModus())
+			try
 			{
-				player.getItemInHand().setType(Material.AIR);
-				player.updateInventory();
-				player.sendMessage(ColorOptions.error + "Items without grades are not allowed!");
+				productID = this.product.getProductIDbyDisplayName(item.getItemMeta().getDisplayName(), false);
+			} catch (Exception ex)
+			{
+				ex.printStackTrace();
+				if (!user.inOwnerModus())
+				{
+					player.getItemInHand().setType(Material.AIR);
+					player.updateInventory();
+					player.sendMessage(ColorOptions.error + "Items without grades are not allowed!");
+				}
+				return;
 			}
-			return;
 		}
+		
 		if (this.isInvincible)
 		{
 			return;
 		}
 		
+		this.trySetInvincibleEntity();
 		if (this.GateEntity == null)
 		{
 			this.trySetInvincibleEntity();
 		}
 
-		if (item != null && item.getType() != Material.AIR)
+		if (item != null && item.getType() != Material.AIR && productID != null)
 		{
 			double itemDamage = this.product.getItemDamage(item);
 			

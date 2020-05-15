@@ -102,7 +102,7 @@ public class TransportEvents implements Listener
 //			
 //			try
 //			{
-//				user = Users.getUser(died.getUniqueId());
+//				user = users.getUser(died.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, died, true);
@@ -112,7 +112,7 @@ public class TransportEvents implements Listener
 //				return;
 //			}
 //			
-//			Transport transport = Users.GetTransport(user);
+//			Transport transport = users.GetTransport(user);
 //			if (transport != null)
 //			{
 //				if (e.getEntity().getKiller() instanceof Player)
@@ -122,7 +122,7 @@ public class TransportEvents implements Listener
 //					
 //					try
 //					{
-//						user = Users.getUser(killer.getUniqueId());
+//						user = users.getUser(killer.getUniqueId());
 //					} catch (UserNotFoundException ex)
 //					{
 //						ErrorHandlers.userNotFoundAction(died, killer, false);
@@ -153,7 +153,7 @@ public class TransportEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(died.getUniqueId());
+//			user = users.getUser(died.getUniqueId());
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, died, true);
@@ -163,7 +163,7 @@ public class TransportEvents implements Listener
 //			return;
 //		}
 //		
-//		Transport transport = Users.GetTransport(user);
+//		Transport transport = users.GetTransport(user);
 //		
 //		if (transport != null)
 //		{

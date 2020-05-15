@@ -33,7 +33,7 @@ public class HealthEvent implements Listener
 //	@EventHandler
 //	public void Healthjoin(PlayerJoinEvent e)
 //	{
-//		//Setting health of a player is managed by the JoinEvents in the Users package
+//		//Setting health of a player is managed by the JoinEvents in the users package
 //	}
 	
 //	@EventHandler
@@ -45,7 +45,7 @@ public class HealthEvent implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -102,7 +102,7 @@ public class HealthEvent implements Listener
 //			
 //			try
 //			{
-//				user = Users.getUser(uuid);
+//				user = users.getUser(uuid);
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, player, true);

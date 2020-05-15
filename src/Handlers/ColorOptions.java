@@ -236,6 +236,36 @@ public interface ColorOptions
 		return new ArrayList<String>(Arrays.asList(street, streetnumber, town));
 	}
 	
+	public static List<String> getStringLines(String string, Integer splitCount)
+	{
+		List<String> description = new ArrayList<String>();
+		
+		String[] split = string.split(" ");
+		if (string.split(" ").length > splitCount)
+		{
+			StringBuilder sb = new StringBuilder();
+			int count = 0;
+	        for(int i = 0; i < split.length; i +=splitCount)
+	        {       
+	            count=i+(splitCount-1);
+	            for(int j=i;j<=count; j++)
+	            {
+	            	if (j < split.length)
+	            	{
+	            		sb.append(split[j]).append(" ");
+	            	}
+	            }
+	            description.add(sb.toString());
+	            sb.delete(0, sb.length());
+	        }
+		} else
+		{
+			description.add(string);
+		}
+		
+		return description;
+	}
+	
 	
 
 }

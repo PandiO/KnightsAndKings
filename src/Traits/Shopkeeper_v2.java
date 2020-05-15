@@ -154,7 +154,7 @@ public class Shopkeeper_v2 extends Trait
 //					
 //					try
 //					{
-//						userTarget = Users.getUser(uuid);
+//						userTarget = users.getUser(uuid);
 //					} catch (Exception ex)
 //					{
 //						ErrorHandlers.userNotFoundAction(null, target, true);

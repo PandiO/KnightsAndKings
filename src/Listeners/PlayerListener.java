@@ -20,6 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -27,15 +28,16 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldGuard;
 import Arenas.Duel;
 import Assignments.Assignment;
-import Assignments.AssignmentKill;
 import Assignments.AssignmentTravelDistance;
 import DataManager.Creations;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import DataManager.Structures.Gates;
 import Exceptions.UserIsNpcException;
@@ -48,6 +50,7 @@ import Houses.House;
 import Houses.HouseCommands;
 import Main.Main;
 import Menu.DuelSetupClick;
+import Menu.Menu;
 import Minigames.BanditAmbushes;
 import Minigames.Transport;
 import Models.Structures.Gate;
@@ -101,11 +104,13 @@ public class PlayerListener implements Listener
 		UUID uuid = player.getUniqueId();
 		Main.joinLong.put(uuid, System.currentTimeMillis());
 		
-		if (Users.getUser(uuid) != null)
+		if (player.hasMetadata("NPC"))
 		{
 			return;
-		} else if (main.existUser(uuid) || player.hasMetadata("NPC"))
+		} else
+		if (Users2.ExistUser(uuid))
 		{
+	    	Users2.InstantiateUser(uuid, false);
 			return;
 		}
 
@@ -152,9 +157,10 @@ public class PlayerListener implements Listener
 		
 	    SimpleDateFormat time = new SimpleDateFormat("dd-MM HH:mm:ss");
 	    
-	    if (main.existUser(uuid))
+	    if (Users2.ExistUser(uuid))
 	    {
-	    	User user = new User(uuid);
+	    	User user = Users2.InstantiateUser(uuid, false);
+	    	Main.logMessage("Joining player");
 	    	user.join(player);
 	    	
 	    	user.setJoinMessage(event);
@@ -226,7 +232,7 @@ public class PlayerListener implements Listener
 		
 		try
 		{
-			user = Users.getUser(uuid);
+			user = Users.findUser(uuid);
 		} catch (UserNotFoundException ex)
 		{
 			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -319,7 +325,7 @@ public class PlayerListener implements Listener
 				
 		try
 		{
-			user = Users.getUser(player.getUniqueId());
+			user = Users2.InstantiateUser(uuid, false);
 		} catch (UserNotFoundException ex)
 		{
 			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -378,6 +384,7 @@ public class PlayerListener implements Listener
 		if (!user.inStaffModus() &&
 				!user.inOwnerModus() &&
 				!user.inSafeZone() &&
+				!user.inMiniGame() &&
 				player.getGameMode() == GameMode.SURVIVAL &&
 				!player.getAllowFlight() &&
 				!BanditAmbushes.hasAmbush(user))
@@ -529,7 +536,7 @@ public class PlayerListener implements Listener
 		
 		try
 		{
-			user = Users.getUser(uuid);
+			user = Users2.InstantiateUser(uuid, false);
 		} catch (UserNotFoundException ex)
 		{
 			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -700,7 +707,7 @@ public class PlayerListener implements Listener
 		
 		try
 		{
-			user = Users.getUser(uuid);
+			user = Users2.FindUser(uuid);
 		} catch (UserNotFoundException ex)
 		{
 			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -814,7 +821,7 @@ public class PlayerListener implements Listener
 		/**
 		 * Player mention
 		 */
-		for (User u : Main.users)
+		for (User u : Users2.users)
 		{
 			if (message.toLowerCase().contains(u.getUsername().toLowerCase()))
 			{
@@ -985,195 +992,103 @@ public class PlayerListener implements Listener
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onDeath(PlayerDeathEvent event)
 	{
+		if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity()))
+		{
+			event.setDroppedExp(0);
+			event.setDeathMessage(null);
+			return;
+		}
+		Main.logMessage("Firing death event for player " + event.getEntity().getDisplayName());
+		
 		String deathMessage = null;
 		Player player = event.getEntity();
-		UUID uuid = player.getUniqueId();
-		User user = null;
+		Player killer = player.getKiller();
 		Location deathLoc = player.getLocation();
+		UUID uuid = player.getUniqueId();
+		User user = Users2.InstantiateUser(uuid, false);
+		User userKiller = null;
 		
-		if (!CitizensAPI.getNPCRegistry().isNPC(player))
+		if (user == null)
 		{
-			try
-			{
-				user = Users.getUser(uuid);
-			} catch (UserNotFoundException ex)
-			{
-				ErrorHandlers.userNotFoundAction(null, player, false);
-				event.setDroppedExp(0);
-				event.setDeathMessage(deathMessage);
-				return;
-			} catch (UserIsNpcException ex)
-			{
-				event.setDroppedExp(0);
-				event.setDeathMessage(deathMessage);
-				return;
-			} catch (Exception ex)
-			{
-				event.setDroppedExp(0);
-				event.setDeathMessage(deathMessage);
-				return;
-			}
+			ErrorHandlers.userNotFoundAction(null, player, false);
+			event.setDroppedExp(0);
+			event.setDeathMessage(deathMessage);
+			return;
+		}
+		
+		if (killer != null && !CitizensAPI.getNPCRegistry().isNPC(killer))
+		{
+			userKiller = Users2.InstantiateUser(killer.getUniqueId(), false);
+		}
+		
+		user.addDeaths(1);
+		if (Main.incombat.containsKey(user))
+		{
+			Main.incombat.remove(user);
+		}
+		Integer coins = user.getCoins()/Main.dropPercentage;
+		user.removeCoins(coins);
+		user.setLastDeathLocation(deathLoc);
+		event.setDroppedExp(0);
+		
+		if (userKiller != null)
+		{
+			Integer exp = userKiller.getMultipliedInt(userKiller.getExpPart(5));
+			userKiller.addKills(false, 1, 1);
+			userKiller.addExperience(exp, true);
+			killer.sendMessage(ColorOptions.messageachievement + "You received " + ColorOptions.messagesubjects + ColorOptions.formatCurrency(exp) + ColorOptions.messageachievement + " experience for killing " + ColorOptions.messagesubjects + user.getUsername());	
+		}
+		
+		/**
+		 * Avenger skill
+		 */
+		User avenger = Users.GetAvenger(user);
+		if (user.getSpecialSkillName() != null && user.getSpecialSkillName().equalsIgnoreCase("avenger"))
+		{
+			user.setAvengerTarget(userKiller);
+			user.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "Avenger skill activated!");
 			
-			Transport transport = Users.GetTransport(user);			
-			if (!CitizensAPI.getNPCRegistry().isNPC(player.getKiller()))
+			
+		} else if (avenger != null && avenger == userKiller)
+		{
+			user.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "You have been avenged!");
+			userKiller.setAvengerTarget(null);
+			killer.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "You have avenged yourself!");
+		}
+		
+		//Minigames
+		Siege siege = Sieges.findSiege(user);
+		Transport transport = Users.GetTransport(user);
+		
+		if (siege != null)
+		{
+			if (userKiller != null)
 			{
-				Player killer = player.getKiller();
-				UUID killerUUID = killer.getUniqueId();
-				User userKiller = null;
-				
-				try
-				{
-					userKiller = Users.getUser(killerUUID);
-				} catch (UserNotFoundException ex)
-				{
-					ErrorHandlers.userNotFoundAction(null, killer, true);
-					event.setDroppedExp(0);
-					event.setDeathMessage(deathMessage);
-					return;
-				} catch (Exception ex)
-				{
-					ex.printStackTrace();
-					ErrorHandlers.userNotFoundAction(null, killer, true);
-					event.setDroppedExp(0);
-					event.setDeathMessage(deathMessage);
-					return;
-				}
-				
-				Siege siege  = Sieges.findSiege(user);
-				if (siege != null)
-				{
-					//SiegeMember member = (SiegeMember) siege.getParticipant(user);
-					//member.spawnMember(member.getCurrentSpawnpoint());
-					user.sendMessage(ColorOptions.message + "You were killed by " + player.getKiller().getName());
-					return;
-				}
-				
-				if (transport != null)
-				{
-					userKiller.addCoins(transport.getComission());
-					killer.sendMessage(ColorOptions.messageachievement + "You succesfully killed " + transport.getPlayer().getName() + " while transporting items!");
-					killer.sendMessage(ColorOptions.messageachievement + "You received " + transport.getComission() + " coins!");
-					transport.failed(ColorOptions.error + "Player " + transport.getPlayer().getName() + " got killed by " + event.getEntity().getKiller().getName() + " while transporting items!", true);
-					return;
-				}
-				
-				RegionManager manager = Worldguard.getRegionManager(deathLoc.getWorld());
-				if (Worldguard.isArenaBattleground(deathLoc, manager))
-				{
-					
-				}
-				
-				if (Main.incombat.containsKey(user))
-				{
-					Main.incombat.remove(user);
-				}
-				
-				Integer exp = userKiller.getMultipliedInt(userKiller.getExpPart(5));
-				Integer coins = user.getCoins();
-				Integer dropamount = (coins/Main.dropPercentage);
-				Integer blockamount = dropamount/10000;
-				Integer rest = (int) dropamount%10000;
-				user.setLastDeathLocation(deathLoc);
-				
-				user.removeCoins(dropamount);
-				
-				event.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, blockamount, ColorOptions.message + player.getName() + "'s coins", "Coins: 10.000"));
-				event.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, 1, ColorOptions.message + player.getName() + "'s coins", "Coins: " + rest));
-				player.sendMessage(ColorOptions.message + "You dropped " + Main.dropPercentage + "% of your coins when killed by " + player.getKiller().getName());
-				
-				if (!Main.combatlogged.contains(uuid))
-				{
-					List<ItemStack> removable = new ArrayList<ItemStack>();
-					List<ItemStack> keep = new ArrayList<ItemStack>();
-					for (ItemStack content : event.getDrops())
-					{
-						if (content.hasItemMeta() && content.getItemMeta().hasDisplayName())
-						{
-							String display = content.getItemMeta().getDisplayName();
-							List<String> lore = content.getItemMeta().getLore();
-							Integer productID = product.getProductIDbyDisplayName(display, false);
-							if ((lore != null) && (lore.contains(ChatColor.RED + "Soulbound"))) 
-				  			{
-				  				removable.add(content);
-				  			} else 
-			  				if ((lore != null) && (lore.contains(ChatColor.DARK_GRAY + "Ghosted")))
-				  			{
-				  				keep.add(content);
-				  			} else
-							if (productID != null)
-							{
-								Integer grade = product.getGrade(productID, false);
-								if (grade > 3)
-								{
-									keep.add(content);
-								}
-							} else
-							{
-								removable.add(content);
-							}
-						} else
-						{
-							removable.add(content);
-						}
-					}
-					event.getDrops().removeAll(removable);
-					event.getDrops().removeAll(keep);
-					
-					user.setKeepItems(keep);
-				}
-				
-				for (Assignment assignment : userKiller.getAssignmentList())
-				{
-					if (assignment instanceof AssignmentKill)
-					{
-						AssignmentKill Assignment = (AssignmentKill) assignment;
-						if (!Assignment.isOnlyBandits())
-						{
-							Assignment.addProgress(1);
-						}
-						break;
-					}
-				}
-				if (userKiller != null)
-				{
-					userKiller.addKills(false, 1, 1);
-					userKiller.addExperience(exp, true);
-				}
-				if (user != null)
-				{
-					user.addDeaths(1);
-				}
-				killer.sendMessage(ColorOptions.messageachievement + "You received " + ColorOptions.messagesubjects + exp + ColorOptions.messageachievement + " experience for killing " + ColorOptions.messagesubjects + user.getUsername());	
-				
-				/**
-				 * Avenger skill
-				 */
-				User avenger = Users.GetAvenger(user);
-				if (user.getSpecialSkillName() != null && user.getSpecialSkillName().equalsIgnoreCase("avenger"))
-				{
-					user.setAvengerTarget(userKiller);
-					user.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "Avenger skill activated!");
-					
-					
-				} else if (avenger != null && avenger == userKiller)
-				{
-					user.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "You have been avenged!");
-					userKiller.setAvengerTarget(null);
-					killer.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "You have avenged yourself!");
-				}
+				user.sendMessage(ColorOptions.message + "You were killed by " + player.getKiller().getName());
+			} else
+			{
+				user.sendMessage(ColorOptions.message + "You died");
+			}
+			event.setDroppedExp(0);
+			event.setDeathMessage(deathMessage);
+			return;
+		}
+		
+		if (transport != null)
+		{
+			if (userKiller != null)
+			{
+				userKiller.addCoins(transport.getComission());
+				killer.sendMessage(ColorOptions.messageachievement + "You succesfully killed " + transport.getPlayer().getName() + " while transporting items!");
+				killer.sendMessage(ColorOptions.messageachievement + "You received " + ColorOptions.formatCurrency(transport.getComission()) + " coins!");
+				transport.failed(ColorOptions.error + "Player " + transport.getPlayer().getName() + " got killed by " + event.getEntity().getKiller().getName() + " while transporting items!", true);
+				event.setDeathMessage(deathMessage);
 			} else
 			{
 				if (transport != null)
 				{
 					transport.failed(ColorOptions.error + "Player " + transport.getPlayer().getName() + " got killed while transporting items!", true);
 				}
-				Integer coins = user.getCoins()/5;
-				
-				user.removeCoins(coins);
-				user.setLastDeathLocation(deathLoc);
-				
-				user.addDeaths(1);
-				event.setDroppedExp(0);
 				for (ItemStack item : player.getInventory().getContents())
 				{
 					if (item != null && item.getType() != Material.AIR && item.hasItemMeta() && item.getItemMeta().getDisplayName().equalsIgnoreCase(ChatColor.GOLD + "personal menu"))
@@ -1181,11 +1096,67 @@ public class PlayerListener implements Listener
 						user.addKeepItems(item);
 					}
 				}
-				player.sendMessage(ColorOptions.message + "You lost 20% of your coins when you died!");
 			}
-			event.setDroppedExp(0);
-			event.setDeathMessage(deathMessage);
+			return;
 		}
+		
+		//Normal
+		if (userKiller != null)
+		{
+			Integer blockamount = coins/10000;
+			Integer rest = (int) coins%10000;
+			user.setLastDeathLocation(deathLoc);
+			
+			user.removeCoins(coins);
+			
+			event.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, blockamount, ColorOptions.message + player.getName() + "'s coins", "Coins: 10.000"));
+			event.getDrops().add(product.createAmountItem(Material.GOLD_INGOT, 1, ColorOptions.message + player.getName() + "'s coins", "Coins: " + ColorOptions.formatCurrency(rest)));
+			player.sendMessage(ColorOptions.message + "You dropped " + ColorOptions.formatCurrency(coins) + " coins when killed by " + player.getKiller().getName());
+		}
+		
+		if (!Main.combatlogged.contains(uuid))
+		{
+			List<ItemStack> removable = new ArrayList<ItemStack>();
+			List<ItemStack> keep = new ArrayList<ItemStack>();
+			for (ItemStack content : event.getDrops())
+			{
+				if (content.hasItemMeta() && content.getItemMeta().hasDisplayName())
+				{
+					String display = content.getItemMeta().getDisplayName();
+					List<String> lore = content.getItemMeta().getLore();
+					Integer productID = product.getProductIDbyDisplayName(display, false);
+					if ((lore != null) && (lore.contains(ChatColor.RED + "Soulbound"))) 
+		  			{
+		  				removable.add(content);
+		  			} else 
+	  				if ((lore != null) && (lore.contains(ChatColor.DARK_GRAY + "Ghosted")))
+		  			{
+		  				keep.add(content);
+		  			} else
+					if (productID != null)
+					{
+						Integer grade = product.getGrade(productID, false);
+						if (grade > 3)
+						{
+							keep.add(content);
+						}
+					} else
+					{
+						removable.add(content);
+					}
+				} else
+				{
+					removable.add(content);
+				}
+			}
+			event.getDrops().removeAll(removable);
+			event.getDrops().removeAll(keep);
+			
+			user.setKeepItems(keep);
+		}
+		
+		event.setDroppedExp(0);
+		event.setDeathMessage(deathMessage);
 		
 	}
 	
@@ -1236,8 +1207,16 @@ public class PlayerListener implements Listener
 			Siege siege = Sieges.findSiege(user);
 			if (siege != null && siege.getProgress())
 			{
+				Menu menu = new Menu();
 				SiegeMember member = siege.getSiegeMember(user);
-				e.setRespawnLocation(member.getCurrentSpawnpoint().getLocation());
+				e.setRespawnLocation(member.GetTeam().getSpawnpoints().get(0).getLocation());
+				new BukkitRunnable()
+				{
+					public void run()
+					{
+						menu.openSiegeSpawnpointMenu(member.getUser(), siege);
+					}
+				}.runTaskLaterAsynchronously(main, 2*20);
 				return;
 			}
 			
@@ -1341,7 +1320,7 @@ public class PlayerListener implements Listener
 			User avengerTarget = user.getAvengerTarget();
 			if (avengerTarget != null)
 			{
-				if (Main.users.contains(avengerTarget))
+				if (Users2.users.contains(avengerTarget))
 				{
 					player.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "You have +50% attack damage against " + avengerTarget.getUsername());
 				} else
@@ -1349,6 +1328,29 @@ public class PlayerListener implements Listener
 					player.sendMessage(ChatColor.GRAY + "" + ChatColor.BOLD + "[" + ColorOptions.Avenger + "Avenger" + ChatColor.GRAY + "]" + ColorOptions.Avenger + "Your killer is not online anymore!");
 				}
 			}
+		}
+	}
+	
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onInteract(PlayerInteractEvent event)
+	{
+		Player player = event.getPlayer();
+		UUID uuid = player.getUniqueId();
+		User user = Users2.InstantiateUser(uuid, false);
+		
+		if (user == null)
+		{
+			return;
+		}
+		
+		
+		/**
+		 * Creation events
+		 */
+		Creation creation = Creations.FindCreation(user);
+		if (creation != null)
+		{
+			creation.processEvent(event);
 		}
 	}
 }

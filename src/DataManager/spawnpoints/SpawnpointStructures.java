@@ -34,9 +34,7 @@ public interface SpawnpointStructures
 							+ "INNER JOIN Spawnpoint ON SpawnpointStructure.SpawnpointID = Spawnpoint.ID WHERE StructureID = ?");
 			
 			stmt.setInt(1, structureID);
-			
-			Main.logMessage(stmt.toString());
-			
+						
 			ResultSet results = stmt.executeQuery();
 			
 			if (results.next())

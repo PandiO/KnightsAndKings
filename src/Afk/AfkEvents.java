@@ -36,7 +36,7 @@ public class AfkEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(player.getUniqueId());
+//			user = users.getUser(player.getUniqueId());
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -70,7 +70,7 @@ public class AfkEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(player.getUniqueId());
+//			user = users.getUser(player.getUniqueId());
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -103,7 +103,7 @@ public class AfkEvents implements Listener
 //			
 //			try
 //			{
-//				user = Users.getUser(player.getUniqueId());
+//				user = users.getUser(player.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, player, true);
@@ -138,7 +138,7 @@ public class AfkEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(player.getUniqueId());
+//			user = users.getUser(player.getUniqueId());
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -169,7 +169,7 @@ public class AfkEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(player.getUniqueId());
+//			user = users.getUser(player.getUniqueId());
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);

@@ -50,7 +50,7 @@ public class AttackSpeedEvent implements Listener
 //			
 //			try
 //			{
-//				userDamager = Users.getUser(player.getUniqueId());
+//				userDamager = users.getUser(player.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, player, true);
@@ -63,7 +63,7 @@ public class AttackSpeedEvent implements Listener
 //			}
 //			try
 //			{
-//				userTarget = Users.getUser(target.getUniqueId());
+//				userTarget = users.getUser(target.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(player, target, false);

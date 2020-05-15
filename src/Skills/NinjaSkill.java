@@ -45,7 +45,7 @@ public class NinjaSkill implements Listener
 //			User userDamaged = null;
 //			try
 //			{
-//				userDamaged = Users.getUser(damaged.getUniqueId());
+//				userDamaged = users.getUser(damaged.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, damaged, true);

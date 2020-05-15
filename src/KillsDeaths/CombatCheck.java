@@ -47,7 +47,7 @@ public class CombatCheck implements Listener
 //			
 //			try
 //			{
-//				userDamager = Users.getUser(damager.getUniqueId());
+//				userDamager = users.getUser(damager.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(null, damager, true);
@@ -60,7 +60,7 @@ public class CombatCheck implements Listener
 //			}
 //			try
 //			{
-//				userDamaged = Users.getUser(damaged.getUniqueId());
+//				userDamaged = users.getUser(damaged.getUniqueId());
 //			} catch (UserNotFoundException ex)
 //			{
 //				ErrorHandlers.userNotFoundAction(damager, damaged, false);

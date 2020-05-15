@@ -66,6 +66,7 @@ import Currency.IncomePayout;
 import Currency.PlayerPayEvent;
 import Currency.RentPayment;
 import Currency.SalaryPayout;
+import DataManager.Users2;
 import DataManager.Structures.Gates;
 import Donator.DonatorChat;
 import Donator.DonatorCommands;
@@ -286,7 +287,7 @@ public class Main extends JavaPlugin
 	public static HashMap<UUID, Integer> scheduledDonator = new HashMap<UUID, Integer>();
 	public static HashMap<UUID, Long> joinLong = new HashMap<UUID, Long>();
 	public static HashMap<Integer, Long> PropertyQuestLong = new HashMap<Integer, Long>();
-	public static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<User>();
+//	public static CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<User>();
 	public static CopyOnWriteArrayList<User> offlineUsers = new CopyOnWriteArrayList<User>();
 	public static CopyOnWriteArrayList<UUID> newPlayers = new CopyOnWriteArrayList<UUID>();
 	public static CopyOnWriteArrayList<UUID> combatlogged = new CopyOnWriteArrayList<UUID>();
@@ -440,7 +441,7 @@ public class Main extends JavaPlugin
 			    {
 			    	for (Player target : Bukkit.getOnlinePlayers())
 			    	{
-			    		User user = new User(target.getUniqueId());
+			    		User user = Users2.InstantiateUser(target.getUniqueId(), false);
 			    		user.join(target);
 			    	}
 			    } catch(Exception e)
@@ -672,6 +673,7 @@ public class Main extends JavaPlugin
 	public void registerEvents()
 	{
 		pluginManager.registerEvents(new EntityListener(this), this);
+		pluginManager.registerEvents(new PlayerListener(this), this);
 		pluginManager.registerEvents(new DoubleDamageListener(this), this);
 		
 		pluginManager.registerEvents(new AfkEvents(this), this);
@@ -704,7 +706,6 @@ public class Main extends JavaPlugin
 		pluginManager.registerEvents(new HouseTouch(this), this);
 		pluginManager.registerEvents(new KillDeathStat(this), this);
 		pluginManager.registerEvents(new CombatCheck(this), this);
-		pluginManager.registerEvents(new PlayerListener(this), this);
 		pluginManager.registerEvents(new TransportEvents(this), this);
 		pluginManager.registerEvents(new OcelotSpawn(this), this);
 		pluginManager.registerEvents(new RespawnLocation(this), this);
@@ -1008,7 +1009,7 @@ public class Main extends JavaPlugin
 				Long current = System.currentTimeMillis();
     			delay.updateDelay();
     			List<Integer> tempdonators = Users.getTempDonatorIDList();
-				for (User user : main.users)
+				for (User user : Users2.users)
 				{
 					if (current > user.getSalaryTime())
 					{
@@ -1154,7 +1155,7 @@ public class Main extends JavaPlugin
 //    					user.setAfk();
 //    				}
 //    			}
-    			for (User user : users)
+    			for (User user : Users2.users)
     			{
     				if (user.GetAfkCommence() < current)
     				{
@@ -1647,8 +1648,8 @@ public class Main extends JavaPlugin
 	{
 		try 
 		{
-			Statement stmt = this.getConnection().createStatement();
-			for (User user : this.users)
+			Statement stmt = Main.getConnection().createStatement();
+			for (User user : Users2.users)
 			{
 				if (!force)
 				{
@@ -1811,24 +1812,24 @@ public class Main extends JavaPlugin
 	{
 //		boolean noWarnings = true;
 //		boolean savedAll = false;
-//		Users.sendStaffMessage(ColorOptions.message + "Saving and reloading " + ColorOptions.messagesubjects + getDescription().getName() + ColorOptions.message + " version " + ColorOptions.messagesubjects + getDescription().getVersion());
+//		users.sendStaffMessage(ColorOptions.message + "Saving and reloading " + ColorOptions.messagesubjects + getDescription().getName() + ColorOptions.message + " version " + ColorOptions.messagesubjects + getDescription().getVersion());
 //		
 //		Stream.of(
 //				new Runnable()
 //				{
 //					public void run()
 //					{
-//						Users.sendStaffMessage("Saving user data...");
+//						users.sendStaffMessage("Saving user data...");
 //						try
 //						{
 //							saveUsers(null, false);
-//							Users.sendStaffMessage("User data saved.");
+//							users.sendStaffMessage("User data saved.");
 //						} catch (Exception ex)
 //						{
 //							ex.printStackTrace();
-//							Users.sendStaffMessage(ColorOptions.error + "Error while saving users. Please notify a developer");
-//							Users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
-//							Users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
+//							users.sendStaffMessage(ColorOptions.error + "Error while saving users. Please notify a developer");
+//							users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
+//							users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
 //							return;
 //						}
 //					}
@@ -1837,17 +1838,17 @@ public class Main extends JavaPlugin
 //				{
 //					public void run()
 //					{
-//						Users.sendStaffMessage("Saving resource-blocks...");
+//						users.sendStaffMessage("Saving resource-blocks...");
 //						try
 //						{
 //							refreshResources(null);
-//							Users.sendStaffMessage("Resource-blocks saved.");
+//							users.sendStaffMessage("Resource-blocks saved.");
 //						} catch (Exception ex)
 //						{
 //							ex.printStackTrace();
-//							Users.sendStaffMessage(ColorOptions.error + "Error while saving resource-blocks. Please notify a developer");
-//							Users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
-//							Users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
+//							users.sendStaffMessage(ColorOptions.error + "Error while saving resource-blocks. Please notify a developer");
+//							users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
+//							users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
 //							return;
 //						}
 //					}
@@ -1856,17 +1857,17 @@ public class Main extends JavaPlugin
 //				{
 //					public void run()
 //					{
-//						Users.sendStaffMessage("Saving SiegeScenarios");
+//						users.sendStaffMessage("Saving SiegeScenarios");
 //						try
 //						{
 //							Scenarios.saveAll();
-//							Users.sendStaffMessage("SiegeScenarios saved.");
+//							users.sendStaffMessage("SiegeScenarios saved.");
 //						} catch (Exception ex)
 //						{
 //							ex.printStackTrace();
-//							Users.sendStaffMessage(ColorOptions.error + "Error while saving SiegeScenarios. Please notify a developer");
-//							Users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
-//							Users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
+//							users.sendStaffMessage(ColorOptions.error + "Error while saving SiegeScenarios. Please notify a developer");
+//							users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
+//							users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
 //							return;
 //						}
 //					}
@@ -1875,17 +1876,17 @@ public class Main extends JavaPlugin
 //				{
 //					public void run()
 //					{
-//						Users.sendStaffMessage("Saving Gates");
+//						users.sendStaffMessage("Saving Gates");
 //						try
 //						{
 //							Gates.gates.saveAll();
-//							Users.sendStaffMessage("Gates saved.");
+//							users.sendStaffMessage("Gates saved.");
 //						} catch (Exception ex)
 //						{
 //							ex.printStackTrace();
-//							Users.sendStaffMessage(ColorOptions.error + "Error while saving Gates. Please notify a developer");
-//							Users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
-//							Users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
+//							users.sendStaffMessage(ColorOptions.error + "Error while saving Gates. Please notify a developer");
+//							users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
+//							users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
 //							return;
 //						}
 //					}
@@ -1894,37 +1895,37 @@ public class Main extends JavaPlugin
 //				{
 //					public void run()
 //					{
-//						Users.sendStaffMessage("Clearing leftover entities...");
+//						users.sendStaffMessage("Clearing leftover entities...");
 //						try
 //						{
 //							clearAfkLeftovers();
-//							Users.sendStaffMessage("Leftovers cleared.");
+//							users.sendStaffMessage("Leftovers cleared.");
 //						} catch (Exception ex)
 //						{
 //							ex.printStackTrace();
-//							Users.sendStaffMessage(ColorOptions.error + "Error while clearing leftovers. Please notify a developer");
-//							Users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
-//							Users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
+//							users.sendStaffMessage(ColorOptions.error + "Error while clearing leftovers. Please notify a developer");
+//							users.sendStaffMessage(ColorOptions.error + "Failed to save Knights and Kings. Preventing server reload..");
+//							users.sendStaffMessage(ColorOptions.error + "Please try to reload again.");
 //							return;
 //						}
 //					}
 //				}
 //				).forEach(r -> r.run());
 //		
-////		Users.sendStaffMessage("Saving and stopping treasures...");
+////		users.sendStaffMessage("Saving and stopping treasures...");
 ////		try
 ////		{
 ////			Treasures.stopTreasures();
-////			Users.sendStaffMessage("Treasures saved.");
+////			users.sendStaffMessage("Treasures saved.");
 ////		} catch (Exception ex)
 ////		{
 ////			ex.printStackTrace();
-////			Users.sendStaffMessage(ColorOptions.error + "Error while saving treasures. Please notify a developer");
+////			users.sendStaffMessage(ColorOptions.error + "Error while saving treasures. Please notify a developer");
 ////			noWarnings = false;
 ////		}
 //		
-//		Users.sendStaffMessage(ColorOptions.messagesubjects + "Succesfully saved " + getDescription().getName() + " version " + getDescription().getVersion());
-//		Users.sendStaffMessage(ColorOptions.message + "Commencing regular reload..");
+//		users.sendStaffMessage(ColorOptions.messagesubjects + "Succesfully saved " + getDescription().getName() + " version " + getDescription().getVersion());
+//		users.sendStaffMessage(ColorOptions.message + "Commencing regular reload..");
 //		Bukkit.getServer().reload();
 		boolean noWarnings = true;
 		Users.sendStaffMessage(ColorOptions.message + "Saving and reloading " + ColorOptions.messagesubjects + getDescription().getName() + ColorOptions.message + " version " + ColorOptions.messagesubjects + getDescription().getVersion());
@@ -1953,15 +1954,15 @@ public class Main extends JavaPlugin
 			noWarnings = false;
 		}
 		
-//		Users.sendStaffMessage("Saving and stopping treasures...");
+//		users.sendStaffMessage("Saving and stopping treasures...");
 //		try
 //		{
 //			Treasures.stopTreasures();
-//			Users.sendStaffMessage("Treasures saved.");
+//			users.sendStaffMessage("Treasures saved.");
 //		} catch (Exception ex)
 //		{
 //			ex.printStackTrace();
-//			Users.sendStaffMessage(ColorOptions.error + "Error while saving treasures. Please notify a developer");
+//			users.sendStaffMessage(ColorOptions.error + "Error while saving treasures. Please notify a developer");
 //			noWarnings = false;
 //		}
 		

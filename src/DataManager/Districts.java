@@ -59,7 +59,7 @@ public interface Districts
 	}
 	
 	/**
-	 * Creates a district. Registers a district into the Database and creates the gateRegion for it
+	 * Creates a district. Registers a district into the Database and creates the Region for it
 	 * @param creation: Contains all the required information
 	 */
 	public static void CreateDistrict(DistrictCreation creation)
@@ -100,12 +100,12 @@ public interface Districts
 		ProtectedRegion parent = null;
 		        
         /**
-         * Creating the main gateRegion
+         * Creating the main Region
          */
         try
         {
             Selection selection = Worldguard.getSelectionFromRegion(player, creation.getTempRegion());
-
+            
         	parent = new ProtectedCuboidRegion(
     				"district_" + districtID,
     				new BlockVector(selection.getNativeMinimumPoint()),
@@ -124,13 +124,13 @@ public interface Districts
     			e.printStackTrace();
     		}
     		
-			String succesMessage = ChatColor.GREEN + "The new District's Worldguard gateRegion has been created";
+			String succesMessage = ChatColor.GREEN + "The new District's Worldguard Region has been created";
 			Main.logMessage(succesMessage);
 			creation.sendMessage(Arrays.asList(succesMessage));
         } catch (Exception ex)
         {
         	completeSteps = false;
-        	String message = ColorOptions.error + "Something went wrong while creating the Worldguard gateRegion! Please try again and notify a developer";
+        	String message = ColorOptions.error + "Something went wrong while creating the Worldguard Region! Please try again and notify a developer";
         	player.sendMessage(message);
         	Main.logError(message);
         	ex.printStackTrace();
@@ -151,13 +151,13 @@ public interface Districts
             	region.setParent(parent);
         		Worldguard.getRegionManager(player.getLocation().getWorld()).addRegion(region);
         		
-    			String succesMessage = ChatColor.GREEN + "The new District's ID child gateRegion has been created " + creation.getTempSubRegions().indexOf(r)+1 + "/" + creation.getTempSubRegions().size();
+    			String succesMessage = ChatColor.GREEN + "The new District's ID child Region has been created " + creation.getTempSubRegions().indexOf(r)+1 + "/" + creation.getTempSubRegions().size();
     			Main.logMessage(succesMessage);
     			creation.sendMessage(Arrays.asList(succesMessage));
             } catch (Exception ex)
             {
             	completeSteps = false;
-            	String message = ColorOptions.error + "Something went wrong while creation the Worldguard child gateRegion! Please try again and notify a developer";
+            	String message = ColorOptions.error + "Something went wrong while creation the Worldguard child Region! Please try again and notify a developer";
             	player.sendMessage(message);
             	Main.logError(message);
             	ex.printStackTrace();
@@ -224,7 +224,7 @@ public interface Districts
 			manager.removeRegion("district_" + districtID);
 		} catch (Exception ex)
 		{
-			message = ColorOptions.error + "Error while removing town's gateRegion from the database. Please notify a developer";
+			message = ColorOptions.error + "Error while removing town's Region from the database. Please notify a developer";
 			Main.logError(message);
 			ex.printStackTrace();
 			removed = false;

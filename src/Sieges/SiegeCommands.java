@@ -171,7 +171,7 @@ public class SiegeCommands implements CommandExecutor
 //					
 //					try
 //					{
-//						user = Users.getUser(uuid);
+//						user = users.getUser(uuid);
 //					} catch (Exception ex)
 //					{
 //						ex.printStackTrace();

@@ -30,8 +30,8 @@ public class DistrictCreation extends Creation
 	protected String townName;
 	protected int townID;
 	
-	//This gateRegion is created after the first required variables are set.
-	//Then this gateRegion is created to allow the user to add sub-regions to the structure.
+	//This Region is created after the first required variables are set.
+	//Then this Region is created to allow the user to add sub-regions to the structure.
 	//When the creation is completed or canceled these regions are given the proper name or will be deleted.
 	protected ProtectedRegion tempRegion;
 	protected List<ProtectedRegion> tempSubRegions = new ArrayList<ProtectedRegion>();
@@ -56,14 +56,14 @@ public class DistrictCreation extends Creation
 					));
 			put(3, Arrays.asList(
 					"",
-					ColorOptions.messagesubjects + "Creating a Worldguard gateRegion",
+					ColorOptions.messagesubjects + "Creating a Worldguard Region",
 					ColorOptions.messageformat + "Please make a worldedit selection of the desired district.",
 					ColorOptions.messageformat + "If you are satisfied with the selection type 'next'",
 					""
 					));
 			put(4, Arrays.asList(
 					"",
-					ColorOptions.messagesubjects + "Extending the Worldguard gateRegion",
+					ColorOptions.messagesubjects + "Extending the Worldguard Region",
 					ColorOptions.messageformat + "If you want to add small parts to the district",
 					ColorOptions.messageformat + "you can make a worldedit selection and type 'save'.",
 					ColorOptions.messageformat + "If you saved a wrong selection type 'undo'.",
@@ -173,8 +173,11 @@ public class DistrictCreation extends Creation
 								selection.getNativeMinimumPoint().getY(),
 								selection.getNativeMinimumPoint().getZ()
 								);
+						Main.Main.logMessage("MaxLoc: " + maxLoc.toString());
+						Main.Main.logMessage("MinLoc: " + minLoc.toString());
 						Integer structureIDMax = Worldguard.getStructureIDbyRegion("town", maxLoc, manager);
 						Integer structureIDMin = Worldguard.getStructureIDbyRegion("town", minLoc, manager);
+						Main.Main.logMessage("StructureIDMax: " + structureIDMax + ", Min: " + structureIDMin + ", townID: " + townID);
 						if ((structureIDMax != null 
 								&& structureIDMin != null)
 									&& (structureIDMax == townID)
@@ -189,13 +192,13 @@ public class DistrictCreation extends Creation
 							addStage = this.stage+1;
 							this.sendMessage(Arrays.asList(
 									"",
-									ColorOptions.messageachievement + "Succesfully saved the gateRegion",
+									ColorOptions.messageachievement + "Succesfully saved the Region",
 									""));
 						} else
 						{
 							this.falseCommand(Arrays.asList(
 									"",
-									ColorOptions.error + "The gateRegion must be inside of the Townregions",
+									ColorOptions.error + "The Region must be inside of the Townregions",
 									""
 									));
 						}
@@ -254,7 +257,7 @@ public class DistrictCreation extends Creation
 							this.tempSubRegions.add(region);
 							this.sendMessage(Arrays.asList(
 									"",
-									ColorOptions.messageachievement + "Saved the gateRegion as sub gateRegion",
+									ColorOptions.messageachievement + "Saved the Region as sub Region",
 									ColorOptions.messageachievement + "type 'next' when you are done",
 									""
 									));
@@ -262,7 +265,7 @@ public class DistrictCreation extends Creation
 						{
 							this.falseCommand(Arrays.asList(
 									"",
-									ColorOptions.error + "The gateRegion must be inside of the Townregions",
+									ColorOptions.error + "The Region must be inside of the Townregions",
 									""
 									));
 						}
@@ -270,7 +273,7 @@ public class DistrictCreation extends Creation
 					{
 						this.falseCommand(Arrays.asList(
 								"",
-								ColorOptions.error + "You must make a worldedit selection to save a sub gateRegion",
+								ColorOptions.error + "You must make a worldedit selection to save a sub Region",
 								""
 							));
 					}
@@ -289,7 +292,7 @@ public class DistrictCreation extends Creation
 						this.tempSubRegions.remove(this.tempSubRegions.size()-1);
 						this.sendMessage(Arrays.asList(
 								"",
-								ColorOptions.messageachievement + "Removed the last sub gateRegion",
+								ColorOptions.messageachievement + "Removed the last sub Region",
 								ColorOptions.messageachievement + "type 'next' when you are done",
 								""
 								));

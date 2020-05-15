@@ -3,9 +3,12 @@ package Sieges;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
+
+import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import DataManager.Worldguard;
 import DataManager.Structures.Gates;
@@ -14,15 +17,32 @@ import Models.Structures.Gate;
 
 public class SideObjective extends Objective
 {
+	protected String name;
 	protected int structureID;
 	protected Gate gate;
 	protected boolean originalGateState;
 	
-	public SideObjective(int spawnpointID, int scenarioID, Location location)
+	public SideObjective(String name, int spawnpointID, int scenarioID, Location location)
 	{
 		super(scenarioID, spawnpointID, 100, DyeColor.WHITE);
-		this.structureID = Worldguard.getStructureIDbyRegion("gate", location, Worldguard.getRegionManager(location.getWorld()));
-		this.gate = Gates.instantiateGate(structureID, false);
+		this.name = name;
+		if (location != null)
+		{
+			RegionManager manager = Worldguard.getRegionManager(location.getWorld());
+
+			this.structureID = ObjectUtils.defaultIfNull(Worldguard.getStructureIDbyRegion("gate", location, manager),-1);
+			this.gate = Gates.instantiateGate(structureID, false);
+		}
+		
+		if (gate != null)
+		{
+			this.name = this.gate.getName();
+		}
+	}
+	
+	public String getName()
+	{
+		return this.name;
 	}
 	
 	public int getGateID()
@@ -65,9 +85,6 @@ public class SideObjective extends Objective
 				this.originalGateState = gate.getActive();
 				this.gate.toggleActive(true);
 				this.gate.setClosed(true);
-			} else
-			{
-				Main.logError("No Gate found for SO " + this.getSpawnpointID());
 			}
 		} else
 		{

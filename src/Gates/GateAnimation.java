@@ -103,7 +103,7 @@ public class GateAnimation
 					}
 				}
 			}
-		}.runTaskTimerAsynchronously(main, 0, this.animationSpeed);
+		}.runTaskTimer(main, 0, this.animationSpeed);
 	}
 	
 	public void complete()

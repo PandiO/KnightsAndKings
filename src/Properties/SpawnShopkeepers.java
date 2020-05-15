@@ -40,7 +40,7 @@ public class SpawnShopkeepers implements Listener
 //		    	if (player.isOp())
 //		    	{
 //		    		player.sendMessage(ColorOptions.error + "An error occured when checking players inside a town!");
-//		    		player.sendMessage(ColorOptions.message + "Users: " + DiscoverTown.playersinTown.keySet());
+//		    		player.sendMessage(ColorOptions.message + "users: " + DiscoverTown.playersinTown.keySet());
 //		    	}
 //		    }
 //		}

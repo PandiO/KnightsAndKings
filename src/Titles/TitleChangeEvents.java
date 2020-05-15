@@ -35,24 +35,8 @@ public class TitleChangeEvents implements Listener
 	@EventHandler
 	public void onChange(TitleChangeEvent e)
 	{
-		UUID uuid = e.getUUID();
-		User user = null;
-		
-		try
-		{
-			user = Users.getUser(uuid);
-		} catch (Exception ex)
-		{
-			try
-			{
-				user = new User(uuid);
-				user.setOfflineUser(true);
-			} catch (Exception exc)
-			{
-				ErrorHandlers.userNotFoundAction(null, null, false);
-				return;
-			}
-		}
+		User user = e.getUser();
+		UUID uuid = user.getUUID();
 		Integer oldTitleID = e.getOldTitle();
 		Integer newTitleID = e.getNewTitle();
 		Integer changeAmount;
@@ -93,7 +77,7 @@ public class TitleChangeEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (Exception ex)
 //		{
 //			ex.printStackTrace();

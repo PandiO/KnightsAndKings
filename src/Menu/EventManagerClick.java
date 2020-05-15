@@ -215,10 +215,10 @@ public class EventManagerClick
 		{
 			if (hs.getProgress())
 			{
-				if (hs.getHiders().contains(participant))
+				if (hs.getHiders().GetMembers().contains(participant))
 				{
 					hs.setSeeker(participant);
-				} else if (hs.getSeekers().contains(participant))
+				} else if (hs.getSeekers().GetMembers().contains(participant))
 				{
 					hs.removeSeeker(participant);
 				}

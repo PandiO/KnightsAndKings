@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import API_methods.WorldGuard;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import Handlers.ColorOptions;
 import Handlers.SoundHandler;
@@ -63,8 +64,8 @@ public class Duel implements Listener
 		
 		this.itemPrize = itemPrize;
 		this.coinPrize = coinPrize;
-		this.user1 = Users.getUser(player1.getUniqueId());
-		this.user2 = Users.getUser(player2.getUniqueId());
+		this.user1 = Users2.FindUser(player1.getUniqueId());
+		this.user2 = Users2.FindUser(player2.getUniqueId());
 		
 		if (!duelType.equalsIgnoreCase("normal"))
 		{

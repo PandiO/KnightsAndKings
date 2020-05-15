@@ -5,7 +5,7 @@ package Models.Structures;
 
 import org.bukkit.Location;
 
-import DataManager.Users;
+import DataManager.Users2;
 import DataManager.spawnpoints.SpawnpointStructures;
 import Users.User;
 import net.citizensnpcs.api.CitizensAPI;
@@ -56,7 +56,7 @@ public class Property extends Structure implements Buyable {
 		super(id, name, streetID, streetNumber, townID, districtID, SpawnpointStructures.InstantiateSpawnpointStructure(id));
 		
 		this.ownerID = ownerID;
-		this.owner = Users.FindUser(ownerID);
+		this.owner = Users2.FindUser(Users2.FetchUUIDbyID(ownerID));
 		this.price = price;
 		this.income = income;
 		this.level = level;
@@ -109,7 +109,7 @@ public class Property extends Structure implements Buyable {
 	}
 
 	/* (non-Javadoc)
-	 * @see Models.Structures.Buyable#setOwner(Users.User)
+	 * @see Models.Structures.Buyable#setOwner(users.User)
 	 */
 	@Override
 	public void setOwner(User owner) {

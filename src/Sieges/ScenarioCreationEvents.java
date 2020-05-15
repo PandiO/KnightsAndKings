@@ -45,7 +45,7 @@ public class ScenarioCreationEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -131,7 +131,7 @@ public class ScenarioCreationEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -467,147 +467,147 @@ public class ScenarioCreationEvents implements Listener
 //		
 //	}
 	
-	@EventHandler
-	public void onInteract(PlayerInteractEvent e)
-	{
-		Player player = e.getPlayer();
-		UUID uuid = player.getUniqueId();
-		User user = null;
-		ScenarioCreation sc = null;
-		
-		try
-		{
-			user = Users.getUser(uuid);
-		} catch (UserNotFoundException ex)
-		{
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		} catch (Exception ex)
-		{
-			ex.printStackTrace();
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			return;
-		}
-		
-		sc = Sieges.getSiegeCreation(user);
-		
-		if (sc == null)
-		{
-			Scenario scenario = null;
-			for (Scenario scenarios : Sieges.Scenarios)
-			{
-				if (scenarios.editMode.containsKey(user))
-				{
-					scenario = scenarios;
-					break;
-				}
-			}
-			
-			if (scenario == null)
-			{
-				return;
-			}
-			
-			if (e.getAction() != Action.RIGHT_CLICK_BLOCK)
-			{
-				return;
-			}
-			
-			if (e.getClickedBlock() == null)
-			{
-				return;
-			}
-			
-			SiegeObject object = scenario.editMode.get(user);
-			if (object instanceof Objective)
-			{
-				if (e.getClickedBlock().getType() != Material.STANDING_BANNER)
-				{
-					user.getPlayer().sendMessage(ColorOptions.error + "The block must be a standing banner");
-					user.getPlayer().sendMessage(ColorOptions.error + "Type 'stop' to stop editing");
-					return;
-				}
-				e.setCancelled(true);
-				
-				Objective objective = (Objective) object;
-				if (objective.getLocation().equals(e.getClickedBlock().getLocation()))
-				{
-					user.getPlayer().sendMessage(ColorOptions.error + "New location can't be the same as the original one");
-					return;
-				}
-				Bukkit.getConsoleSender().sendMessage(objective.getLocation().toString());
-				Bukkit.getConsoleSender().sendMessage(e.getClickedBlock().getLocation().toString());
-
-				user.getPlayer().sendMessage(ColorOptions.message + "Changing location...");
-				objective.changeLocation(user.getPlayer(), e.getClickedBlock().getLocation());
-				Block block = e.getClickedBlock();
-		        BlockState bs = block.getState();
-		        Banner banner = (Banner) block.getState();
-		        banner.setBaseColor(DyeColor.WHITE);
-		        banner.addPattern(new Pattern(DyeColor.BLUE, PatternType.GRADIENT));
-		        banner.addPattern(new Pattern(DyeColor.WHITE, PatternType.GRADIENT_UP));
-		        banner.update(true);
-				scenario.removeEditMode(user);
-				new Menu().openScenarioManager(user, scenario);
-			}
-			return;
-		}
-		
-		if (e.getAction() != Action.RIGHT_CLICK_BLOCK)
-		{
-			return;
-		}
-		
-		if (e.getClickedBlock() == null)
-		{
-			return;
-		}
-		
-		if (sc.getStage() == 5 || sc.getStage() == 6)
-		{
-			if (e.getClickedBlock().getType() != Material.STANDING_BANNER)
-			{
-				sc.falseCommand(Arrays.asList(ColorOptions.error + "The block must be a standing banner"));
-				return;
-			}
-		}
-			
-		
-		if (sc.getStage() == 5)
-		{
-			sc.mainObjective = e.getClickedBlock().getLocation();
-			sc.sendMessage(Arrays.asList(
-					"",
-					ColorOptions.messageachievement + "Saved the block as main objective",
-					""
-					));
-			player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
-			sc.nextStage(sc.getStage()+1);
-		} else if (sc.getStage() == 6)
-		{
-			if (sc.getSideObjectives().size() >= 9)
-			{
-				sc.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Side Objectives has been reached"));
-				return;
-			}
-			for (TempSideObjective so : sc.getSideObjectives())
-			{
-				if (so.location == e.getClickedBlock().getLocation())
-				{
-					sc.falseCommand(Arrays.asList(
-							ColorOptions.error + "This block is already a side objective"
-							));
-					return;
-				}
-			}
-			sc.getSideObjectives().add(new TempSideObjective(e.getClickedBlock().getLocation(), null));
-			sc.sendMessage(Arrays.asList(
-					"",
-					ColorOptions.messageachievement + "Saved the block as a side objective",
-					ColorOptions.messageachievement + "type 'next' when you are done",
-					""
-					));
-			player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
-		}
-	}
+//	@EventHandler
+//	public void onInteract(PlayerInteractEvent e)
+//	{
+//		Player player = e.getPlayer();
+//		UUID uuid = player.getUniqueId();
+//		User user = null;
+//		ScenarioCreation sc = null;
+//		
+//		try
+//		{
+//			user = users.getUser(uuid);
+//		} catch (UserNotFoundException ex)
+//		{
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		} catch (Exception ex)
+//		{
+//			ex.printStackTrace();
+//			ErrorHandlers.userNotFoundAction(null, player, true);
+//			return;
+//		}
+//		
+//		sc = Sieges.getSiegeCreation(user);
+//		
+//		if (sc == null)
+//		{
+//			Scenario scenario = null;
+//			for (Scenario scenarios : Sieges.Scenarios)
+//			{
+//				if (scenarios.editMode.containsKey(user))
+//				{
+//					scenario = scenarios;
+//					break;
+//				}
+//			}
+//			
+//			if (scenario == null)
+//			{
+//				return;
+//			}
+//			
+//			if (e.getAction() != Action.RIGHT_CLICK_BLOCK)
+//			{
+//				return;
+//			}
+//			
+//			if (e.getClickedBlock() == null)
+//			{
+//				return;
+//			}
+//			
+//			SiegeObject object = scenario.editMode.get(user);
+//			if (object instanceof Objective)
+//			{
+//				if (e.getClickedBlock().getType() != Material.STANDING_BANNER)
+//				{
+//					user.getPlayer().sendMessage(ColorOptions.error + "The block must be a standing banner");
+//					user.getPlayer().sendMessage(ColorOptions.error + "Type 'stop' to stop editing");
+//					return;
+//				}
+//				e.setCancelled(true);
+//				
+//				Objective objective = (Objective) object;
+//				if (objective.getLocation().equals(e.getClickedBlock().getLocation()))
+//				{
+//					user.getPlayer().sendMessage(ColorOptions.error + "New location can't be the same as the original one");
+//					return;
+//				}
+//				Bukkit.getConsoleSender().sendMessage(objective.getLocation().toString());
+//				Bukkit.getConsoleSender().sendMessage(e.getClickedBlock().getLocation().toString());
+//
+//				user.getPlayer().sendMessage(ColorOptions.message + "Changing location...");
+//				objective.changeLocation(user.getPlayer(), e.getClickedBlock().getLocation());
+//				Block block = e.getClickedBlock();
+//		        BlockState bs = block.getState();
+//		        Banner banner = (Banner) block.getState();
+//		        banner.setBaseColor(DyeColor.WHITE);
+//		        banner.addPattern(new Pattern(DyeColor.BLUE, PatternType.GRADIENT));
+//		        banner.addPattern(new Pattern(DyeColor.WHITE, PatternType.GRADIENT_UP));
+//		        banner.update(true);
+//				scenario.removeEditMode(user);
+//				new Menu().openScenarioManager(user, scenario);
+//			}
+//			return;
+//		}
+//		
+//		if (e.getAction() != Action.RIGHT_CLICK_BLOCK)
+//		{
+//			return;
+//		}
+//		
+//		if (e.getClickedBlock() == null)
+//		{
+//			return;
+//		}
+//		
+//		if (sc.getStage() == 5 || sc.getStage() == 6)
+//		{
+//			if (e.getClickedBlock().getType() != Material.STANDING_BANNER)
+//			{
+//				sc.falseCommand(Arrays.asList(ColorOptions.error + "The block must be a standing banner"));
+//				return;
+//			}
+//		}
+//			
+//		
+//		if (sc.getStage() == 5)
+//		{
+//			sc.mainObjective = e.getClickedBlock().getLocation();
+//			sc.sendMessage(Arrays.asList(
+//					"",
+//					ColorOptions.messageachievement + "Saved the block as main objective",
+//					""
+//					));
+//			player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+//			sc.nextStage(sc.getStage()+1);
+//		} else if (sc.getStage() == 6)
+//		{
+//			if (sc.getSideObjectives().size() >= 9)
+//			{
+//				sc.falseCommand(Arrays.asList(ColorOptions.error + "A maximum of 9 Side Objectives has been reached"));
+//				return;
+//			}
+//			for (TempSideObjective so : sc.getSideObjectives())
+//			{
+//				if (so.location == e.getClickedBlock().getLocation())
+//				{
+//					sc.falseCommand(Arrays.asList(
+//							ColorOptions.error + "This block is already a side objective"
+//							));
+//					return;
+//				}
+//			}
+//			sc.getSideObjectives().add(new TempSideObjective(e.getClickedBlock().getLocation(), null));
+//			sc.sendMessage(Arrays.asList(
+//					"",
+//					ColorOptions.messageachievement + "Saved the block as a side objective",
+//					ColorOptions.messageachievement + "type 'next' when you are done",
+//					""
+//					));
+//			player.playSound(player.getLocation(), Sound.NOTE_PIANO, 0.5F, 1.0F);
+//		}
+//	}
 }

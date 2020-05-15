@@ -5,11 +5,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import DataManager.Users2;
 import Exceptions.UserNotFoundException;
 import Handlers.ErrorHandlers;
 import Main.Main;
 import Users.User;
-import Users.Users;
 
 public class AfkCommand implements CommandExecutor
 {
@@ -30,7 +30,7 @@ public class AfkCommand implements CommandExecutor
 				
 				try
 				{
-					user = Users.getUser(player.getUniqueId());
+					user = Users2.FindUser(player.getUniqueId());
 				} catch (UserNotFoundException ex)
 				{
 					ErrorHandlers.userNotFoundAction(null, player, true);

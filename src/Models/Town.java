@@ -6,6 +6,7 @@ import java.util.List;
 import org.bukkit.command.CommandSender;
 
 import DataManager.Towns;
+import Models.spawnpoint.Spawnpoint;
 import Users.User;
 
 public class Town 
@@ -14,6 +15,7 @@ public class Town
 	protected String Name;
 	protected String Description;
 	protected int RequiredTitleID;
+	protected Spawnpoint Spawnpoint;
 	protected List<Integer> DiscoveredUserIDs = new ArrayList<Integer>();
 	protected List<User> EnteredUsers = new ArrayList<User>();
 
@@ -59,6 +61,14 @@ public class Town
 
 	public void setRequiredTitleID(int RequiredTitleID) {
 		this.RequiredTitleID = RequiredTitleID;
+	}
+	
+	public Spawnpoint getSpawnpoint() {
+		return this.Spawnpoint;
+	}
+	
+	public void setSpawnpoint(Spawnpoint spawnpoint) {
+		this.Spawnpoint = spawnpoint;
 	}
 
 	public List<Integer> getDiscoveredUserIDs() {

@@ -19,6 +19,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import Assignments.Assignment;
 import Assignments.AssignmentTravelRandom;
 import Assignments.AssignmentTravelSpecific;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
@@ -62,9 +63,13 @@ public class TownEvents implements Listener
 			Integer requiredTitleID = town.getRequiredTitleID(townID);
 			User user = null;
 			
+			if (Users.findUser(uuid) == null)
+			{
+				return;
+			}
 			try
 			{
-				user = Users.getUser(uuid);
+				user = Users2.InstantiateUser(uuid, false);
 			} catch (UserNotFoundException ex)
 			{
 				ErrorHandlers.userNotFoundAction(null, player, true);
@@ -212,7 +217,7 @@ public class TownEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);

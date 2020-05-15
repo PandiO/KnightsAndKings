@@ -2,7 +2,7 @@ package Models.Structures;
 
 import org.bukkit.command.CommandSender;
 
-import DataManager.Users;
+import DataManager.Users2;
 import DataManager.Structures.Structures;
 import DataManager.spawnpoints.SpawnpointStructures;
 import Users.User;
@@ -31,7 +31,7 @@ public class House extends Structure implements Buyable
 				SpawnpointStructures.InstantiateSpawnpointStructure(id));
 		
 		this.ownerID = ownerID;
-		this.owner = Users.FindUser(ownerID);
+		this.owner = Users2.FindUser(Users2.FetchUUIDbyID(ownerID));
 		this.price = price;
 		
 		Structures.Structures.add(this);

@@ -4,6 +4,7 @@
 package DataManager.Structures;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,5 +47,28 @@ public interface Structures
 		}
 		
 		Spawnpoints.RemoveSpawnpoint(spawnpointID);
+	}
+	
+	public static String FetchStructureName(Integer structureID)
+	{
+		String name = null;
+		
+		try
+		{
+			PreparedStatement stmt = Main.getConnection().prepareStatement("SELECT * FROM Structure WHERE ID = ?");
+			stmt.setInt(1, structureID);
+			
+			ResultSet results = stmt.executeQuery();
+			
+			if (results.next())
+			{
+				name = results.getString("Name");
+			}
+		} catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		
+		return name;
 	}
 }

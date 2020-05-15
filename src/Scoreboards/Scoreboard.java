@@ -15,11 +15,13 @@ import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
 
 import Afk.AfkEvents;
+import DataManager.Users2;
 import Handlers.ColorOptions;
+import HideAndSeek.HSTeam;
 import HideAndSeek.HideAndSeek;
 import Main.Main;
-import Minigames.MGTeam;
 import Minigames.Participant;
+import Minigames.SiegeTeam;
 import Sieges.Siege;
 import Users.OwnerCommands;
 import Users.User;
@@ -150,16 +152,16 @@ public class Scoreboard
 		if (siege != null && siege.getProgress())
 		{
 			Participant participant = siege.getParticipant(user);
-			MGTeam mGTeam = participant.GetTeam();
-			MGTeam enemyTeam = null;
+			SiegeTeam siegeTeam = (SiegeTeam) participant.GetTeam();
+			SiegeTeam enemyTeam = null;
 
-			siege.createScoreboard(participant.GetTeam());
-			team = FetchTeam(board, "siege" + mGTeam.GetNumber());
+			siegeTeam.CreateSideBarBoard(siege);
+			team = FetchTeam(board, "siege" + siegeTeam.GetNumber());
 			
-			if (mGTeam.GetNumber() == 1)
+			if (siegeTeam.GetNumber() == 1)
 			{
 				enemyTeam = siege.GetTeam2();
-			} else if (mGTeam.GetNumber() == 2)
+			} else if (siegeTeam.GetNumber() == 2)
 			{
 				enemyTeam = siege.GetTeam1();
 			}
@@ -172,7 +174,7 @@ public class Scoreboard
 		if (Main.HideAndSeek != null && Main.HideAndSeek.getParticipating(user) && Main.HideAndSeek.getProgress())
 		{
 			Participant participant = Main.HideAndSeek.getParticipant(user);
-			for (User target : main.users)
+			for (User target : Users2.users)
 			{
 				if (!Main.HideAndSeek.getParticipating(target))
 				{
@@ -180,7 +182,10 @@ public class Scoreboard
 					target.getPlayer().hidePlayer(player);
 				}
 			}
-			if (Main.HideAndSeek.getSeekers().contains(participant))
+			HSTeam hsTeam = Main.HideAndSeek.getTeam(participant);
+			
+			hsTeam.CreateSideBarBoard(Main.HideAndSeek);
+			if (hsTeam.GetNumber() == 2)
 			{
 				team = FetchTeam(board, "hsseeker");
 			} else
@@ -317,7 +322,7 @@ public class Scoreboard
 			TargetUsers = Users;
 		} else
 		{
-			TargetUsers = main.users;
+			TargetUsers = Users2.users;
 		}
 		
 		for (User user : TargetUsers)
@@ -347,7 +352,7 @@ public class Scoreboard
 			team.addPlayer(player);
 			
 			player.setScoreboard(defaultBoard);
-			player.setHealth(player.getHealth());
+//			player.setHealth(player.getHealth());
 			
 			( (CraftPlayer) player).getHandle().playerConnection.sendPacket(this.getTabLayout());
 		}

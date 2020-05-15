@@ -385,6 +385,9 @@ public class MenuClick implements Listener
 			} else if (menuName.equalsIgnoreCase(Menus.SiegeInformationMenu))
 			{
 				new EventsClick().onSiegeInformationClick(e, user);
+			} else if (menuName.equalsIgnoreCase(Menus.SiegeSpawnpointsMenu))
+			{
+				new EventsClick().onSiegeRespawnClick(e, user);
 			}
 			
 			else

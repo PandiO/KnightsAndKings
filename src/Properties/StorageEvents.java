@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.StorageEvent;
 import Main.Main;
@@ -33,7 +34,7 @@ public class StorageEvents implements Listener
 		Integer streetID = property.getStreetID(propertyID);
 		String streetName = street.getStreetName(streetID);
 		String townName = town.getTownName(street.getTownID(streetID));
-		for (User user : main.users)
+		for (User user : Users2.users)
 		{
 			Integer userID = user.getID();
 			Player target = user.getPlayer();

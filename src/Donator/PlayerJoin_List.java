@@ -29,7 +29,7 @@ public class PlayerJoin_List implements Listener
 //	@EventHandler(priority = EventPriority.HIGHEST)
 //	public void onJoin(PlayerJoinEvent e)
 //	{
-//		//Located in the JoinEvents in the Users package
+//		//Located in the JoinEvents in the users package
 //	}
 	
 //	@EventHandler
@@ -37,7 +37,7 @@ public class PlayerJoin_List implements Listener
 //	{
 //		Player player = e.getPlayer();
 //		UUID uuid = player.getUniqueId();
-//		User user = Users.getUser(uuid);
+//		User user = users.getUser(uuid);
 //		if (main.existUser(uuid))
 //		{
 //			Integer genderID = user.getGenderID();
@@ -85,7 +85,7 @@ public class PlayerJoin_List implements Listener
 //				e.setQuitMessage(null);
 //			}
 //		}
-//		Users.updateScoreBoard(null);
+//		users.updateScoreBoard(null);
 //	}
 	
 

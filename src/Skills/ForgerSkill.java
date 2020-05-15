@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.ErrorHandlers;
 import Handlers.PurchaseEvent;
@@ -32,7 +33,7 @@ public class ForgerSkill implements Listener
 		User user = e.getUser();
 		Player player = user.getPlayer();
 		UUID uuid = player.getUniqueId();
-		if (!main.users.contains(user))
+		if (!Users2.users.contains(user))
 		{
 			ErrorHandlers.userNotFoundAction(null, player, true);
 			return;

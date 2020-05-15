@@ -38,6 +38,7 @@ import Assignments.AssignmentKill;
 import Assignments.AssignmentTravelDistance;
 import Assignments.AssignmentTravelRandom;
 import Assignments.AssignmentTravelSpecific;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import Donator.Donator;
 import Genders.Gender;
@@ -74,10 +75,19 @@ public class User
 	Gender gender = new Gender();
 	Donator donator = new Donator();
 	
+	//Runtime variables
 	boolean isOfflineUser = false;
 	boolean fetchedAddress = false;
 	boolean fetchedData = false;
+	Afk afk = null;
+	Long afkCommence;
+	HashMap<Integer, Integer> soldItems = new HashMap<Integer, Integer>(); 
+	Location banditLocation;
+	HashMap<UUID, Integer> mentionDelay = new HashMap<UUID, Integer>();
+	List<ItemStack> keepItems = new ArrayList<ItemStack>();
+	User avengerTarget;
 	
+	//Database variables
 	Player player = null;
 	InetAddress address;
 	int attackspeedID;
@@ -185,18 +195,12 @@ public class User
 	
 	int votes;
 	
-	Afk afk = null;
-	Long afkCommence;
-	HashMap<Integer, Integer> soldItems = new HashMap<Integer, Integer>(); 
-	Location banditLocation;
-	HashMap<UUID, Integer> mentionDelay = new HashMap<UUID, Integer>();
-	List<ItemStack> keepItems = new ArrayList<ItemStack>();
-	User avengerTarget;
-	
 	public User(UUID uuid)
 	{	
 		if (existUser(uuid))
 		{
+			Users2.users.add(this);
+
 			ResultSet data = fetchUser(uuid);
 			this.setData(uuid, data);
 		}
@@ -685,15 +689,16 @@ public class User
 		this.isOfflineUser = isOfflineUser;
 	}
 	
-	public void addList()
-	{
-		main.users.add(this);
-	}
+//	public void addList()
+//	{
+//		users
+//		main.users.add(this);
+//	}
 	
-	public void removeList()
-	{
-		main.users.remove(this);
-	}
+//	public void removeList()
+//	{
+//		main.users.remove(this);
+//	}
 	
 	public void join(Player player)
 	{
@@ -725,17 +730,15 @@ public class User
 		}
 		this.afkCommence = (System.currentTimeMillis()+ main.afkTime*1000);
 		
-		Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "Before joining: " + main.users);
-		this.addList();
-		Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "After joining: " + main.users);
+//		this.addList();
+		Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "After joining: " + Users2.users);
 	}
 	
 	public void quit()
 	{
 		this.checkMiniGames();
-		Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "Before leaving: " + main.users);
-		this.removeList();
-		Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "After leaving: " + main.users);
+		Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "Before leaving: " + Users2.users);
+//		this.removeList();
 		this.destroy();
 	}
 	
@@ -746,13 +749,13 @@ public class User
 		{
 			try
 			{
-				main.offlineUsers.remove(this);
+				Main.offlineUsers.remove(this);
 			} catch (Exception ex)
 			{
 				ex.printStackTrace();
 			}
 		}
-		Users.destroy(this);
+		Users2.Destroy(this);
 	}
 	
 	public void refresh()
@@ -778,8 +781,21 @@ public class User
 		}
 		if (Main.HideAndSeek.getParticipating(this))
 		{
-			Main.HideAndSeek.leave(this);
+			Main.HideAndSeek.leave(Main.HideAndSeek.getParticipant(user));
 		}
+	}
+	
+	public boolean inMiniGame()
+	{
+		boolean inMiniGame = false;
+		
+		if (Sieges.Sieges.findSiege(this) != null
+				|| Main.HideAndSeek.getParticipating(user))
+		{
+			inMiniGame = true;
+		}
+		
+		return inMiniGame;
 	}
 	
 	public boolean isOfflineUser()
@@ -2722,9 +2738,9 @@ public class User
 			finalExp = (int) nettoExp*part;
 		} else
 		{
-			int nextExp = title.getExpmin(titleID);
+			int nextExp = title.getExpmax(titleID);
 			int currentExp = title.getExpmin(titleID);
-			int nettoExp = ((nextExp-currentExp)/100);
+			int nettoExp = ((nextExp-currentExp)/1000);
 			finalExp = (int) nettoExp*part;
 		}
 		
@@ -3372,9 +3388,6 @@ public class User
 			{
 				safe = true;
 			}
-		} else
-		{
-			Main.logMessage("propertyID == null, townID == null or arenaground! townID: " + townID + ", ptopertyID: " + propertyID);
 		}
 		
 		return safe;

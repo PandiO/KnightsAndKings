@@ -97,10 +97,10 @@ public class JoinEvents implements Listener
 //	    				List<String> alternativeNames = new ArrayList<String>();
 //	    				for (Integer userID : this.offlineUser.getUserIDlistByAddress(player.getAddress().getAddress()))
 //	    				{
-//	    					String username = this.offlineUser.getUserName(Users.fetchUUIDbyID(userID));
+//	    					String username = this.offlineUser.getUserName(users.fetchUUIDbyID(userID));
 //	    					if (!username.equalsIgnoreCase(player.getName()))
 //	    					{
-//		    					alternativeNames.add(this.offlineUser.getUserName(Users.fetchUUIDbyID(userID)));
+//		    					alternativeNames.add(this.offlineUser.getUserName(users.fetchUUIDbyID(userID)));
 //	    					}
 //	    				}
 //	    				target.sendMessage(ColorOptions.message + "► Player " + ColorOptions.messagesubjects + player.getName() + ColorOptions.message + " joined using an IP address that has already been used!");
@@ -118,7 +118,7 @@ public class JoinEvents implements Listener
 //			player.sendMessage(ChatColor.GREEN + 	 "Don't forget to vote for useful rewards!");
 //			player.sendMessage(ColorOptions.statsbrackets);
 //	    }
-//	    Users.updateScoreBoard(null);
+//	    users.updateScoreBoard(null);
 //	}
 	
 //	@EventHandler
@@ -172,7 +172,7 @@ public class JoinEvents implements Listener
 //		
 //		try
 //		{
-//			user = Users.getUser(uuid);
+//			user = users.getUser(uuid);
 //		} catch (UserNotFoundException ex)
 //		{
 //			ErrorHandlers.userNotFoundAction(null, player, true);
@@ -211,7 +211,7 @@ public class JoinEvents implements Listener
 //					
 //					try
 //					{
-//						user = Users.getUser(uuid);
+//						user = users.getUser(uuid);
 //					} catch (UserNotFoundException ex)
 //					{
 //						ErrorHandlers.userNotFoundAction(null, player, true);
@@ -223,7 +223,7 @@ public class JoinEvents implements Listener
 //						return;
 //					}
 //					
-//					if (!player.hasPermission("k&k.join.nolocation") && !main.ownermodus.containsKey(uuid) && Users.existUser(player.getName()))
+//					if (!player.hasPermission("k&k.join.nolocation") && !main.ownermodus.containsKey(uuid) && users.existUser(player.getName()))
 //					{
 //						//Later de discoer check toevoegen voor kardenna
 //						if (spawnpoint.getSpawnPointID("spawn") != null)
