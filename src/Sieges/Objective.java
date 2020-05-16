@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -411,8 +412,9 @@ public class Objective extends SiegeObject
 		return isCapturing;
 	}
 	
-	public void setActive(boolean active)
+	public boolean setActive(boolean active)
 	{
+		boolean changeSuccess = false;
 		boolean changedValue = false;
 		
 		if (this.isActive != active)
@@ -425,59 +427,106 @@ public class Objective extends SiegeObject
 		{
 			try
 			{
-//				bannerBlock.setTypeId(176);
-				Main.logMessage("Type of bannerBlock: " + bannerBlock.getType().toString());
 				bannerBlock.setType(Material.STANDING_BANNER);
-				Main.logMessage("Type of bannerBlock: " + bannerBlock.getType().toString());
-			} catch (Exception ex)
-			{
-				ex.printStackTrace();
-			}
-			
-			Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
-
-			BlockState state = this.bannerBlock.getState();
-			if (!(state instanceof Banner))
-			{
-				Main.logMessage("Type of bannerBlock when state is not banner: " + this.bannerBlock.getType().toString());
-
-				this.bannerBlock.setType(Material.STANDING_BANNER);
+				
+				BlockState state = this.bannerBlock.getState();
+				Main.logMessage("State of objective block: " + state.toString());
+				if (!(state instanceof Banner))
+				{
+					this.bannerBlock.setType(Material.STANDING_BANNER);
+					Bukkit.getPlayer("__pandi__").teleport(this.bannerBlock.getLocation());
+				}
 				Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
 
-			}
-			Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
-
-			this.banner = (Banner) this.bannerBlock.getLocation().add(0, 1, 0).getBlock().getState();
-			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
-			banner.update(true);
-			
-			this.startCaptureTask();
-			this.startCircleTask();
-			this.setPercentageEntity();
-			
-			if (this.instance instanceof SideObjective)
+				this.banner = (Banner) this.bannerBlock.getLocation().getBlock().getState();
+				this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+				banner.update(true);
+				
+				changeSuccess = true;
+			} catch (Exception ex)
 			{
-				SideObjective objective = (SideObjective) this;
-				objective.activate(true);
+				changeSuccess = false;
+				ex.printStackTrace();
+				Main.logError("Something went wrong while activating Objective " + this.getSpawnpointID() + " of scenario " + this.scenarioID);
+				return changeSuccess;
 			}
-			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
-			banner.update(true);
+			
+			try
+			{
+				this.startCaptureTask();
+				this.startCircleTask();
+				this.setPercentageEntity();
+				
+				changeSuccess = true;
+			} catch (Exception ex)
+			{
+				changeSuccess = false;
+				ex.printStackTrace();
+				Main.logError("Something went wrong while activating Objective " + this.getSpawnpointID() + " of scenario " + this.scenarioID);
+				
+				return changeSuccess;
+			}
+			
+			try
+			{
+				if (this.instance instanceof SideObjective)
+				{
+					SideObjective objective = (SideObjective) this;
+					objective.activate(true);
+				}
+				this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+				banner.update(true);
+				
+				changeSuccess = true;
+			} catch (Exception ex)
+			{
+				changeSuccess = false;
+				ex.printStackTrace();
+				Main.logError("Something went wrong while activating Objective " + this.getSpawnpointID() + " of scenario " + this.scenarioID);
+				
+				return changeSuccess;
+			}
 		} else if (!this.isActive && changedValue)
-		{			
-			this.stopCaptureTask();
-			this.stopCircleTask();
-			this.removePercentageEntity();
-			
-			
-			if (this.instance instanceof SideObjective)
+		{	
+			try
 			{
-				SideObjective objective = (SideObjective) this;
-				objective.activate(false);
+				this.stopCaptureTask();
+				this.stopCircleTask();
+				this.removePercentageEntity();
+				
+				changeSuccess = true;
+			} catch (Exception ex)
+			{
+				changeSuccess = false;
+				ex.printStackTrace();
+				Main.logError("Something went wrong while activating Objective " + this.getSpawnpointID() + " of scenario " + this.scenarioID);
+				
+				return changeSuccess;
 			}
-			this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
-			banner.update(true);
-			this.bannerBlock.setType(Material.AIR);
+			
+			try
+			{
+				if (this.instance instanceof SideObjective)
+				{
+					SideObjective objective = (SideObjective) this;
+					objective.activate(false);
+				}
+				this.banner.setPatterns(this.patternList.get(this.patternList.size()-1));
+				banner.update(true);
+				this.bannerBlock.setType(Material.AIR);
+				
+				changeSuccess = true;
+			} catch (Exception ex)
+			{
+				changeSuccess = false;
+				ex.printStackTrace();
+				Main.logError("Something went wrong while activating Objective " + this.getSpawnpointID() + " of scenario " + this.scenarioID);
+				
+				return changeSuccess;
+			}
 		}
+		
+		return changeSuccess;
 	}
 	
 	public void addTestingList(User user)

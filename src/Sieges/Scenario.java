@@ -564,11 +564,25 @@ public class Scenario
 		this.siege = siege;
 		this.active = active;
 		Main.logMessage("Setting MO active..");
-		mainObjective.setActive(active);
+		boolean moSuccess = mainObjective.setActive(active);
+		int moCount = 0;
+		
+		while (!moSuccess && moCount < 5)
+		{
+			moSuccess = mainObjective.setActive(active);
+			moCount++;
+		}
 		for (SideObjective objective : this.getSideObjectives())
 		{
 			Main.logMessage("Setting SO " + this.getSideObjectives().indexOf(objective) + " active..");
-			objective.setActive(active);
+			boolean soSuccess = objective.setActive(active);
+			int soCount = 0;
+			
+			while (!moSuccess && moCount < 5)
+			{
+				soSuccess = objective.setActive(active);
+				soCount++;
+			}
 		}
 		this.team1Spawnpoints.forEach(q -> q.setActive(active));
 		this.team2Spawnpoints.forEach(q -> q.setActive(active));

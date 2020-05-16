@@ -13,6 +13,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -430,7 +431,7 @@ public class Gate extends Structure
 			return;
 		}
 		
-		this.trySetInvincibleEntity();
+		this.clearNearbyGateEntities();
 		if (this.GateEntity == null)
 		{
 			this.trySetInvincibleEntity();
@@ -502,6 +503,19 @@ public class Gate extends Structure
 //			this.trySetInvincibleEntity();
 			
 			this.GateEntity.setCustomNameVisible(true);
+		}
+	}
+	
+	public void clearNearbyGateEntities()
+	{
+		List<Entity> entities = this.GateEntity.getNearbyEntities(2, 2, 2);
+		
+		for (Entity e : entities)
+		{
+			if (e.getName().contains("Gate: "))
+			{
+				e.remove();
+			}
 		}
 	}
 }
