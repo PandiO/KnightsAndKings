@@ -238,7 +238,10 @@ public class SiegeTeam extends MGTeam
 		Scoreboard board = this.GetScoreboard();
 		org.bukkit.scoreboard.Objective sideBoard = board.getObjective("siege_" + Sieges.Sieges.indexOf(siege) + "_" + this.GetNumber());
 		
-		sideBoard.unregister();
+		if (sideBoard != null)
+		{
+			sideBoard.unregister();
+		}
 	}
 	
 	@Override

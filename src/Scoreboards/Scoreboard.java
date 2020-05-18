@@ -98,7 +98,7 @@ public class Scoreboard
 	    //Hide and Seek
 	    //Hider
 	    Team hsHider = board.registerNewTeam("hshider");
-	    hsHider.setPrefix("§aHider");
+	    hsHider.setPrefix("§7[§aH§7] §a");
 	    hsHider.setNameTagVisibility(NameTagVisibility.HIDE_FOR_OTHER_TEAMS);
 	    hsHider.setCanSeeFriendlyInvisibles(true);    
 	    //Seeker
@@ -183,14 +183,23 @@ public class Scoreboard
 				}
 			}
 			HSTeam hsTeam = Main.HideAndSeek.getTeam(participant);
+			HSTeam enemyTeam = Main.HideAndSeek.getOppositeTeam(hsTeam);
+			String enemyT = null;
 			
 			hsTeam.CreateSideBarBoard(Main.HideAndSeek);
 			if (hsTeam.GetNumber() == 2)
 			{
 				team = FetchTeam(board, "hsseeker");
+				enemyT = "hshider";
 			} else
 			{
 				team = FetchTeam(board, "hshider");
+				enemyT = "hsseeker";
+			}
+			
+			for (Participant enemy : enemyTeam.GetMembers())
+			{
+				this.FetchTeam(board, enemyT).addPlayer(enemy.getUser().getPlayer());
 			}
 		} else
 	    if (player.hasPermission("k&k.owner"))
@@ -333,6 +342,10 @@ public class Scoreboard
 			Siege siege = Sieges.Sieges.findSiege(user);
 			HideAndSeek hideAndSeek = Main.HideAndSeek;
 			
+			if (hideAndSeek.getParticipating(user))
+			{
+				defaultBoard = hideAndSeek.getParticipant(user).GetTeam().GetScoreboard();
+			} else
 			if (siege != null && siege.getProgress())
 			{
 				defaultBoard = siege.getParticipant(user).GetTeam().GetScoreboard();

@@ -14,6 +14,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import Handlers.ColorOptions;
 import Main.Main;
 import Minigames.MGTeam;
+import Sieges.Sieges;
 
 /**
  * @author pandi
@@ -21,7 +22,9 @@ import Minigames.MGTeam;
  */
 public class HSTeam extends MGTeam {
 
+	protected HideAndSeek instance;
 	/**
+	 * @param instance The HideAndSeek instance
 	 * @param number The teamNumber
 	 * @param name The name of the team
 	 * @param color The chatColor of the team
@@ -29,10 +32,11 @@ public class HSTeam extends MGTeam {
 	 * @param scoreboard The bukkit scoreboard for tablist names etc.
 	 * @param winMessage The message being displayed when this team wins
 	 */
-	public HSTeam(int number, String name, ChatColor color, short bannerColor,
+	public HSTeam(HideAndSeek instance, int number, String name, ChatColor color, short bannerColor,
 			org.bukkit.scoreboard.Scoreboard scoreboard, ArrayList<String> winMessage) {
 		super(number, name, color, bannerColor, scoreboard, winMessage);
 		// TODO Auto-generated constructor stub
+		this.instance = instance;
 	}
 	
 	public void CreateSideBarBoard(HideAndSeek hideAndSeek)
@@ -55,7 +59,7 @@ public class HSTeam extends MGTeam {
 			for (int i = 1; i < 3; i++)
 			{
 				HashMap<String, Integer> calcTimeOld = Main.getCalculatedTime(hideAndSeek.getProgressSeconds()+i); 
-				board.resetScores("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
+				board.resetScores(ColorOptions.message + "Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
 			}
 //			Score timeScoreOld = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTimeOld.get("minute") + ":" + calcTimeOld.get("second"));
 //			timeScoreOld.setScore(0);
@@ -63,7 +67,7 @@ public class HSTeam extends MGTeam {
 		
 		sideBoard.setDisplayName(ColorOptions.KAKColor + "Hide and Seek");
 		
-		Score teamScore = sideBoard.getScore(ColorOptions.message + "You are a " + this.GetColor() + teamName);
+		Score teamScore = sideBoard.getScore(ColorOptions.message + "Team: " + this.GetColor() + teamName);
 		teamScore.setScore(boardLength);
 		
 		boardLength--;
@@ -77,10 +81,10 @@ public class HSTeam extends MGTeam {
 		
 		if (this.GetNumber() == 1)
 		{
-			objectiveString = ColorOptions.error + "Seekers: ";
+			objectiveString = ColorOptions.error + "Seekers: " + this.instance.getOppositeTeam(this).GetMembers().size();
 		} else if (this.GetNumber() == 2)
 		{
-			objectiveString = ColorOptions.error + "Hiders: ";
+			objectiveString = ColorOptions.error + "Hiders: " + this.instance.getOppositeTeam(this).GetMembers().size();
 		}
 		Score objectiveScore = sideBoard.getScore(objectiveString);
 		objectiveScore.setScore(boardLength);
@@ -91,7 +95,7 @@ public class HSTeam extends MGTeam {
 		boardLength--;
 		
 		HashMap<String, Integer> calcTime = Main.getCalculatedTime(hideAndSeek.getProgressSeconds()); 
-		Score timeScore = sideBoard.getScore("Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
+		Score timeScore = sideBoard.getScore(ColorOptions.message + "Time remaining: " + ColorOptions.message + "" + calcTime.get("minute") + ":" + calcTime.get("second"));
 		timeScore.setScore(boardLength);
 	}
 	
@@ -123,11 +127,30 @@ public class HSTeam extends MGTeam {
 			board.resetScores(objectiveKind + oldTeamAmount);
 		}
 		
-		Score newScore = sideBoard.getScore(objectiveKind);
+		Score newScore = sideBoard.getScore(objectiveKind + this.instance.getOppositeTeam(this).GetMembers().size());
 		if (boardSlot > 0)
 		{
 			newScore.setScore(boardSlot);
 		}
 	}
-
+	
+	public void ResetSideBarBoard()
+	{
+		Scoreboard board = this.GetScoreboard();
+		org.bukkit.scoreboard.Objective sideBoard = board.getObjective("hs_" + this.GetNumber());
+		
+		if (sideBoard != null)
+		{
+			sideBoard.unregister();
+		}
+	}
+	
+	@Override
+	public void Reset()
+	{
+		this.Scoreboard = this.GetScoreboard();
+		this.Members.clear();
+		
+		this.ResetSideBarBoard();
+	}
 }

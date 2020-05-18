@@ -434,7 +434,6 @@ public class Objective extends SiegeObject
 				if (!(state instanceof Banner))
 				{
 					this.bannerBlock.setType(Material.STANDING_BANNER);
-					Bukkit.getPlayer("__pandi__").teleport(this.bannerBlock.getLocation());
 				}
 				Main.logMessage("Type of bannerBlock: " + this.bannerBlock.getType().toString());
 

@@ -3,7 +3,6 @@ package Sieges;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Bukkit;
@@ -12,12 +11,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Score;
-import org.bukkit.scoreboard.Scoreboard;
 
 import Handlers.ColorOptions;
 import Main.Main;
+import Minigames.MGTeam;
 import Minigames.MiniGame;
 import Minigames.Participant;
 import Minigames.SiegeTeam;
@@ -414,12 +411,27 @@ public class Siege extends MiniGame
 		if (this.getParticipant(user) != null)
 		{
 			Participant participant = this.getParticipant(user);
-			if (participant == null)
-			{
-				Main.logError("Participant for user " + user.getUsername() + " is null");
-			}
+
 			participant.returnBeforeJoinLocation();
-			participant.GetTeam().RemoveMember(participant);
+			MGTeam team = participant.GetTeam();
+			
+			if (this.randomVotes.contains(participant))
+			{
+				this.randomVotes.remove(participant);
+			}
+			
+			for (Scenario s : this.suggestedScenarioList)
+			{
+				if (s.getVotes().contains(participant))
+				{
+					s.removeVotes(participant);
+				}
+			}
+			
+			if (team != null)
+			{
+				participant.GetTeam().RemoveMember(participant);
+			}
 			this.removeParticipant(participant);
 			this.updateMenus(true);
 		}

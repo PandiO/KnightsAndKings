@@ -115,7 +115,7 @@ public class GateAnimation
 		    block.setData(toMaterial.getData().getData());
 		}
 		this.animationTask.cancel();
-		this.gate.trySetInvincibleEntity();
+		this.gate.trySetGateEntity();
 		Gates.destroyGateAnimationTask(this);
 	}
 }

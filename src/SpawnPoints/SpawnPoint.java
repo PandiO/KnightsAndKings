@@ -820,7 +820,6 @@ public class SpawnPoint
 				Block block = loc.getBlock();
 				if (block.getType() != Material.AIR && block.getType() != Material.SNOW)
 				{
-					Bukkit.getConsoleSender().sendMessage("Location obstructed by " + block.getType().toString() + " on location " + loc.toString());
 					safe = false;
 					break;
 				}

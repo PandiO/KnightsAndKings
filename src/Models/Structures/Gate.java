@@ -77,7 +77,7 @@ public class Gate extends Structure
 		if (!newGate)
 		{
 			this.changeGateBlocks(true);
-			this.trySetInvincibleEntity();
+			this.trySetGateEntity();
 		}
 	}
 	
@@ -302,6 +302,11 @@ public class Gate extends Structure
         {
         	location.add(-1.5, 0, 0.5);
         }
+        
+		double x = location.getX();
+		double z = location.getZ();
+		
+		location = location.add(x > 0 ? -0.5 : 0.5, 0.0, z > 0 ? 0.5 : -0.5);
 
 		return location;
 	}
@@ -314,7 +319,7 @@ public class Gate extends Structure
 	public void setInvincible(boolean invincible)
 	{
 		this.isInvincible = invincible;
-		this.trySetInvincibleEntity();
+		this.trySetGateEntity();
 	}
 	
 	public void toggleClosed()
@@ -372,7 +377,7 @@ public class Gate extends Structure
 	}
 	
 	//Creates or removes an entity used to get damage for the gate
-	public void trySetInvincibleEntity()
+	public void trySetGateEntity()
 	{
 		Main.logMessage("Setting invincibleEntity");
 		if (this.GateEntity != null)
@@ -434,7 +439,7 @@ public class Gate extends Structure
 		this.clearNearbyGateEntities();
 		if (this.GateEntity == null)
 		{
-			this.trySetInvincibleEntity();
+			this.trySetGateEntity();
 		}
 
 		if (item != null && item.getType() != Material.AIR && productID != null)

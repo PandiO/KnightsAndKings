@@ -66,7 +66,6 @@ public class Participant
 	{
 		if (this.beforeJoinLocation == null)
 		{
-			Main.logError("Participant should be returned to before join location, but location is null!");
 			return;
 		}
 		this.user.getPlayer().teleport(this.beforeJoinLocation);
