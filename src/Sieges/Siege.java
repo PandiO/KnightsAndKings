@@ -101,14 +101,14 @@ public class Siege extends MiniGame
 	{
 		SiegeTeam opposite = null;
 		
-		if (team != this.Team1)
+		if (team == this.Team1)
 		{
 			opposite = this.Team2;
 		} else
 		{
 			opposite = this.Team1;
 		}
-		
+				
 		return opposite;
 	}
 	

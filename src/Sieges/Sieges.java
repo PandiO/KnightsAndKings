@@ -6,7 +6,7 @@ import Main.Main;
 import SpawnPoints.SpawnPoint;
 import Users.User;
 
-public class Sieges 
+public class Sieges
 {
 	static SpawnPoint spawnpoint = new SpawnPoint();
 	static Main main = Main.getPlugin(Main.class);

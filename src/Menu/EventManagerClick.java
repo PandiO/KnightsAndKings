@@ -11,6 +11,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import DataManager.HideandSeeks;
 import Handlers.ColorOptions;
 import HideAndSeek.HideAndSeek;
 import Main.Main;
@@ -46,7 +47,7 @@ public class EventManagerClick
 		}
 		if (dc.equalsIgnoreCase("hide and seek"))
 		{
-			if (main.HideAndSeek == null)
+			if (HideandSeeks.HideAndSeeks.isEmpty())
 			{
 				user.getPlayer().sendMessage(ColorOptions.error + "The Hide and Seek didn't start yet!");
 			}
@@ -67,7 +68,10 @@ public class EventManagerClick
 		Inventory menu = e.getInventory();
 		ItemStack clicked = e.getCurrentItem();
 		String dc = ChatColor.stripColor(clicked.getItemMeta().getDisplayName().toLowerCase());
-		HideAndSeek hs = main.HideAndSeek;
+		ItemStack hsItem = e.getInventory().getItem(4);
+		List<String> hsLore = hsItem.getItemMeta().getLore();
+		Integer hsID = Integer.valueOf(ChatColor.stripColor(hsLore.get(0)).split(": ")[1]);
+		HideAndSeek hs = DataManager.HideandSeeks.findHideAndSeek(hsID);
 		
 		Integer step = 250;
 		
@@ -184,7 +188,10 @@ public class EventManagerClick
 	
 	public void onHsPlayerManagerClick(InventoryClickEvent e, User user)
 	{
-		HideAndSeek hs = main.HideAndSeek;
+		ItemStack hsItem = e.getInventory().getItem(4);
+		List<String> hsLore = hsItem.getItemMeta().getLore();
+		Integer hsID = Integer.valueOf(ChatColor.stripColor(hsLore.get(0)).split(": ")[1]);
+		HideAndSeek hs = DataManager.HideandSeeks.findHideAndSeek(hsID);
 
 		e.setCancelled(true);
 		

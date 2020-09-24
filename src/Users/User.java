@@ -38,6 +38,7 @@ import Assignments.AssignmentKill;
 import Assignments.AssignmentTravelDistance;
 import Assignments.AssignmentTravelRandom;
 import Assignments.AssignmentTravelSpecific;
+import DataManager.HideandSeeks;
 import DataManager.Users2;
 import DataManager.Worldguard;
 import Donator.Donator;
@@ -45,6 +46,7 @@ import Genders.Gender;
 import Handlers.ColorOptions;
 import Handlers.ExperienceChangeEvent;
 import Handlers.SoundHandler;
+import HideAndSeek.HideAndSeek;
 import Houses.House;
 import KillsDeaths.CombatCheck;
 import Main.Main;
@@ -775,13 +777,14 @@ public class User
 	public void checkMiniGames()
 	{
 		Siege siege = Sieges.Sieges.findSiege(this);
+		HideAndSeek hs = HideandSeeks.findHideAndSeek(user);
 		if (siege != null)
 		{
 			siege.leavePlayer(this);
 		}
-		if (Main.HideAndSeek.getParticipating(this))
+		if (hs != null)
 		{
-			Main.HideAndSeek.leave(Main.HideAndSeek.getParticipant(user));
+			hs.leave(hs.getParticipant(user));
 		}
 	}
 	
@@ -790,7 +793,7 @@ public class User
 		boolean inMiniGame = false;
 		
 		if (Sieges.Sieges.findSiege(this) != null
-				|| Main.HideAndSeek.getParticipating(user))
+				|| HideandSeeks.findHideAndSeek(user) != null)
 		{
 			inMiniGame = true;
 		}

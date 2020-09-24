@@ -37,6 +37,7 @@ import Arenas.Duel;
 import Assignments.Assignment;
 import Assignments.AssignmentTravelDistance;
 import DataManager.Creations;
+import DataManager.HideandSeeks;
 import DataManager.Users2;
 import DataManager.Worldguard;
 import DataManager.Structures.Gates;
@@ -551,12 +552,12 @@ public class PlayerListener implements Listener
 		/**
 		 * Hide and Seek
 		 */
-		HideAndSeek hideAndSeek = Main.HideAndSeek;
-		if (Main.HideAndSeek != null && Main.HideAndSeek.getParticipating(user))
+		HideAndSeek hideAndSeek = HideandSeeks.findHideAndSeek(user);
+		if (hideAndSeek != null)
 		{
-			if (Main.HideAndSeek.getInHub() || Main.HideAndSeek.getProgress())
+			if (hideAndSeek.getInHub() || hideAndSeek.getProgress())
 			{
-				if (!Main.HideAndSeek.getAllowedCommands().contains(message) && !user.inOwnerModus())
+				if (!hideAndSeek.getAllowedCommands().contains(message) && !user.inOwnerModus())
 				{
 					event.setCancelled(true);
 					player.sendMessage(ColorOptions.error + "You are can't use this command while playing Hide and Seek!");
@@ -1187,9 +1188,10 @@ public class PlayerListener implements Listener
 			/**
 			 * Hide and seek minigame
 			 */
-			if (Main.HideAndSeek != null && Main.HideAndSeek.getProgress() && Main.HideAndSeek.getParticipating(user))
+			HideAndSeek hs = HideandSeeks.findHideAndSeek(user);
+			if (hs != null && hs.getProgress())
 			{
-				Integer townID = Main.HideAndSeek.getTownID();
+				Integer townID = hs.getTownID();
 				
 				try
 				{

@@ -50,6 +50,8 @@ public class Menus {
 	public static String EventManagerMenu = ColorOptions.stats + "Event Manager";
 	public static String EventsMenu = ColorOptions.coinStats + "Events list";
 	public static String HideAndSeekManagerMenu = ColorOptions.messagesubjects + "Manage Hide And Seek";
+	public static String HideAndSeekOverviewMenu = ColorOptions.coinStats + "Active Hide and Seeks";
+	public static String HideAndSeekInformationMenu = ColorOptions.coinStats + "Hide and Seek Information";
 	public static String SiegeManagerMenu = ColorOptions.coinStats + "Manage Siege";
 	public static String SiegeOverviewMenu = ColorOptions.coinStats + "Active Sieges";
 	public static String SiegeInformationMenu = ColorOptions.coinStats + "Siege Information";

@@ -66,6 +66,7 @@ import Currency.IncomePayout;
 import Currency.PlayerPayEvent;
 import Currency.RentPayment;
 import Currency.SalaryPayout;
+import DataManager.HideandSeeks;
 import DataManager.Users2;
 import DataManager.Structures.Gates;
 import Donator.DonatorChat;
@@ -299,9 +300,7 @@ public class Main extends JavaPlugin
 	public static Map<UUID, Integer> teleportconfirm = new HashMap<UUID, Integer>();
 	
 	public static HashMap<UUID, String> msgReceived = new HashMap<UUID, String>();
-	
-	public static HideAndSeek HideAndSeek = null;
-	
+		
 	@SuppressWarnings("rawtypes")
 	public static List<ArrayList> playerList = new ArrayList<ArrayList>(Arrays.asList(HomelessEnter.homelessList));
 	
@@ -998,9 +997,9 @@ public class Main extends JavaPlugin
     		public void run()
     		{
     			Main main = Main.getPlugin(Main.class);
-    			if (HideAndSeek == null)
+    			if (HideandSeeks.HideAndSeeks.size() < 1)
     			{
-    	        	HideAndSeek = new HideAndSeek();
+    	        	HideandSeeks.HideAndSeeks.add(new HideAndSeek());
     			}
     			if (Sieges.Sieges.Sieges.size() < 1)
     			{
@@ -1409,27 +1408,6 @@ public class Main extends JavaPlugin
 		}
     }
     
-    public static boolean getHideAndSeekParticipating(User user)
-    {
-    	boolean participating = false;
-    	
-    	if (HideAndSeek == null)
-    	{
-    		return participating;
-    	}
-    	
-    	for (Participant part : HideAndSeek.getParticipants())
-    	{
-    		if (part.getUser() == user)
-    		{
-    			participating = true;
-    			break;
-    		}
-    	}
-    	
-    	return participating;
-    }
-    
     public boolean checkContribution(Integer contribution)
     {
     	boolean exist = false;
@@ -1678,105 +1656,105 @@ public class Main extends JavaPlugin
 	
 	public void refreshResources(User user)
 	{
-//		new BukkitRunnable()
-//		{
-//			public void run()
-//			{
-//				Main main = Main.getPlugin(Main.class);
-//				YmlFile file = new YmlFile();
-//    			String oreName = "ore-resources";
-//    			String woodName = "wood-resources";
-//    			String harvestName = "harvest-resources";
-//				Integer harvestBlocks = file.getBlockIDList(harvestName, false, null).size();
-//				Integer oreBlocks = file.getBlockIDList(oreName, false, null).size();
-//				Integer woodBlocks = file.getBlockIDList(woodName, false, null).size();
-//				boolean orePart = false;
-//				boolean woodPart = false;
-//				boolean harvestPart = false;
-//				if (oreBlocks > 50)
-//				{
-//					orePart = true;
-//				}
-//				if (woodBlocks > 50)
-//				{
-//					woodPart = true;
-//				}
-//				if (harvestBlocks > 50)
-//				{
-//					harvestPart = true;
-//				}
-//				
-//				for (BlockRefresh block : BlockBreakEvents.refreshList)
-//    			{
-//					block.RefreshBlock();
-//    			}
-//				
-//				if (orePart)
-//				{
-//					new BukkitRunnable()
-//					{
-//						public void run()
-//						{
-//			    			for (Integer blockID : file.getBlockIDList(oreName, file.getBlockIDList(oreName, false, null).size() > 50 ? true : false, 25))
-//			    			{
-//								file.changeBlock(oreName, blockID, true);
-//			    			}
-//						}
-//					}.runTaskTimerAsynchronously(main, 0, 1*20);
-//				} else
-//				{
-//	    			for (Integer blockID : file.getBlockIDList(oreName, orePart, 25))
-//	    			{
-//						file.changeBlock(oreName, blockID, true);
-//	    			}
-//				}
-//				
-//				if (woodPart)
-//				{
-//					new BukkitRunnable()
-//					{
-//						public void run()
-//						{
-//			    			for (Integer blockID : file.getBlockIDList(woodName, file.getBlockIDList(woodName, false, null).size() > 50 ? true : false, 25))
-//			    			{
-//								file.changeBlock(woodName, blockID, true);
-//			    			}
-//						}
-//					}.runTaskTimerAsynchronously(main, 0, 1*20);
-//				} else
-//				{
-//	    			for (Integer blockID : file.getBlockIDList(woodName, woodPart, 25))
-//	    			{
-//						file.changeBlock(woodName, blockID, true);
-//	    			}
-//				}
-//				
-//				if (harvestPart)
-//				{
-//					new BukkitRunnable()
-//					{
-//						public void run()
-//						{
-//			    			for (Integer blockID : file.getBlockIDList(harvestName, file.getBlockIDList(harvestName, false, null).size() > 50 ? true : false, 25))
-//			    			{
-//								file.changeBlock(harvestName, blockID, true);
-//			    			}
-//						}
-//					}.runTaskTimerAsynchronously(main, 0, 1*20);
-//				} else
-//				{
-//	    			for (Integer blockID : file.getBlockIDList(harvestName, harvestPart, 25))
-//	    			{
-//						file.changeBlock(harvestName, blockID, true);
-//	    			}
-//				}
-//				
-//				if (user != null)
-//				{
-//					user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully reloaded all resource blocks!");
-//				}
-//			}
-//		}.runTask(this);
+		new BukkitRunnable()
+		{
+			public void run()
+			{
+				Main main = Main.getPlugin(Main.class);
+				YmlFile file = new YmlFile();
+    			String oreName = "ore-resources";
+    			String woodName = "wood-resources";
+    			String harvestName = "harvest-resources";
+				Integer harvestBlocks = file.getBlockIDList(harvestName, false, null).size();
+				Integer oreBlocks = file.getBlockIDList(oreName, false, null).size();
+				Integer woodBlocks = file.getBlockIDList(woodName, false, null).size();
+				boolean orePart = false;
+				boolean woodPart = false;
+				boolean harvestPart = false;
+				if (oreBlocks > 50)
+				{
+					orePart = true;
+				}
+				if (woodBlocks > 50)
+				{
+					woodPart = true;
+				}
+				if (harvestBlocks > 50)
+				{
+					harvestPart = true;
+				}
+				
+				for (BlockRefresh block : BlockBreakEvents.refreshList)
+    			{
+					block.RefreshBlock();
+    			}
+				
+				if (orePart)
+				{
+					new BukkitRunnable()
+					{
+						public void run()
+						{
+			    			for (Integer blockID : file.getBlockIDList(oreName, file.getBlockIDList(oreName, false, null).size() > 50 ? true : false, 25))
+			    			{
+								file.changeBlock(oreName, blockID, true);
+			    			}
+						}
+					}.runTaskTimerAsynchronously(main, 0, 1*20);
+				} else
+				{
+	    			for (Integer blockID : file.getBlockIDList(oreName, orePart, 25))
+	    			{
+						file.changeBlock(oreName, blockID, true);
+	    			}
+				}
+				
+				if (woodPart)
+				{
+					new BukkitRunnable()
+					{
+						public void run()
+						{
+			    			for (Integer blockID : file.getBlockIDList(woodName, file.getBlockIDList(woodName, false, null).size() > 50 ? true : false, 25))
+			    			{
+								file.changeBlock(woodName, blockID, true);
+			    			}
+						}
+					}.runTaskTimerAsynchronously(main, 0, 1*20);
+				} else
+				{
+	    			for (Integer blockID : file.getBlockIDList(woodName, woodPart, 25))
+	    			{
+						file.changeBlock(woodName, blockID, true);
+	    			}
+				}
+				
+				if (harvestPart)
+				{
+					new BukkitRunnable()
+					{
+						public void run()
+						{
+			    			for (Integer blockID : file.getBlockIDList(harvestName, file.getBlockIDList(harvestName, false, null).size() > 50 ? true : false, 25))
+			    			{
+								file.changeBlock(harvestName, blockID, true);
+			    			}
+						}
+					}.runTaskTimerAsynchronously(main, 0, 1*20);
+				} else
+				{
+	    			for (Integer blockID : file.getBlockIDList(harvestName, harvestPart, 25))
+	    			{
+						file.changeBlock(harvestName, blockID, true);
+	    			}
+				}
+				
+				if (user != null)
+				{
+					user.getPlayer().sendMessage(ColorOptions.messageachievement + "Succesfully reloaded all resource blocks!");
+				}
+			}
+		}.runTask(this);
 	}
 	
 	public boolean IsDay(World world)

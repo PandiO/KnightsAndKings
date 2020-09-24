@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import com.mewin.WGRegionEvents.events.RegionLeaveEvent;
 
 import API_methods.WorldGuard;
+import DataManager.HideandSeeks;
 import DataManager.Worldguard;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
@@ -265,12 +266,9 @@ public class HideAndSeekEvents implements Listener
 			return;
 		}
 		
-		if (Main.HideAndSeek == null)
-		{
-			return;
-		}
+		HideAndSeek hs = HideandSeeks.findHideAndSeek(user);
 		
-		if (!Main.HideAndSeek.getParticipating(user))
+		if (hs == null)
 		{
 			return;
 		}
@@ -300,12 +298,9 @@ public class HideAndSeekEvents implements Listener
 			return;
 		}
 		
-		if (Main.HideAndSeek == null)
-		{
-			return;
-		}
+		HideAndSeek hs = HideandSeeks.findHideAndSeek(user);
 		
-		if (!Main.HideAndSeek.getParticipating(user))
+		if (hs == null)
 		{
 			return;
 		}
@@ -320,17 +315,17 @@ public class HideAndSeekEvents implements Listener
 			return;
 		}
 		
-		if (Main.HideAndSeek.getTownID() != townID)
+		if (hs.getTownID() != townID)
 		{
 			return;
 		}
 		
-		if (!Main.HideAndSeek.getProgress())
+		if (!hs.getProgress())
 		{
 			return;
 		}
 		
-		if (Main.HideAndSeek.getFinished())
+		if (hs.getFinished())
 		{
 			return;
 		}

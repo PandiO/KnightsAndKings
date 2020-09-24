@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import DataManager.HideandSeeks;
 import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.Menus;
@@ -275,7 +276,7 @@ public class HideAndSeek extends MiniGame
 		{
 			if (this.cooldown == false && this.matchmaking == false && this.progress == false)
 			{
-				Main.HideAndSeek.startMatchmaking();
+				this.startMatchmaking();
 			}
 		}
 	}
@@ -811,7 +812,7 @@ public class HideAndSeek extends MiniGame
 			}
 			return;
 		}
-		if (this.getParticipating(user))
+		if (HideandSeeks.findHideAndSeek(user) != null)
 		{
 			HashMap<String, Integer> time = Main.getCalculatedTime(this.matchmakingSeconds);
 			player.sendMessage(ColorOptions.error + "You are already participating in the upcoming Hide and Seek!");

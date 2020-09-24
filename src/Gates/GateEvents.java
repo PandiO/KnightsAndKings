@@ -39,13 +39,11 @@ public class GateEvents implements Listener
 	@EventHandler
 	public void onGateHit(BlockDamageEvent e)
 	{
-		Main.logMessage("BlockDamage event triggered in GateEvents..");
 		Player player = e.getPlayer();
 		Block block = e.getBlock();
 		Location blockLocation = block.getLocation();
 		Integer gateID = Worldguard.getStructureIDbyRegion("gate", blockLocation, Worldguard.getRegionManager(blockLocation.getWorld()));
 		
-		Main.logMessage("GateID of damaged gate: " + gateID);
 		UUID uuid = player.getUniqueId();
 		User user = Users2.InstantiateUser(uuid, false);
 		

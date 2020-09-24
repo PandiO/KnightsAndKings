@@ -17,12 +17,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
+import DataManager.HideandSeeks;
 import DataManager.Worldguard;
 import Exceptions.UserIsNpcException;
 import Exceptions.UserNotFoundException;
@@ -30,14 +30,12 @@ import Handlers.ColorOptions;
 import Handlers.DoubleDamage;
 import Handlers.ErrorHandlers;
 import Handlers.SoundHandler;
+import HideAndSeek.HideAndSeek;
 import Main.Main;
-import Menu.Menu;
 import Minigames.Participant;
-import Minigames.SiegeTeam;
 import Scoreboards.ActionBar;
 import Sieges.Siege;
 import Sieges.SiegeMember;
-import Sieges.SiegeSpawnpoint;
 import Skills.Skill;
 import Users.User;
 import Users.Users;
@@ -128,17 +126,19 @@ public class EntityListener implements Listener
 			/**
 			 * Hide and Seek
 			 */
-			if (!CitizensAPI.getNPCRegistry().isNPC(damaged) && Main.getHideAndSeekParticipating(userDamager) && Main.getHideAndSeekParticipating(userDamaged))
+			HideAndSeek hsDamaged = HideandSeeks.findHideAndSeek(userDamaged);
+			HideAndSeek hsDamager = HideandSeeks.findHideAndSeek(userDamager);
+			if (!CitizensAPI.getNPCRegistry().isNPC(damaged) && hsDamaged != null && hsDamager != null && hsDamaged == hsDamager)
 			{
-				Participant pDamager = Main.HideAndSeek.getParticipant(userDamager);
-				Participant pDamaged = Main.HideAndSeek.getParticipant(userDamaged);
+				Participant pDamager = hsDamaged.getParticipant(userDamager);
+				Participant pDamaged = hsDamaged.getParticipant(userDamaged);
 				
-				if (Main.HideAndSeek.getSeekers().GetMembers().contains(pDamager) 
-						&& !Main.HideAndSeek.getSeekers().GetMembers().contains(pDamaged)
-						&& !Main.HideAndSeek.getHideTime())
+				if (hsDamaged.getSeekers().GetMembers().contains(pDamager) 
+						&& !hsDamaged.getSeekers().GetMembers().contains(pDamaged)
+						&& !hsDamaged.getHideTime())
 				{
 					Main.logMessage("found the two participants..");
-					Main.HideAndSeek.catchParticipant(userDamager, userDamaged);
+					hsDamaged.catchParticipant(userDamager, userDamaged);
 				}
 			}
 			
@@ -298,7 +298,7 @@ public class EntityListener implements Listener
 				{
 					Main.logMessage("Damaged is in safezone or damager is friend of damaged");
 					if ((damagedSiege == null && damagerSiege == null) 
-							&& (!Main.getHideAndSeekParticipating(userDamager) && !Main.getHideAndSeekParticipating(userDamaged)))
+							&& (HideandSeeks.findHideAndSeek(userDamager) == null && HideandSeeks.findHideAndSeek(userDamaged) == null))
 					{
 						Main.logMessage("Safezone cancelling damage");
 

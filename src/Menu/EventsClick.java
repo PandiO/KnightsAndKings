@@ -41,10 +41,11 @@ public class EventsClick
 		}
 		if (dc.equalsIgnoreCase("hide and seek"))
 		{
-			if (main.HideAndSeek == null)
-			{
-				user.getPlayer().sendMessage(ColorOptions.error + "The Hide and Seek didn't start yet!");
-			}
+			///TODO: Should open up the Hide and seek overview menu
+//			if (main.HideAndSeek == null)
+//			{
+//				user.getPlayer().sendMessage(ColorOptions.error + "The Hide and Seek didn't start yet!");
+//			}
 			this.menu.openHideAndSeekOverview(user);
 			user.playSound("succesclick");
 		}

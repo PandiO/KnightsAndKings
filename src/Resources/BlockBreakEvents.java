@@ -20,6 +20,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 
 import API_methods.WorldEdit;
+import DataManager.Users2;
 import DataManager.Worldguard;
 import Exceptions.UserNotFoundException;
 import Handlers.ColorOptions;
@@ -84,18 +85,14 @@ public class BlockBreakEvents implements Listener
 		}
 
 		
-		try
+		if (Users2.ExistUser(uuid))
 		{
-			user = Users.getUser(uuid);
-		} catch (UserNotFoundException ex)
-		{
-			ErrorHandlers.userNotFoundAction(null, player, true);
-			e.setCancelled(true);
+	    	user = Users2.InstantiateUser(uuid, false);
 			return;
-		} catch (Exception ex)
+		}
+		
+		if (user == null)
 		{
-			ex.printStackTrace();
-			ErrorHandlers.userNotFoundAction(null, player, true);
 			e.setCancelled(true);
 			return;
 		}

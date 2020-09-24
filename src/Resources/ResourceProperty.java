@@ -167,7 +167,7 @@ public class ResourceProperty extends Property
 		try
 		{
 			//prepare the query to retrieve the id of a house
-			PreparedStatement stmt = main.getConnection().prepareStatement("Select * From ResourceProperties WHERE ID=?;");	
+			PreparedStatement stmt = Main.getConnection().prepareStatement("Select * From ResourceProperties WHERE ID=?;");	
 			stmt.setInt(1, propertyID);
 			//Execute the query
 			ResultSet results = stmt.executeQuery();

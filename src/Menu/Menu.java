@@ -33,6 +33,7 @@ import API_methods.WorldGuard;
 import Arenas.Arena;
 import Assignments.Assignment;
 import Assignments.AssignmentTravelRandom;
+import DataManager.HideandSeeks;
 import Donator.Donator;
 import Exceptions.UserNotFoundException;
 import Genders.Gender;
@@ -3895,7 +3896,8 @@ public class Menu
 	
 	public void openHideAndSeekManager(User user)
 	{
-		HideAndSeek hs = main.HideAndSeek;		
+		///TODO: This has to be changed to receive a specific Hide and Seek instance to be changed. A new menu must be added in order to fix this menu: A Hide and Seek manager overview
+		HideAndSeek hs = null;		
 		String status = "Cooldown";
 		Inventory menu = Bukkit.createInventory(null, 3*9+main.getMenuSize(hs.getParticipants().size()), Menus.HideAndSeekManagerMenu);
 		
@@ -4083,7 +4085,8 @@ public class Menu
 	
 	public void openHsPlayerManager(User user, User target)
 	{
-		HideAndSeek hs = main.HideAndSeek;		
+		///TODO: Must also receive a Hide and Seek instance to retrieve its participants
+		HideAndSeek hs = null;		
 
 		Inventory menu = Bukkit.createInventory(null, 3*9, ColorOptions.message + "Hide and Seek player");
 		
@@ -4504,7 +4507,601 @@ public class Menu
 	
 	public void openHideAndSeekOverview(User user)
 	{
+		HideAndSeek hs = HideandSeeks.findHideAndSeek(user);
+		Integer participants = 0;
 		
+		if (hs != null)
+		{
+			this.openHideAndSeekInformation(user, hs, 0);
+			return;
+		}
+
+		for (HideAndSeek h : HideandSeeks.HideAndSeeks)
+		{
+			participants += h.getParticipants().size();
+		}
+		Inventory menu = Bukkit.createInventory(null, 2*9+main.getMenuSize(HideandSeeks.HideAndSeeks.size()), Menus.HideAndSeekOverviewMenu);
+		
+		ItemStack hideandSeeksItem = product.createItem(ColorOptions.messagesubjects + "Hide and Seeks", new ItemStack(Material.LEAVES), false,
+				ColorOptions.message + "Check the status of",
+				ColorOptions.message + "active hide and seeks",
+				ColorOptions.message + "or join a siege",
+				"",
+				ColorOptions.message + "Current amount of games: " + ColorOptions.messagesubjects + HideandSeeks.HideAndSeeks.size(),
+				ColorOptions.message + "Players playing Hide & Seek: " + ColorOptions.messagesubjects + participants);
+		
+		menu.setItem(4, hideandSeeksItem);
+		menu.setItem(8, Menus.getBackButton(Menus.EventsMenu));
+		
+		for (int i = 9; i < 18; i++)
+		{
+			menu.setItem(i, product.createItem(ColorOptions.error + "No Hide and Seek", new ItemStack(Material.BARRIER), false, ColorOptions.message + "No game has started"));
+		}
+		
+		Integer slot = 9;
+		for (HideAndSeek h : HideandSeeks.HideAndSeeks)
+		{
+			String locationName = ColorOptions.error + "Not set";
+			String stage = "Cooldown";
+			List<String> timeDescription = new ArrayList<String>();
+			
+			if (h.getTownID() != null)
+			{
+				locationName = ColorOptions.messagesubjects + h.getTownName();
+			}
+			if (h.getMatchmaking())
+			{
+				main.logMessage("HideAndSeek in matchmaking");
+				HashMap<String, Integer> timeFormat = main.getCalculatedTime(h.getMatchmakingSeconds());
+				timeDescription.addAll(Arrays.asList(
+						" ",
+						ColorOptions.message + "Time until game starts:",
+						ColorOptions.message + "" + timeFormat.get("minute") + " minutes and " + timeFormat.get("second") + " seconds"
+						));
+				
+				stage = "Matchmaking";
+//				if (!siege.getSuggestedScenarioList().isEmpty() && siege.getScenario() == null)
+//				{
+//					locationName = ColorOptions.message + "Voting..";
+//				}
+			} else if (h.getCooldown())
+			{
+				main.logMessage("Hide and Seek in cooldown");
+				stage = "Cooldown";
+				HashMap<String, Integer> timeFormat = main.getCalculatedTime(h.getCooldownSeconds());
+				timeDescription.addAll(Arrays.asList(
+						" ",
+						ColorOptions.message + "Time until matchmaking:",
+						ColorOptions.message + "" + timeFormat.get("minute") + " minutes and " + timeFormat.get("second") + " seconds"
+						));
+			} else if (h.getProgress())
+			{
+				main.logMessage("Siege in progress");
+				stage = "In progress";
+				HashMap<String, Integer> timeFormat = main.getCalculatedTime(h.getProgressSeconds());
+				timeDescription.addAll(Arrays.asList(
+						" ",
+						ColorOptions.message + "Time until game ends:",
+						ColorOptions.message + "" + timeFormat.get("minute") + " minutes and " + timeFormat.get("second") + " seconds"
+						));
+			}
+			main.logMessage(timeDescription.toString());
+
+			ItemStack hItem = product.createItem(
+	    			ColorOptions.message + "Hide and Seek " + ColorOptions.messagesubjects + (HideandSeeks.HideAndSeeks.indexOf(h)+1), 
+	    			new ItemStack(Material.LEAVES), 
+	    			false, 
+	    			ColorOptions.message + "Location: " + locationName,
+//	    			ColorOptions.message + "Skilled match: " + (h.getSkilledMatch() ? ColorOptions.error + "Skilled" : ColorOptions.message + "Regular"),
+	    			ColorOptions.message + "Joined players: "  + (h.getParticipants().isEmpty() ? ColorOptions.error + "None" : ColorOptions.messagesubjects + "" + h.getParticipants().size()),
+	    			ColorOptions.message + "Current stage: " + ColorOptions.messagesubjects + stage
+	    			);
+			List<String> joinDesc = new ArrayList<String>();
+			joinDesc.addAll(timeDescription);
+			
+			joinDesc.add(" ");
+			if (h.getMatchmaking())
+			{
+				if (user.getTitleID() >= h.getEntryTitle())
+				{
+					joinDesc.add(ColorOptions.messagesubjects + "Click to join!");
+				} else
+				{
+					joinDesc.add(ColorOptions.error + "Can't join match!");
+					joinDesc.add(ColorOptions.error + "Allowed titles: higher than " + h.getEntryTitle());
+				}
+			} else
+			{
+				joinDesc.addAll(Arrays.asList(
+						ColorOptions.error + "Can't join match!",
+						ColorOptions.error + "Wait for matchmaking to start"));
+			}
+			
+			hItem = product.addItemDescription(hItem, joinDesc);
+			menu.setItem(slot, hItem);
+			slot++;
+		}
+		
+		menu = this.fillEmptyMenu(menu, false, " ", null);
+		
+		user.getPlayer().closeInventory();
+		user.getPlayer().openInventory(menu);
+	}
+	
+	public void openHideAndSeekInformation(User user, HideAndSeek hs, Integer pageNumber) 
+	{
+		///TODO: Will be addressed and improved in issue KNK-8
+//		Integer scenarioItemSlot = 0;
+//		Integer scenarioStartSlot = 1;
+//		Integer randomScenarioSlot = 3;
+//		Integer hsItemSlot = 4;
+//		Integer backItemSlot = 8;
+//		Integer joinedPlayerItemSlot = 31;
+//		
+//		hs.orderLowToHigh();
+//		List<Participant> participantList = new ArrayList<Participant>();
+//		List<Participant> list = hs.getParticipants();
+//		if (list.size() > 45)
+//		{
+//			Integer startingindex = 0;
+//			switch(pageNumber)
+//			{
+//			case 2: startingindex = 18;
+//			break;
+//			case 3: startingindex = 36;
+//			break;
+//			case 4: startingindex = 54;
+//			break;
+//			case 5: startingindex = 72;
+//			break;
+//			case 6: startingindex = 90;
+//			break;
+//			case 7: startingindex = 108;
+//			break;
+//			case 8: startingindex = 126;
+//			break;
+//			case 9: startingindex = 144;
+//			break;
+//			case 10: startingindex = 162;
+//			break;
+//			default: startingindex = 0;
+//			break;
+//			}
+//			
+//			for (int i = startingindex; i < startingindex+18; i++)
+//			{
+//				participantList.add(list.get(i));
+//			}
+//		} else
+//		{
+//			participantList.addAll(list);
+//		}
+//		Inventory menu = Bukkit.createInventory(null, 6*9, Menus.HideAndSeekInformationMenu);
+//		
+//		List<String> scenarioItemDesc = new ArrayList<String>();
+//		String scenarioName = ColorOptions.error + "Not set";
+//		List<String> timeDescription = new ArrayList<String>();
+//		List<String> objectiveDescription = new ArrayList<String>(Arrays.asList(
+//				ColorOptions.messageformat + "Description",
+//				ColorOptions.message + "The game starts off with one seeker.",
+//				ColorOptions.message + "All players captured by the seeker",
+//				ColorOptions.message + "will help the seeker find",
+//				ColorOptions.message + "the remaining hiders.",
+//				""
+//				));
+//		List<String> playerDescription = new ArrayList<String>();
+//		
+//		if (siege.getScenario() != null)
+//		{
+//			Scenario scenario = siege.getScenario();
+//			scenarioName = ColorOptions.messagesubjects + siege.getScenario().getName();
+//			
+//			String districtString = ColorOptions.message + "Districts: ";
+//			
+//			for (District district : scenario.getDistricts())
+//			{
+//				districtString = districtString + ColorOptions.message + district.getName() + "(" + district.getTown().getName() + "), ";
+//			}
+//			
+//			scenarioItemDesc.addAll(ColorOptions.getStringLines(districtString, 4));
+//			
+//			scenarioItemDesc.addAll(Arrays.asList(
+//					ColorOptions.message + "EntryTitle if not skilled match: " + scenario.getEntryTitle(),
+//					"",
+//					ColorOptions.message + "Min. players: " + scenario.getPlayersMin(),
+//					ColorOptions.message + "Max. players: " + scenario.getPlayersMax(),
+//					"",
+//					ColorOptions.message + "Amount of votes: " + scenario.getVotes().size()
+//					));
+//			objectiveDescription.addAll(Arrays.asList(
+//					ColorOptions.message + "Total amount of objectives: " + ColorOptions.messagesubjects + (scenario.getSideObjectives().size() + 1),
+//					""
+//					));
+//			
+//			Integer gateObjectives = 0;
+//			for (SideObjective objective : scenario.getSideObjectives())
+//			{
+//				if (objective.getGateID() != -1)
+//				{
+//					gateObjectives++;
+//				}
+//			}
+//			
+//			objectiveDescription.add(ColorOptions.message + "Objectives with Gates: " + (gateObjectives > 0 ? ColorOptions.messagesubjects : ColorOptions.error) + gateObjectives);
+//			playerDescription.addAll(Arrays.asList(
+//					ColorOptions.message + "Min. players: " + ColorOptions.messagesubjects + scenario.getPlayersMin(),
+//					ColorOptions.message + "Max. players: " + ColorOptions.error + scenario.getPlayersMax()
+//					));
+//		} else
+//		{
+//			objectiveDescription.add(ColorOptions.error + "No objective information yet");
+//		}
+//		if (siege.getMatchmaking())
+//		{
+//			main.logMessage("Siege in matchmaking");
+//			HashMap<String, Integer> timeFormat = main.getCalculatedTime(siege.getMatchmakingSeconds());
+//			timeDescription.addAll(Arrays.asList(
+//					" ",
+//					ColorOptions.message + "Time until game starts:",
+//					ColorOptions.message + "" + timeFormat.get("minute") + " minutes and " + timeFormat.get("second") + " seconds"
+//					));
+//			
+//			if (!siege.getSuggestedScenarioList().isEmpty() && siege.getScenario() == null)
+//			{
+//				scenarioName = ColorOptions.message + "Voting..";
+//				scenarioItemDesc.addAll(Arrays.asList(
+//						ColorOptions.message + "Voting for scenario..."
+//						));
+//				for (Scenario scenarios : siege.getSuggestedScenarioList())
+//				{
+//					scenarioItemDesc.addAll(Arrays.asList(
+//							"",
+//							ColorOptions.message + "Scenario: " + ColorOptions.messagesubjects + scenarios.getName(),
+//							ColorOptions.message + "Votes: " + ColorOptions.messagesubjects + scenarios.getVotes().size()
+//							));
+//				}
+//				scenarioItemDesc.addAll(Arrays.asList(
+//						"",
+//						ColorOptions.message + "Random scenario",
+//						ColorOptions.message + "Votes: " + ColorOptions.messagesubjects + siege.getRandomVotes().size(),
+//						""
+//						));
+//				if (!siege.getParticipating(user))
+//				{
+//					scenarioItemDesc.add(ColorOptions.error + "Join the Siege to vote");
+//				}
+//			}
+//		} else if (siege.getCooldown())
+//		{
+//			this.openSiegeOverview(user);
+//			user.getPlayer().sendMessage(ColorOptions.error + "Can't view information. Siege is in cooldown!");
+//		} else if (siege.getProgress())
+//		{
+//			main.logMessage("Siege in progress");
+//			HashMap<String, Integer> timeFormat = main.getCalculatedTime(siege.getProgressSeconds());
+//			timeDescription.addAll(Arrays.asList(
+//					" ",
+//					ColorOptions.message + "Time until game ends:",
+//					ColorOptions.message + "" + timeFormat.get("minute") + " minutes and " + timeFormat.get("second") + " seconds"
+//					));
+//		}
+//		main.logMessage(timeDescription.toString());
+//
+//
+//		List<String> joinDesc = new ArrayList<String>();
+//		joinDesc.addAll(timeDescription);
+//		
+//		joinDesc.add(" ");
+//		
+//		if (siege.getParticipating(user))
+//		{
+//			joinDesc.add(ColorOptions.messagesubjects + "Participating in this Siege");
+//		} else
+//		{
+//			if (siege.getMatchmaking())
+//			{
+//				if ((siege.getSkilledMatch() && user.getTitleID() >= siege.getSkilledMin() && user.getTitleID() <= siege.getSkilledMax()) || !siege.getSkilledMatch())
+//				{
+//					joinDesc.add(ColorOptions.messagesubjects + "Click to join!");
+//				} else if (siege.getSkilledMatch() && (user.getTitleID() < siege.getSkilledMin() || user.getTitleID() > siege.getSkilledMax()))
+//				{
+//					joinDesc.addAll(Arrays.asList(
+//							ColorOptions.error + "Can't join match!",
+//							ColorOptions.error + "Allowed titles: " + siege.getSkilledMin() + " till " + siege.getSkilledMax()
+//							));
+//				}
+//			} else
+//			{
+//				joinDesc.addAll(Arrays.asList(
+//						ColorOptions.error + "Can't join match!",
+//						ColorOptions.error + "Wait for matchmaking to start"));
+//			}
+//		}
+//		
+//		ItemStack scenarioItem = product.createItem(
+//				ColorOptions.message + "Scenario: " + scenarioName, 
+//				new ItemStack(siege.getProgress() ? Material.MAP : Material.COMPASS), 
+//				false
+//				);
+//		
+//		scenarioItem = product.addItemDescription(scenarioItem, scenarioItemDesc);
+//		
+//		ItemStack objectiveItem = product.createItem(ColorOptions.messageachievement + "Objective information", new ItemStack(Material.BANNER, 1, (short) 15), false);
+//		ItemStack playerItem = product.createItem(ColorOptions.messagesubjects + "Joined players", new ItemStack(Material.SKULL_ITEM), false);
+//
+//		objectiveItem = product.addItemDescription(objectiveItem, objectiveDescription);
+//		
+//		menu.setItem(backItemSlot, Menus.getBackButton(Menus.SiegeOverviewMenu));
+//		
+//		playerDescription.addAll(Arrays.asList(
+//				ColorOptions.message + "Joined players: " + (siege.getParticipants().isEmpty() ? ColorOptions.error : ColorOptions.messagesubjects) + siege.getParticipants().size(),
+//				""));
+//		if (!siege.getParticipants().isEmpty())
+//		{
+//			playerDescription.add(ColorOptions.message + "Average title of joined players: " + siege.getTitleAverage());
+//		}
+//		
+//		playerItem = product.addItemDescription(playerItem, playerDescription);
+//		
+//		if (siege.getParticipating(user))
+//		{
+//			Participant participant = siege.getParticipant(user);
+//			menu.setItem(scenarioItemSlot, scenarioItem);
+//			menu.setItem(objectiveItemSlot, objectiveItem);
+//
+//			if (siege.getMatchmaking())
+//			{	
+//				if (!siege.getSuggestedScenarioList().isEmpty() && siege.getScenario() == null)
+//				{
+//					Integer slot = scenarioStartSlot;
+//					for (Scenario scenarios : siege.getSuggestedScenarioList())
+//					{
+//						List<String> scenariosDesc = new ArrayList<String>();
+//						ItemStack scenariosItem = product.createItem(ColorOptions.messagesubjects + scenarios.getName(), 
+//								new ItemStack(Material.MAP), 
+//								scenarios.getVotes().contains(participant)
+//								);
+//						
+//						int gateObjectives = 0;
+//						for (SideObjective objective : scenarios.getSideObjectives())
+//						{
+//							if (objective.getGateID() != -1)
+//							{
+//								gateObjectives++;
+//							}
+//						}
+//						
+//						String districtString = ColorOptions.message + "Districts: ";
+//						
+//						for (District district : scenarios.getDistricts())
+//						{
+//							districtString = districtString + district.getName() + "(" + district.getTown().getName() + "), ";
+//						}
+//						
+//						scenariosDesc.addAll(ColorOptions.getStringLines(districtString, 4));
+//						
+//						scenariosDesc.addAll(Arrays.asList(
+//								ColorOptions.message + "Entrytitle: " + ColorOptions.messagesubjects + scenarios.getEntryTitle(),
+//								"",
+//								ColorOptions.message + "Min. players: " + scenarios.getPlayersMin(),
+//								ColorOptions.message + "Max. players: " + scenarios.getPlayersMax(),
+//								"",
+//								ColorOptions.message + "Amount of objectives: " + ColorOptions.messagesubjects + scenarios.getSideObjectives().size(),
+//								ColorOptions.message + "Objectives with gate: " + (gateObjectives > 0 ? ColorOptions.messagesubjects : ColorOptions.error) + gateObjectives,
+//								"",
+//								ColorOptions.message + "Amount of votes: " + ColorOptions.messagesubjects + scenarios.getVotes().size()
+//						));
+//						
+//						if (scenarios.getVotes().contains(participant))
+//						{
+//							scenariosDesc.addAll(Arrays.asList(
+//									"",
+//									ColorOptions.error + "Voted"
+//									));
+//						} else
+//						{
+//							scenariosDesc.addAll(Arrays.asList(
+//									"",
+//									ColorOptions.messagesubjects + "Click to vote"
+//									));
+//						}
+//						scenariosItem = product.addItemDescription(scenariosItem, scenariosDesc);
+//						menu.setItem(slot, scenariosItem);
+//						slot++;
+//					}
+//					
+//					List<String> randomDesc = new ArrayList<String>();
+//					ItemStack randomItem = product.createItem(ChatColor.DARK_PURPLE + "Random", 
+//							new ItemStack(Material.EMPTY_MAP), 
+//							siege.getRandomVotes().contains(participant), 
+//							ColorOptions.message + "A random map will",
+//							ColorOptions.message + "be chosen",
+//							"",
+//							ColorOptions.message + "Amount of votes: " + ColorOptions.messagesubjects + siege.getRandomVotes().size());
+//					
+//					if (siege.getRandomVotes().contains(participant))
+//					{
+//						randomDesc.addAll(Arrays.asList(
+//								"",
+//								ColorOptions.error + "Voted"
+//								));
+//					} else
+//					{
+//						randomDesc.addAll(Arrays.asList(
+//								"",
+//								ColorOptions.messagesubjects + "Click to vote"
+//								));
+//					}
+//					randomItem = product.addItemDescription(randomItem, randomDesc);
+//					menu.setItem(randomScenarioSlot, randomItem);
+//				}
+//			}
+//			String teamName = ColorOptions.error + "None";
+//			MGTeam team = participant.GetTeam();
+//			
+//			if (team != null)
+//			{
+//				teamName = team.GetColor() + team.GetName();
+//				siegeBannerColor = team.GetBannerColor();
+//			}
+//			
+//			joinDesc.addAll(Arrays.asList(
+//					"",
+//					ColorOptions.message + "Your team: " + teamName
+//					));
+//			
+//			if (siege.getProgress())
+//			{
+//				SiegeMember sMember = (SiegeMember) participant;
+////				short blockColor = 2;
+////				boolean currentSpawnpoint = false;
+////				Integer slot = 9;
+////				Integer teamNumber = team.GetNumber();
+////				List<SiegeSpawnpoint> spawnpoints = siege.getScenario().getTeamSpawnpoints(teamNumber);
+////				for (SiegeSpawnpoint spawnpoint : spawnpoints)
+////				{
+////					List<String> spawnDesc = new ArrayList<String>();
+////					if (sMember.getCurrentSpawnpoint() == spawnpoint)
+////					{
+////						blockColor = 1;
+////						currentSpawnpoint = true;
+////						spawnDesc.add(ColorOptions.error + "Current spawnpoint");
+////					} else
+////					{
+////						//spawnDesc.add(ColorOptio)
+////					}
+////					ItemStack spawnItem = product.createItem(
+////							ColorOptions.messageachievement + "Spawnpoint " + spawnpoint.getSpawnCountID(), 
+////							new ItemStack(Material.STAINED_CLAY, 1, blockColor), 
+////							currentSpawnpoint);
+////					
+////					menu.setItem(slot, spawnItem);
+////				}
+//				if (team != null)
+//				{
+//					teamName = team.GetColor() + team.GetName();
+//					siegeBannerColor = team.GetBannerColor();
+//				}
+//				
+//				/**
+//				 * Spawnpoint Item
+//				 */
+//				ItemStack spawnpointItem = product.createItem(ColorOptions.messageachievement + "Change spawnpoint", new ItemStack(Material.COMPASS), true, 
+//						ColorOptions.message + "Click to change the location where",
+//						ColorOptions.message + "you spawn when killed",
+//						"",
+//						ColorOptions.message + "Current spawnpoint: " + ColorOptions.messagesubjects + sMember.getCurrentSpawnpoint().getName(),
+//						ColorOptions.messagesubjects + "Click to change");
+//				
+//				/**
+//				 * Main objective
+//				 */
+//				MainObjective mainObjective = siege.getScenario().getMainObjective();
+//				SiegeTeam heldTeam = siege.getHeldTeam(mainObjective);
+//				List<String> moDescription = new ArrayList<String>(Arrays.asList(ColorOptions.message + "Held by: " + heldTeam.GetColor() + heldTeam.GetName(),
+//						"",
+//						ColorOptions.message + "Captured: " + ColorOptions.error + mainObjective.getCapturePercentage() + "%"));
+//				if (mainObjective.getCaptured())
+//				{
+//					moDescription.addAll(Arrays.asList(
+//							"",
+//							ColorOptions.error + "Captured by " + mainObjective.getCapturer().getUser().getUsername()
+//							));
+//				}
+//				ItemStack mainObjectiveItem = product.createItem(ColorOptions.message + "Main Objective", new ItemStack(Material.BANNER, 1), false);
+//				BannerMeta moBannerMeta = (BannerMeta) mainObjectiveItem.getItemMeta();
+//				moBannerMeta.setPatterns(mainObjective.getBanner().getPatterns());
+//				moBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+//				mainObjectiveItem.setItemMeta(moBannerMeta);
+//				mainObjectiveItem = product.setItemDescription(mainObjectiveItem, 1, mainObjectiveItem.getItemMeta().getDisplayName(), moDescription);
+//				
+//				/**
+//				 * Side objectives
+//				 */
+//				Integer slot = sideObjectiveStartSlot;
+//				for (Objective objective : siege.getScenario().getSideObjectives())
+//				{
+//					SideObjective sideObjective = (SideObjective)objective;
+//					SiegeTeam heldSOTeam = siege.getHeldTeam(objective);
+//					List<String> soDescription = new ArrayList<String>(Arrays.asList(
+//							ColorOptions.message + "Held by: " + heldSOTeam.GetColor() + heldSOTeam.GetName(),
+//							"",
+//							ColorOptions.message + "Captured: " + ColorOptions.error + objective.getCapturePercentage() + "%"));
+//					
+//					if (sideObjective.getCaptured())
+//					{
+//						soDescription.addAll(Arrays.asList(
+//								"",
+//								ColorOptions.error + "Captured by " + sideObjective.getCapturer().getUser().getUsername()
+//								));
+//					}
+//					ItemStack sideObjectiveItem = product.createItem(ColorOptions.message + sideObjective.getName(), new ItemStack(Material.BANNER, 1), false);
+//					
+//					BannerMeta soBannerMeta = (BannerMeta) sideObjectiveItem.getItemMeta();
+//					soBannerMeta.setPatterns(objective.getBanner().getPatterns());
+//					soBannerMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+//					sideObjectiveItem.setItemMeta(soBannerMeta);
+//					sideObjectiveItem = product.setItemDescription(sideObjectiveItem, 1, sideObjectiveItem.getItemMeta().getDisplayName(), soDescription);
+//					
+//					menu.setItem(slot, sideObjectiveItem);
+//					
+//					slot++;
+//				}
+//				
+//				menu.setItem(mainObjectiveSlot, mainObjectiveItem);
+//				menu.setItem(spawnpointItemSlot, spawnpointItem);
+//			}
+//			
+//		} else
+//		{
+//			menu.setItem(scenarioItemSlot, scenarioItem);
+//			menu.setItem(13, objectiveItem);
+//		}
+//		
+//		ItemStack siegeItem = product.createItem(
+//    			ColorOptions.message + "Siege " + ColorOptions.messagesubjects + (Sieges.Sieges.indexOf(siege)+1), 
+//    			new ItemStack(Material.BANNER, 1, siegeBannerColor), 
+//    			false, 
+//    			ColorOptions.message + "Scenario: " + scenarioName,
+//    			ColorOptions.message + "Skilled match: " + (siege.getSkilledMatch() ? ColorOptions.error + "Skilled" : ColorOptions.message + "Regular"),
+//    			ColorOptions.message + "Joined players: "  + (siege.getParticipants().isEmpty() ? ColorOptions.error + "None" : ColorOptions.messagesubjects + "" + siege.getParticipants().size())
+//    			);
+//		siegeItem = product.addItemDescription(siegeItem, joinDesc);
+//		menu.setItem(siegeItemSlot, siegeItem);
+//		
+//		for (int i = 27; i < 36; i++)
+//		{
+//			menu.setItem(i, product.createItem(" ", new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 15), false));
+//		}
+//		
+//		menu.setItem(joinedPlayerItemSlot, playerItem);
+//		
+//		if (siege.getParticipants().size() > 18)
+//		{
+//			menu.setItem(27, product.createItem(ColorOptions.messagesubjects + "Previous tab", new ItemStack(Material.ARROW), false, ColorOptions.message + "Click to go to the previous", ColorOptions.message + "tab of participants", "", ColorOptions.message + "Current page: " + ColorOptions.messagesubjects + pageNumber));
+//			menu.setItem(35, product.createItem(ColorOptions.messagesubjects + "Next tab", new ItemStack(Material.ARROW), false, ColorOptions.message + "Click to go to the next", ColorOptions.message + "tab of participants", "", ColorOptions.message + "Current page: " + ColorOptions.messagesubjects + pageNumber));
+//		}
+//		
+//		Integer slot = 36;
+//		for (Participant participant : participantList)
+//		{
+//			User userParticipant = participant.getUser();
+//			ItemStack profile = Menus.getSocialProfile(userParticipant);
+//			main.logMessage(profile.getItemMeta().getLore().size() + "");
+//	    	ItemStack skull = product.createItem(ColorOptions.message + userParticipant.getUsername(), 
+//	    			profile, 
+//	    			(userParticipant.getID() == user.getID() ? true : false)
+//	    			);
+//	    	
+//	    	menu.setItem(slot, skull);
+//	    	slot++;
+//		}
+//		
+//		
+//		menu = this.fillEmptyMenu(menu, false, " ", null);
+//		
+//		user.getPlayer().closeInventory();
+//		user.getPlayer().openInventory(menu);
 	}
 	
 	public void openSiegeOverview(User user)

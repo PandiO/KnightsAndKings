@@ -18,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.scheduler.BukkitTask;
 
+import DataManager.MiniGames;
 import DataManager.Users2;
 import Handlers.ColorOptions;
 import Handlers.Menus;
@@ -49,6 +50,7 @@ public class MiniGame
 //	}};
 	
 	protected String name;	//Stores the name of the mininame
+	protected Integer id;
 	protected MiniGame instance;
 	protected List<Participant> Participants = new ArrayList<Participant>();	//Stores the participants of the minigame
 	protected int progressSeconds = 900;
@@ -86,8 +88,14 @@ public class MiniGame
 	
 	public MiniGame(String name, String joinCommand)
 	{
+		this.id = MiniGames.getUnusedId();
 		this.name = name;
 		this.setMatchmakingNotifications(joinCommand);
+	}
+	
+	public Integer getId()
+	{
+		return this.id;
 	}
 	
 	public String getName()

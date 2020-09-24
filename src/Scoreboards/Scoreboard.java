@@ -15,6 +15,7 @@ import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
 
 import Afk.AfkEvents;
+import DataManager.HideandSeeks;
 import DataManager.Users2;
 import Handlers.ColorOptions;
 import HideAndSeek.HSTeam;
@@ -148,6 +149,7 @@ public class Scoreboard
 		}
 		Team team = null;
 		
+		HideAndSeek hs = HideandSeeks.findHideAndSeek(user);
 		Siege siege = Sieges.Sieges.findSiege(user);
 		if (siege != null && siege.getProgress())
 		{
@@ -171,22 +173,22 @@ public class Scoreboard
 				this.FetchTeam(board, "siege" + enemyTeam.GetNumber()).addPlayer(enemy.getUser().getPlayer());
 			}
 		} else
-		if (Main.HideAndSeek != null && Main.HideAndSeek.getParticipating(user) && Main.HideAndSeek.getProgress())
+		if (hs != null && hs.getParticipating(user) && hs.getProgress())
 		{
-			Participant participant = Main.HideAndSeek.getParticipant(user);
+			Participant participant = hs.getParticipant(user);
 			for (User target : Users2.users)
 			{
-				if (!Main.HideAndSeek.getParticipating(target))
+				if (!hs.getParticipating(target))
 				{
 					player.hidePlayer(target.getPlayer());
 					target.getPlayer().hidePlayer(player);
 				}
 			}
-			HSTeam hsTeam = Main.HideAndSeek.getTeam(participant);
-			HSTeam enemyTeam = Main.HideAndSeek.getOppositeTeam(hsTeam);
+			HSTeam hsTeam = hs.getTeam(participant);
+			HSTeam enemyTeam = hs.getOppositeTeam(hsTeam);
 			String enemyT = null;
 			
-			hsTeam.CreateSideBarBoard(Main.HideAndSeek);
+			hsTeam.CreateSideBarBoard(hs);
 			if (hsTeam.GetNumber() == 2)
 			{
 				team = FetchTeam(board, "hsseeker");
@@ -340,9 +342,9 @@ public class Scoreboard
 			Team team = null;
 			
 			Siege siege = Sieges.Sieges.findSiege(user);
-			HideAndSeek hideAndSeek = Main.HideAndSeek;
+			HideAndSeek hideAndSeek = HideandSeeks.findHideAndSeek(user);
 			
-			if (hideAndSeek.getParticipating(user))
+			if (hideAndSeek != null)
 			{
 				defaultBoard = hideAndSeek.getParticipant(user).GetTeam().GetScoreboard();
 			} else
