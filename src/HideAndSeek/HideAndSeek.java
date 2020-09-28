@@ -52,6 +52,7 @@ public class HideAndSeek extends MiniGame
 	
 	public HideAndSeek()
 	{
+		//Hide and Seek initiator
 		super("HideAndSeek", "/hs join");
 		
 		this.Hiders = new HSTeam(this, 1, "Hiders", ChatColor.BLUE, (short)0, this.scoreboard.getScoreBoard(), null);
